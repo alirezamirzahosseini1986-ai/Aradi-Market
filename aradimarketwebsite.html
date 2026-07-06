@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arádi Market Budapest</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C9933A;
+  --gold-light:#F0D9A8;
+  --dark:#1A1410;
+  --dark2:#2D2318;
+  --cream:#FAF6EF;
+  --cream2:#F2EAD8;
+  --text:#3D2F1E;
+  --gray:#8A7968;
+  --green:#2E6B3E;
+}
+
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);direction:ltr}
+body.rtl{direction:rtl}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(26,20,16,0.95);backdrop-filter:blur(10px);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);letter-spacing:1px;text-decoration:none}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{color:#E8DCC8;font-size:13px;font-weight:500;text-decoration:none;letter-spacing:0.5px;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+.lang-btns{display:flex;gap:6px}
+.lang-btn{background:none;border:1px solid rgba(201,147,58,0.4);color:var(--gold-light);font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+.lang-btn.active,.lang-btn:hover{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.nav-order-btn{background:var(--gold);color:var(--dark);border:none;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.nav-order-btn:hover{background:var(--gold-light)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:24px;height:2px;background:var(--gold)}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:var(--dark);padding:20px 24px;flex-direction:column;gap:16px;z-index:99}
+.mobile-menu.open{display:flex}
+.mobile-menu a{color:#E8DCC8;font-size:15px;text-decoration:none;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
+
+/* HERO */
+.hero{min-height:100vh;background:linear-gradient(160deg, var(--dark) 0%, var(--dark2) 60%, #3D2810 100%);display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 24px 60px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=1400&q=80') center/cover;opacity:0.12}
+.hero-inner{position:relative;max-width:700px}
+.hero-eyebrow{font-size:12px;font-weight:600;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:20px}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(42px,7vw,80px);color:#FAF6EF;line-height:1.1;margin-bottom:24px}
+.hero-title span{color:var(--gold)}
+.hero-sub{font-size:17px;color:#C8B89A;line-height:1.7;max-width:520px;margin:0 auto 40px}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--gold);color:var(--dark);padding:14px 32px;border-radius:30px;font-size:15px;font-weight:600;text-decoration:none;transition:all .2s;border:none;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:#FAF6EF;padding:14px 32px;border-radius:30px;font-size:15px;font-weight:500;text-decoration:none;border:1px solid rgba(250,246,239,0.3);transition:all .2s}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.hero-scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:#8A7968;font-size:11px;letter-spacing:1px}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,transparent,var(--gold));animation:scrollAnim 2s infinite}
+@keyframes scrollAnim{0%,100%{opacity:0;transform:scaleY(0.5)}50%{opacity:1;transform:scaleY(1)}}
+
+/* ABOUT */
+.section{padding:80px 24px}
+.container{max-width:1100px;margin:0 auto}
+.section-label{font-size:11px;font-weight:600;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(30px,4vw,46px);color:var(--text);line-height:1.2;margin-bottom:20px}
+.section-text{font-size:16px;color:var(--gray);line-height:1.8;max-width:580px}
+
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.about-img{border-radius:12px;overflow:hidden;aspect-ratio:4/3;position:relative}
+.about-img img{width:100%;height:100%;object-fit:cover}
+.about-features{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px}
+.feature{background:var(--cream2);border-radius:10px;padding:20px;border-left:3px solid var(--gold)}
+.feature-icon{font-size:24px;margin-bottom:8px}
+.feature-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.feature-text{font-size:12px;color:var(--gray);line-height:1.5}
+
+/* PRODUCTS */
+.products-section{background:var(--dark);padding:80px 24px}
+.products-section .section-title{color:#FAF6EF}
+.products-section .section-label{color:var(--gold)}
+.products-tabs{display:flex;gap:8px;margin:32px 0 40px;flex-wrap:wrap}
+.tab-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(201,147,58,0.2);color:#C8B89A;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+.tab-btn.active,.tab-btn:hover{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.product-card{background:rgba(255,255,255,0.05);border:1px solid rgba(201,147,58,0.15);border-radius:12px;overflow:hidden;transition:all .2s;cursor:pointer}
+.product-card:hover{transform:translateY(-4px);border-color:var(--gold);background:rgba(201,147,58,0.08)}
+.product-img{aspect-ratio:1;overflow:hidden;background:#2D2318}
+.product-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.product-card:hover .product-img img{transform:scale(1.05)}
+.product-info{padding:14px}
+.product-category{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px}
+.product-name{font-size:14px;font-weight:500;color:#FAF6EF;line-height:1.4}
+.product-price{font-size:13px;color:var(--gold-light);margin-top:6px;font-weight:600}
+.hidden{display:none}
+
+/* HANDCRAFT */
+.handcraft-section{padding:80px 24px;background:var(--cream2)}
+.handcraft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-top:40px}
+.handcraft-card{border-radius:16px;overflow:hidden;position:relative;aspect-ratio:3/4;cursor:pointer}
+.handcraft-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.handcraft-card:hover img{transform:scale(1.06)}
+.handcraft-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(26,20,16,0.92),transparent);padding:28px 20px 20px}
+.handcraft-tag{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.handcraft-name{font-family:'Playfair Display',serif;font-size:20px;color:#FAF6EF;margin-bottom:6px}
+.handcraft-desc{font-size:12px;color:#C8B89A;line-height:1.5}
+
+/* WHY US */
+.why-section{padding:80px 24px;background:var(--cream)}
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:48px}
+.why-card{text-align:center;padding:32px 24px}
+.why-icon{width:56px;height:56px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px}
+.why-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);margin-bottom:10px}
+.why-text{font-size:14px;color:var(--gray);line-height:1.7}
+
+/* ORDER FORM */
+.order-section{background:var(--dark2);padding:80px 24px}
+.order-inner{max-width:680px;margin:0 auto}
+.order-section .section-title{color:#FAF6EF}
+.order-section .section-text{color:#C8B89A}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:12px;font-weight:600;color:#C8B89A;letter-spacing:0.5px}
+.form-group input,.form-group textarea,.form-group select{background:rgba(255,255,255,0.07);border:1px solid rgba(201,147,58,0.25);border-radius:8px;padding:12px 16px;color:#FAF6EF;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--gold)}
+.form-group select option{background:var(--dark2);color:#FAF6EF}
+.form-group textarea{resize:vertical;min-height:100px}
+.form-group input::placeholder,.form-group textarea::placeholder{color:#6B5D4F}
+.submit-btn{width:100%;background:var(--gold);color:var(--dark);border:none;padding:16px;border-radius:30px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;transition:all .2s}
+.submit-btn:hover{background:var(--gold-light);transform:translateY(-1px)}
+.form-success{display:none;text-align:center;padding:32px;background:rgba(46,107,62,0.2);border:1px solid var(--green);border-radius:12px;margin-top:20px}
+.form-success h3{font-family:'Playfair Display',serif;font-size:24px;color:#7DC48A;margin-bottom:8px}
+.form-success p{color:#C8B89A;font-size:14px}
+
+/* CONTACT */
+.contact-section{padding:80px 24px;background:var(--cream2)}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;margin-top:48px}
+.contact-item{display:flex;gap:16px;align-items:flex-start;margin-bottom:28px}
+.contact-icon{width:44px;height:44px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.contact-label{font-size:12px;font-weight:600;color:var(--gray);letter-spacing:0.5px;margin-bottom:4px}
+.contact-value{font-size:15px;color:var(--text);font-weight:500;text-decoration:none}
+.contact-value:hover{color:var(--gold)}
+.map-placeholder{background:var(--cream);border-radius:16px;aspect-ratio:4/3;overflow:hidden;border:1px solid rgba(201,147,58,0.2)}
+.map-placeholder iframe{width:100%;height:100%;border:none}
+.social-row{display:flex;gap:12px;margin-top:24px}
+.social-btn{width:44px;height:44px;background:var(--dark);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;transition:all .2s}
+.social-btn:hover{background:var(--gold);transform:translateY(-2px)}
+
+/* FOOTER */
+footer{background:var(--dark);padding:40px 24px;text-align:center}
+.footer-logo{font-family:'Playfair Display',serif;font-size:24px;color:var(--gold);margin-bottom:12px}
+.footer-text{font-size:13px;color:#6B5D4F;line-height:1.7}
+.footer-divider{width:60px;height:1px;background:var(--gold);margin:20px auto}
+
+@media(max-width:768px){
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .about-grid,.contact-grid{grid-template-columns:1fr}
+  .why-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .about-features{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">ARÁDI MARKET</a>
+  <div class="nav-links">
+    <a href="#about" data-i="nav_about">About</a>
+    <a href="#products" data-i="nav_products">Products</a>
+    <a href="#handcraft" data-i="nav_handcraft">Handcraft</a>
+    <a href="#contact" data-i="nav_contact">Contact</a>
+    <div class="lang-btns">
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('fa')">FA</button>
+      <button class="lang-btn" onclick="setLang('hu')">HU</button>
+    </div>
+    <button class="nav-order-btn" onclick="document.getElementById('order').scrollIntoView({behavior:'smooth'})" data-i="nav_order">Order Now</button>
+  </div>
+  <button class="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about" onclick="toggleMenu()" data-i="nav_about">About</a>
+  <a href="#products" onclick="toggleMenu()" data-i="nav_products">Products</a>
+  <a href="#handcraft" onclick="toggleMenu()" data-i="nav_handcraft">Handcraft</a>
+  <a href="#contact" onclick="toggleMenu()" data-i="nav_contact">Contact</a>
+  <div class="lang-btns" style="margin-top:8px">
+    <button class="lang-btn" onclick="setLang('en');toggleMenu()">EN</button>
+    <button class="lang-btn" onclick="setLang('fa');toggleMenu()">FA</button>
+    <button class="lang-btn" onclick="setLang('hu');toggleMenu()">HU</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow" data-i="hero_eyebrow">Persian Market · Budapest</div>
+    <h1 class="hero-title" data-i="hero_title">A Taste of Home,<br>in the Heart of <span>Europe</span></h1>
+    <p class="hero-sub" data-i="hero_sub">Authentic Persian food, spices, and handcrafted Middle Eastern art — all in one place in Budapest.</p>
+    <div class="hero-btns">
+      <a href="#products" class="btn-primary" data-i="hero_btn1">Explore Products</a>
+      <a href="#order" class="btn-outline" data-i="hero_btn2">Place an Order</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <div class="section-label" data-i="about_label">Who We Are</div>
+        <h2 class="section-title" data-i="about_title">More Than a Grocery Store</h2>
+        <p class="section-text" data-i="about_text">Arádi Market is Budapest's home for authentic Persian and Middle Eastern products. From the finest saffron to handcrafted copper and mosaic art — we bring the warmth, flavors, and craftsmanship of the Middle East to the heart of Europe.</p>
+        <div class="about-features">
+          <div class="feature"><div class="feature-icon">🌿</div><div class="feature-title" data-i="f1_title">Fresh & Authentic</div><div class="feature-text" data-i="f1_text">Products sourced directly from Iran and the Middle East</div></div>
+          <div class="feature"><div class="feature-icon">🎨</div><div class="feature-title" data-i="f2_title">Handcrafted Art</div><div class="feature-text" data-i="f2_text">Unique copper, stone & mosaic pieces by master artisans</div></div>
+          <div class="feature"><div class="feature-icon">🚚</div><div class="feature-title" data-i="f3_title">Local Delivery</div><div class="feature-text" data-i="f3_text">Fast delivery across Budapest</div></div>
+          <div class="feature"><div class="feature-icon">❤️</div><div class="feature-title" data-i="f4_title">Loyalty Club</div><div class="feature-text" data-i="f4_text">Earn points, get birthday gifts & special discounts</div></div>
+        </div>
+      </div>
+      <div class="about-img">
+        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=700&q=80" alt="Arádi Market">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="products-section" id="products">
+  <div class="container">
+    <div class="section-label" data-i="prod_label">What We Offer</div>
+    <h2 class="section-title" style="color:#FAF6EF" data-i="prod_title">Persian & Middle Eastern Foods</h2>
+    <div class="products-tabs">
+      <button class="tab-btn active" onclick="filterProducts('all',this)" data-i="tab_all">All</button>
+      <button class="tab-btn" onclick="filterProducts('dairy',this)" data-i="tab_dairy">Dairy</button>
+      <button class="tab-btn" onclick="filterProducts('spice',this)" data-i="tab_spice">Spices</button>
+      <button class="tab-btn" onclick="filterProducts('pickle',this)" data-i="tab_pickle">Pickles & Jams</button>
+      <button class="tab-btn" onclick="filterProducts('rice',this)" data-i="tab_rice">Rice & Legumes</button>
+      <button class="tab-btn" onclick="filterProducts('drink',this)" data-i="tab_drink">Drinks</button>
+      <button class="tab-btn" onclick="filterProducts('snack',this)" data-i="tab_snack">Snacks</button>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+  </div>
+</section>
+
+<!-- HANDCRAFT -->
+<section class="handcraft-section" id="handcraft">
+  <div class="container">
+    <div class="section-label" data-i="craft_label">Middle Eastern Art</div>
+    <h2 class="section-title" data-i="craft_title">Handcrafted Treasures</h2>
+    <p class="section-text" data-i="craft_text">Every piece tells a story — shaped by artisan hands, carved from copper, stone, and wood, carrying centuries of Middle Eastern tradition.</p>
+    <div class="handcraft-grid" id="handcraftGrid"></div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why-section">
+  <div class="container" style="text-align:center">
+    <div class="section-label" style="text-align:center" data-i="why_label">Why Choose Us</div>
+    <h2 class="section-title" style="text-align:center;margin:0 auto 0" data-i="why_title">The Arádi Difference</h2>
+    <div class="why-grid">
+      <div class="why-card"><div class="why-icon">🌍</div><h3 class="why-title" data-i="why1_title">Direct from Source</h3><p class="why-text" data-i="why1_text">Our products come directly from Iran and the Middle East, ensuring the most authentic taste and quality you can find in Budapest.</p></div>
+      <div class="why-card"><div class="why-icon">🎁</div><h3 class="why-title" data-i="why2_title">Loyalty Rewards</h3><p class="why-text" data-i="why2_text">Join our customer club and earn points with every purchase. We remember your birthday — and we celebrate it with you.</p></div>
+      <div class="why-card"><div class="why-icon">🤝</div><h3 class="why-title" data-i="why3_title">Community First</h3><p class="why-text" data-i="why3_text">More than a shop — we are a gathering place for Iranians and Middle Eastern culture lovers in the heart of Budapest.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER FORM -->
+<section class="order-section" id="order">
+  <div class="order-inner">
+    <div class="section-label" data-i="order_label">Place an Order</div>
+    <h2 class="section-title" style="color:#FAF6EF" data-i="order_title">Order Online</h2>
+    <p class="section-text" data-i="order_text">Fill in the form and we will contact you to confirm your order. Payment on delivery or in-store.</p>
+    <div class="form-grid">
+      <div class="form-group"><label data-i="form_name">Full Name *</label><input type="text" id="fname" required placeholder="Your name"></div>
+      <div class="form-group"><label data-i="form_phone">Phone / WhatsApp *</label><input type="tel" id="fphone" required placeholder="+36..."></div>
+      <div class="form-group"><label data-i="form_email">Email</label><input type="email" id="femail" placeholder="your@email.com"></div>
+      <div class="form-group"><label data-i="form_lang">Preferred Language</label>
+        <select id="flang">
+          <option value="fa">فارسی</option>
+          <option value="en">English</option>
+          <option value="hu">Magyar</option>
+        </select>
+      </div>
+      <div class="form-group full"><label data-i="form_order">Your Order *</label><textarea id="forder" required placeholder="List the products you want to order..."></textarea></div>
+      <div class="form-group full"><label data-i="form_address">Delivery Address (if needed)</label><input type="text" id="faddress" placeholder="Budapest, street..."></div>
+      <div class="form-group full"><label data-i="form_note">Note</label><textarea id="fnote" placeholder="Any special requests..." style="min-height:70px"></textarea></div>
+    </div>
+    <button class="submit-btn" onclick="submitOrder()" data-i="form_submit">Send Order</button>
+    <div class="form-success" id="formSuccess">
+      <h3 data-i="success_title">✅ Order Received!</h3>
+      <p data-i="success_text">Thank you! We will contact you shortly to confirm your order.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <div class="container">
+    <div class="section-label" data-i="contact_label">Find Us</div>
+    <h2 class="section-title" data-i="contact_title">Visit Arádi Market</h2>
+    <div class="contact-grid">
+      <div>
+        <div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label" data-i="c_addr_label">Address</div><span class="contact-value">Budapest, Hungary</span></div></div>
+        <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label" data-i="c_phone_label">Phone / WhatsApp</div><a href="tel:+36302511086" class="contact-value">+36 30 251 1086</a></div></div>
+        <div class="contact-item"><div class="contact-icon">📸</div><div><div class="contact-label" data-i="c_ig_label">Instagram</div><a href="https://instagram.com/aradimarket" target="_blank" class="contact-value">@aradimarket</a></div></div>
+        <div class="contact-item"><div class="contact-icon">🕐</div><div><div class="contact-label" data-i="c_hours_label">Opening Hours</div><span class="contact-value" data-i="c_hours">Mon–Sat: 9:00–19:00</span></div></div>
+        <div class="social-row">
+          <a href="https://instagram.com/aradimarket" target="_blank" class="social-btn">📸</a>
+          <a href="https://t.me/aradimarket" target="_blank" class="social-btn">✈️</a>
+          <a href="https://facebook.com/aradimarket" target="_blank" class="social-btn">👍</a>
+        </div>
+        <div style="margin-top:24px">
+          <a href="#order" class="btn-primary" data-i="contact_order_btn">Order Now →</a>
+        </div>
+      </div>
+      <div class="map-placeholder">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d86154.42!2d19.0402!3d47.4979!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4741c334d1d4cfc9%3A0x400c4290c1e1160!2sBudapest!5e0!3m2!1sen!2shu!4v1" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">ARÁDI MARKET</div>
+  <div class="footer-divider"></div>
+  <p class="footer-text" data-i="footer_text">Authentic Persian & Middle Eastern products in Budapest<br>مزه‌ی خونه، تو قلب اروپا</p>
+  <p style="font-size:12px;color:#4A3D30;margin-top:16px">© 2025 Arádi Market Budapest. All rights reserved.</p>
+</footer>
+
+<script>
+// ===== TRANSLATIONS =====
+const T = {
+  en: {
+    nav_about:'About', nav_products:'Products', nav_handcraft:'Handcraft',
+    nav_contact:'Contact', nav_order:'Order Now',
+    hero_eyebrow:'Persian Market · Budapest',
+    hero_title:'A Taste of Home,<br>in the Heart of <span>Europe</span>',
+    hero_sub:'Authentic Persian food, spices, and handcrafted Middle Eastern art — all in one place in Budapest.',
+    hero_btn1:'Explore Products', hero_btn2:'Place an Order',
+    about_label:'Who We Are', about_title:'More Than a Grocery Store',
+    about_text:"Arádi Market is Budapest's home for authentic Persian and Middle Eastern products. From the finest saffron to handcrafted copper and mosaic art — we bring the warmth, flavors, and craftsmanship of the Middle East to the heart of Europe.",
+    f1_title:'Fresh & Authentic', f1_text:'Products sourced directly from Iran and the Middle East',
+    f2_title:'Handcrafted Art', f2_text:'Unique copper, stone & mosaic pieces by master artisans',
+    f3_title:'Local Delivery', f3_text:'Fast delivery across Budapest',
+    f4_title:'Loyalty Club', f4_text:'Earn points, get birthday gifts & special discounts',
+    prod_label:'What We Offer', prod_title:'Persian & Middle Eastern Foods',
+    tab_all:'All', tab_dairy:'Dairy', tab_spice:'Spices', tab_pickle:'Pickles & Jams',
+    tab_rice:'Rice & Legumes', tab_drink:'Drinks', tab_snack:'Snacks',
+    craft_label:'Middle Eastern Art', craft_title:'Handcrafted Treasures',
+    craft_text:'Every piece tells a story — shaped by artisan hands, carved from copper, stone, and wood, carrying centuries of Middle Eastern tradition.',
+    why_label:'Why Choose Us', why_title:'The Arádi Difference',
+    why1_title:'Direct from Source', why1_text:'Our products come directly from Iran and the Middle East, ensuring the most authentic taste and quality you can find in Budapest.',
+    why2_title:'Loyalty Rewards', why2_text:'Join our customer club and earn points with every purchase. We remember your birthday — and we celebrate it with you.',
+    why3_title:'Community First', why3_text:'More than a shop — we are a gathering place for Iranians and Middle Eastern culture lovers in the heart of Budapest.',
+    order_label:'Place an Order', order_title:'Order Online',
+    order_text:'Fill in the form and we will contact you to confirm your order. Payment on delivery or in-store.',
+    form_name:'Full Name *', form_phone:'Phone / WhatsApp *', form_email:'Email',
+    form_lang:'Preferred Language', form_order:'Your Order *',
+    form_address:'Delivery Address (if needed)', form_note:'Note', form_submit:'Send Order',
+    success_title:'✅ Order Received!', success_text:'Thank you! We will contact you shortly to confirm your order.',
+    contact_label:'Find Us', contact_title:'Visit Arádi Market',
+    c_addr_label:'Address', c_phone_label:'Phone / WhatsApp', c_ig_label:'Instagram',
+    c_hours_label:'Opening Hours', c_hours:'Mon–Sat: 9:00–19:00',
+    contact_order_btn:'Order Now →',
+    footer_text:'Authentic Persian & Middle Eastern products in Budapest<br>مزه‌ی خونه، تو قلب اروپا'
+  },
+  fa: {
+    nav_about:'درباره ما', nav_products:'محصولات', nav_handcraft:'صنایع دستی',
+    nav_contact:'تماس', nav_order:'ثبت سفارش',
+    hero_eyebrow:'سوپرمارکت ایرانی · بوداپست',
+    hero_title:'مزه‌ی خونه،<br>تو قلب <span>اروپا</span>',
+    hero_sub:'محصولات اصیل ایرانی، ادویه‌جات، و صنایع دستی خاورمیانه — همه در یک جا در بوداپست.',
+    hero_btn1:'مشاهده محصولات', hero_btn2:'ثبت سفارش',
+    about_label:'ما چه کسانی هستیم', about_title:'بیشتر از یک سوپرمارکت',
+    about_text:'آرادی مارکت، خانه محصولات اصیل ایرانی و خاورمیانه در بوداپست است. از بهترین زعفران تا صنایع دستی مسی و آینه‌کاری — ما گرما، طعم و هنر خاورمیانه را به قلب اروپا می‌آوریم.',
+    f1_title:'تازه و اصیل', f1_text:'محصولات مستقیم از ایران و خاورمیانه',
+    f2_title:'هنر دست‌ساز', f2_text:'آثار منحصربفرد مسی، سنگی و آینه‌کاری',
+    f3_title:'ارسال محلی', f3_text:'ارسال سریع در سراسر بوداپست',
+    f4_title:'باشگاه مشتریان', f4_text:'امتیاز جمع کنید، هدیه تولد بگیرید',
+    prod_label:'چه داریم', prod_title:'محصولات ایرانی و خاورمیانه',
+    tab_all:'همه', tab_dairy:'لبنیات', tab_spice:'ادویه', tab_pickle:'ترشی و مربا',
+    tab_rice:'برنج و حبوبات', tab_drink:'نوشیدنی', tab_snack:'تنقلات',
+    craft_label:'هنر خاورمیانه', craft_title:'صنایع دستی',
+    craft_text:'هر اثر یک داستان دارد — شکل گرفته توسط دستان هنرمند، تراشیده از مس، سنگ و چوب، حامل قرن‌ها سنت خاورمیانه.',
+    why_label:'چرا ما', why_title:'تفاوت آرادی',
+    why1_title:'مستقیم از مبدأ', why1_text:'محصولات ما مستقیماً از ایران و خاورمیانه تأمین می‌شوند.',
+    why2_title:'پاداش وفاداری', why2_text:'به باشگاه مشتریان ما بپیوندید. تولدتان یادمانه — با هدیه!',
+    why3_title:'جامعه اول', why3_text:'بیشتر از یک مغازه — ما یک نقطه تجمع برای ایرانیان بوداپست هستیم.',
+    order_label:'سفارش آنلاین', order_title:'سفارش بده',
+    order_text:'فرم را پر کنید تا با شما تماس بگیریم و سفارش را تأیید کنیم. پرداخت موقع تحویل یا در فروشگاه.',
+    form_name:'نام و نام خانوادگی *', form_phone:'تلفن / واتساپ *', form_email:'ایمیل',
+    form_lang:'زبان ترجیحی', form_order:'سفارش شما *',
+    form_address:'آدرس تحویل (در صورت نیاز)', form_note:'توضیحات', form_submit:'ثبت سفارش',
+    success_title:'✅ سفارش دریافت شد!', success_text:'ممنون! به زودی با شما تماس می‌گیریم.',
+    contact_label:'ما را پیدا کنید', contact_title:'به آرادی مارکت بیایید',
+    c_addr_label:'آدرس', c_phone_label:'تلفن / واتساپ', c_ig_label:'اینستاگرام',
+    c_hours_label:'ساعت کاری', c_hours:'شنبه تا پنجشنبه: ۹:۰۰–۱۹:۰۰',
+    contact_order_btn:'ثبت سفارش ←',
+    footer_text:'محصولات اصیل ایرانی و خاورمیانه در بوداپست<br>مزه‌ی خونه، تو قلب اروپا'
+  },
+  hu: {
+    nav_about:'Rólunk', nav_products:'Termékek', nav_handcraft:'Kézművesség',
+    nav_contact:'Kapcsolat', nav_order:'Rendelés',
+    hero_eyebrow:'Perzsa Piac · Budapest',
+    hero_title:'Az otthon íze,<br><span>Európa</span> szívében',
+    hero_sub:'Eredeti perzsa élelmiszerek, fűszerek és közel-keleti kézműves alkotások — egy helyen Budapesten.',
+    hero_btn1:'Termékek felfedezése', hero_btn2:'Rendelés leadása',
+    about_label:'Kik vagyunk', about_title:'Több mint egy élelmiszerbolt',
+    about_text:'Az Arádi Market a perzsa és közel-keleti termékek otthona Budapesten. A legjobb sáfrántól a kézzel készített réz- és mozaikalkotásokig — a Közel-Kelet melegét és hagyományait hozzuk Európa szívébe.',
+    f1_title:'Friss és eredeti', f1_text:'Közvetlenül Iránból és a Közel-Keletről',
+    f2_title:'Kézműves alkotások', f2_text:'Egyedi réz-, kő- és mozaikdarabok mesterektől',
+    f3_title:'Helyi szállítás', f3_text:'Gyors kiszállítás Budapesten',
+    f4_title:'Törzsvásárlói klub', f4_text:'Pontokat gyűjt, születésnapi ajándékot kap',
+    prod_label:'Kínálatunk', prod_title:'Perzsa és Közel-keleti élelmiszerek',
+    tab_all:'Összes', tab_dairy:'Tejtermékek', tab_spice:'Fűszerek', tab_pickle:'Savanyúság & Lekvár',
+    tab_rice:'Rizs & Hüvelyesek', tab_drink:'Italok', tab_snack:'Rágcsálnivalók',
+    craft_label:'Közel-keleti művészet', craft_title:'Kézműves kincsek',
+    craft_text:'Minden darab mesél — kézzel formálva, rézből, kőből és fából, évszázados közel-keleti hagyományokat hordozva.',
+    why_label:'Miért mi', why_title:'Az Arádi különbség',
+    why1_title:'Közvetlenül a forrásból', why1_text:'Termékeink közvetlenül Iránból és a Közel-Keletről érkeznek.',
+    why2_title:'Hűségpontok', why2_text:'Csatlakozzon törzsvásárlói klubunkhoz. Születésnapját nem felejtjük el!',
+    why3_title:'Közösség először', why3_text:'Több mint egy bolt — gyülekezőhely a budapesti iraniak számára.',
+    order_label:'Rendelés leadása', order_title:'Rendelés online',
+    order_text:'Töltse ki az űrlapot, és felvesszük Önnel a kapcsolatot a rendelés megerősítéséhez. Fizetés átvételkor.',
+    form_name:'Teljes név *', form_phone:'Telefon / WhatsApp *', form_email:'E-mail',
+    form_lang:'Preferált nyelv', form_order:'Rendelése *',
+    form_address:'Szállítási cím (ha szükséges)', form_note:'Megjegyzés', form_submit:'Rendelés küldése',
+    success_title:'✅ Rendelés beérkezett!', success_text:'Köszönjük! Hamarosan felvesszük Önnel a kapcsolatot.',
+    contact_label:'Találjon meg minket', contact_title:'Látogasson el az Arádi Marketbe',
+    c_addr_label:'Cím', c_phone_label:'Telefon / WhatsApp', c_ig_label:'Instagram',
+    c_hours_label:'Nyitvatartás', c_hours:'H–Szo: 9:00–19:00',
+    contact_order_btn:'Rendelés →',
+    footer_text:'Eredeti perzsa és közel-keleti termékek Budapesten<br>مزه‌ی خونه، تو قلب اروپا'
+  }
+};
+
+let currentLang = 'en';
+
+function setLang(lang) {
+  currentLang = lang;
+  document.body.classList.toggle('rtl', lang==='fa');
+  document.querySelectorAll('[data-i]').forEach(el => {
+    const key = el.getAttribute('data-i');
+    if(T[lang][key] !== undefined) el.innerHTML = T[lang][key];
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase()===lang);
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const key = b.getAttribute('data-i');
+    if(key && T[lang][key]) b.textContent = T[lang][key];
+  });
+  // Update form placeholder language
+  document.getElementById('forder').placeholder = lang==='fa'?'محصولاتی که می‌خواهید سفارش دهید...':lang==='hu'?'Listázza a rendelni kívánt termékeket...':'List the products you want to order...';
+}
+
+// ===== PRODUCTS DATA =====
+const products = [
+  {cat:'dairy', name:{en:'Strained Yogurt',fa:'ماست چکیده',hu:'Sűrített joghurt'}, price:'890 Ft', img:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=80'},
+  {cat:'dairy', name:{en:'Persian Cheese',fa:'پنیر ایرانی',hu:'Perzsa sajt'}, price:'1,250 Ft', img:'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=400&q=80'},
+  {cat:'dairy', name:{en:'Kashk',fa:'کشک',hu:'Kashk'}, price:'2,800 Ft', img:'https://images.unsplash.com/photo-1559598467-f8b76c8155d0?w=400&q=80'},
+  {cat:'spice', name:{en:'Persian Saffron',fa:'زعفران',hu:'Perzsa sáfrány'}, price:'2,400 Ft', img:'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80'},
+  {cat:'spice', name:{en:'Turmeric',fa:'زردچوبه',hu:'Kurkuma'}, price:'850 Ft', img:'https://images.unsplash.com/photo-1615485500704-8e3b85be4d0a?w=400&q=80'},
+  {cat:'spice', name:{en:'Dried Fenugreek',fa:'شنبلیله خشک',hu:'Szárított görögszéna'}, price:'1,300 Ft', img:'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=400&q=80'},
+  {cat:'pickle', name:{en:'Mixed Pickle',fa:'ترشی مخلوط',hu:'Vegyes savanyúság'}, price:'1,550 Ft', img:'https://images.unsplash.com/photo-1597714026720-8f74c62310ba?w=400&q=80'},
+  {cat:'pickle', name:{en:'Sour Cherry Jam',fa:'مربا آلبالو',hu:'Meggy lekvár'}, price:'1,350 Ft', img:'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&q=80'},
+  {cat:'rice', name:{en:'Persian Rice 1kg',fa:'برنج ۷ ستاره ۱ کیلو',hu:'Perzsa rizs 1 kg'}, price:'2,000 Ft', img:'https://images.unsplash.com/photo-1536304993881-ff86e0c9aeb1?w=400&q=80'},
+  {cat:'rice', name:{en:'Barberries',fa:'زرشک',hu:'Sóska bogyó'}, price:'2,750 Ft', img:'https://images.unsplash.com/photo-1574226516831-e1dff420e562?w=400&q=80'},
+  {cat:'drink', name:{en:'Doogh Sparkling 1.5L',fa:'دوغ گازدار دربند',hu:'Szénsavas ayran 1.5L'}, price:'1,600 Ft', img:'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=400&q=80'},
+  {cat:'drink', name:{en:'Rose Water',fa:'گلاب یک و یک',hu:'Rózsavíz'}, price:'1,100 Ft', img:'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&q=80'},
+  {cat:'snack', name:{en:'Salted Chickpeas',fa:'نخودچی با نمک',hu:'Sós csicseriborsó'}, price:'1,450 Ft', img:'https://images.unsplash.com/photo-1515543904379-3d757aca5a98?w=400&q=80'},
+  {cat:'snack', name:{en:'Lavashak',fa:'لواشک',hu:'Lavashak'}, price:'1,600 Ft', img:'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&q=80'},
+  {cat:'snack', name:{en:'Dates',fa:'خرما',hu:'Dátum'}, price:'1,700 Ft', img:'https://images.unsplash.com/photo-1598569304088-5b5c56f8d3ff?w=400&q=80'},
+  {cat:'dairy', name:{en:'Cream',fa:'خامه',hu:'Tejszín'}, price:'1,500 Ft', img:'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=400&q=80'},
+];
+
+const handcrafts = [
+  {tag:{en:'Copper Art',fa:'مسگری',hu:'Rézmívesség'}, name:{en:'Handcrafted Copper Set',fa:'سرویس مسی دست‌ساز',hu:'Kézzel készített rézgarnitúra'}, desc:{en:'Master-crafted copper vessels with intricate engravings',fa:'ظروف مسی با نقوش ظریف دست‌ساز',hu:'Kézzel vésett réztárgyak'}, img:'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80'},
+  {tag:{en:'Mosaic Art',fa:'آینه‌کاری',hu:'Mozaikművészet'}, name:{en:'Mirror Mosaic Vase Set',fa:'سرویس سفالی آینه‌کاری',hu:'Tükörből kirakott váza szett'}, desc:{en:'Gold mirror mosaic on handmade clay — a thousand reflections',fa:'آینه‌کاری طلایی روی سفال دست‌ساز',hu:'Arany tükrös mozaik kézzel készített agyagon'}, img:'https://images.unsplash.com/photo-1619119069152-a2b331eb392a?w=600&q=80'},
+  {tag:{en:'Wood & Stone',fa:'چوب و سنگ',hu:'Fa és kő'}, name:{en:'Handmade Backgammon & Chess',fa:'تخته نرد و شطرنج دست‌ساز',hu:'Kézzel készített backgammon és sakk'}, desc:{en:'Premium handcrafted wood — one of a kind',fa:'چوب مرغوب دست‌ساز — یک نمونه منحصربفرد',hu:'Prémium kézzel faragott fa — egyedi darab'}, img:'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=600&q=80'},
+];
+
+function buildProducts(filter='all') {
+  const grid = document.getElementById('productsGrid');
+  const filtered = filter==='all' ? products : products.filter(p=>p.cat===filter);
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-card">
+      <div class="product-img"><img src="${p.img}" alt="${p.name.en}" loading="lazy"></div>
+      <div class="product-info">
+        <div class="product-category">${p.cat}</div>
+        <div class="product-name">${p.name[currentLang]||p.name.en}</div>
+        <div class="product-price">${p.price}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildHandcrafts() {
+  document.getElementById('handcraftGrid').innerHTML = handcrafts.map(h => `
+    <div class="handcraft-card">
+      <img src="${h.img}" alt="${h.name.en}" loading="lazy">
+      <div class="handcraft-overlay">
+        <div class="handcraft-tag">${h.tag[currentLang]||h.tag.en}</div>
+        <div class="handcraft-name">${h.name[currentLang]||h.name.en}</div>
+        <div class="handcraft-desc">${h.desc[currentLang]||h.desc.en}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterProducts(cat, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildProducts(cat);
+}
+
+// ===== ORDER FORM =====
+function submitOrder() {
+  const name = document.getElementById('fname').value.trim();
+  const phone = document.getElementById('fphone').value.trim();
+  const order = document.getElementById('forder').value.trim();
+  if(!name||!phone||!order) {
+    alert(currentLang==='fa'?'لطفاً فیلدهای ستاره‌دار را پر کنید':currentLang==='hu'?'Kérjük, töltse ki a kötelező mezőket':'Please fill in all required fields');
+    return;
+  }
+  // Build WhatsApp message
+  const addr = document.getElementById('faddress').value;
+  const note = document.getElementById('fnote').value;
+  const msg = `🛒 New Order from aradimarket.com\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n\n📦 Order:\n${order}${addr?'\n\n📍 Address: '+addr:''}${note?'\n\n📝 Note: '+note:''}`;
+  const waUrl = `https://wa.me/36302511086?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
+  document.getElementById('formSuccess').style.display='block';
+  document.getElementById('formSuccess').scrollIntoView({behavior:'smooth'});
+}
+
+// ===== MOBILE MENU =====
+function toggleMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+// ===== INIT =====
+buildProducts();
+buildHandcrafts();
+setLang('en');
+document.querySelector('.lang-btn').classList.add('active');
+</script>
+</body>
+</html>
