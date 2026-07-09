@@ -3,7 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arádi Market Budapest</title>
+<title>Arádi Market Budapest | Persian &amp; Middle Eastern Grocery Store</title>
+<meta name="description" content="Arádi Market — authentic Persian and Middle Eastern groceries, spices, saffron, and handcrafted art in Budapest. Order online or visit us at Balázs Béla utca 39.">
+<meta name="keywords" content="Persian market Budapest, Iranian grocery Budapest, Middle Eastern food Budapest, saffron Budapest, Persian shop, آردی مارکت, سوپرمارکت ایرانی بوداپست">
+<link rel="canonical" href="https://alirezamirzahosseini1986-ai.github.io/Aradi-Market/">
+
+<!-- Open Graph / social sharing -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Arádi Market Budapest | Persian & Middle Eastern Grocery Store">
+<meta property="og:description" content="Authentic Persian and Middle Eastern groceries, spices, saffron, and handcrafted art — in the heart of Budapest.">
+<meta property="og:image" content="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=1200&q=80">
+<meta property="og:url" content="https://alirezamirzahosseini1986-ai.github.io/Aradi-Market/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Structured data for local business SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "GroceryStore",
+  "name": "Arádi Market",
+  "image": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=1200&q=80",
+  "description": "Authentic Persian and Middle Eastern groceries, spices, and handcrafted art in Budapest.",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Balázs Béla utca 39",
+    "postalCode": "1094",
+    "addressLocality": "Budapest",
+    "addressCountry": "HU"
+  },
+  "telephone": "+36705945722",
+  "openingHoursSpecification": [
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "10:00", "closes": "13:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "15:00", "closes": "20:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "14:00" }
+  ],
+  "sameAs": ["https://instagram.com/aradimarket"]
+}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -79,7 +116,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(26,20,16,0.9
 .products-section{background:var(--dark);padding:80px 24px}
 .products-section .section-title{color:#FAF6EF}
 .products-section .section-label{color:var(--gold)}
-.products-tabs{display:flex;gap:8px;margin:32px 0 40px;flex-wrap:wrap}
+.products-search{max-width:420px;margin:28px auto 0}
+.products-search input{width:100%;padding:12px 18px;border-radius:24px;border:1px solid rgba(201,147,58,0.3);background:rgba(255,255,255,0.06);color:#FAF6EF;font-size:14px;font-family:'Inter',sans-serif}
+.products-search input::placeholder{color:#8A7968}
+.products-search input:focus{outline:none;border-color:var(--gold)}
+.products-tabs{display:flex;gap:8px;margin:20px 0 40px;flex-wrap:wrap}
 .tab-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(201,147,58,0.2);color:#C8B89A;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
 .tab-btn.active,.tab-btn:hover{background:var(--gold);color:var(--dark);border-color:var(--gold)}
 .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
@@ -241,6 +282,9 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
   <div class="container">
     <div class="section-label" data-i="prod_label">What We Offer</div>
     <h2 class="section-title" style="color:#FAF6EF" data-i="prod_title">Persian & Middle Eastern Foods</h2>
+    <div class="products-search">
+      <input type="text" id="productSearch" placeholder="Search products by name or price…" oninput="handleProductSearch(this.value)">
+    </div>
     <div class="products-tabs" id="productsTabs"></div>
     <div class="products-grid" id="productsGrid"><p style="color:#C8B89A;text-align:center;width:100%" id="productsLoading">Loading products…</p></div>
   </div>
@@ -306,20 +350,21 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
     <div class="contact-grid">
       <div>
         <div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label" data-i="c_addr_label">Address</div><span class="contact-value">1094 Budapest, Balázs Béla utca 39</span></div></div>
-        <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label" data-i="c_phone_label">Phone / WhatsApp</div><a href="tel:+36302511086" class="contact-value">+36 30 251 1086</a></div></div>
+        <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label" data-i="c_phone_label">Phone / WhatsApp</div><a href="tel:+36705945722" class="contact-value">+36 70 594 5722</a></div></div>
         <div class="contact-item"><div class="contact-icon">📸</div><div><div class="contact-label" data-i="c_ig_label">Instagram</div><a href="https://instagram.com/aradimarket" target="_blank" class="contact-value">@aradimarket</a></div></div>
         <div class="contact-item"><div class="contact-icon">🕐</div><div><div class="contact-label" data-i="c_hours_label">Opening Hours</div><span class="contact-value" data-i="c_hours">Mon–Fri: 10:00–13:00, 15:00–20:00 | Sat: 10:00–14:00 | Sun: Closed</span></div></div>
         <div class="social-row">
           <a href="https://instagram.com/aradimarket" target="_blank" class="social-btn">📸</a>
-          <a href="https://t.me/aradimarket" target="_blank" class="social-btn">✈️</a>
-          <a href="https://facebook.com/aradimarket" target="_blank" class="social-btn">👍</a>
         </div>
-        <div style="margin-top:24px">
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
           <a href="#order" class="btn-primary" data-i="contact_order_btn">Order Now →</a>
+          <a href="https://maps.app.goo.gl/n1ZFfRCM42Zq1gcv5?g_st=atm" target="_blank" class="btn-outline" style="color:var(--text);border-color:var(--gray)" data-i="contact_maps_btn">Open in Google Maps →</a>
         </div>
       </div>
       <div class="map-placeholder">
-        <iframe src="https://www.google.com/maps?q=1094+Budapest,+Bal%C3%A1zs+B%C3%A9la+utca+39&output=embed" allowfullscreen loading="lazy"></iframe>
+        <a href="https://maps.app.goo.gl/n1ZFfRCM42Zq1gcv5?g_st=atm" target="_blank" style="display:block;height:100%">
+          <iframe src="https://www.google.com/maps?q=1094+Budapest,+Bal%C3%A1zs+B%C3%A9la+utca+39&output=embed" allowfullscreen loading="lazy" style="pointer-events:none"></iframe>
+        </a>
       </div>
     </div>
   </div>
@@ -367,6 +412,7 @@ const T = {
     c_addr_label:'Address', c_phone_label:'Phone / WhatsApp', c_ig_label:'Instagram',
     c_hours_label:'Opening Hours', c_hours:'Mon–Fri: 10:00–13:00, 15:00–20:00 | Sat: 10:00–14:00 | Sun: Closed',
     contact_order_btn:'Order Now →',
+    contact_maps_btn:'Open in Google Maps →',
     footer_text:'Authentic Persian & Middle Eastern products in Budapest<br>مزه‌ی خونه، تو قلب اروپا'
   },
   fa: {
@@ -401,6 +447,7 @@ const T = {
     c_addr_label:'آدرس', c_phone_label:'تلفن / واتساپ', c_ig_label:'اینستاگرام',
     c_hours_label:'ساعت کاری', c_hours:'دوشنبه تا جمعه: ۱۰:۰۰–۱۳:۰۰ و ۱۵:۰۰–۲۰:۰۰ | شنبه: ۱۰:۰۰–۱۴:۰۰ | یکشنبه تعطیل',
     contact_order_btn:'ثبت سفارش ←',
+    contact_maps_btn:'مسیریابی در گوگل مپ ←',
     footer_text:'محصولات اصیل ایرانی و خاورمیانه در بوداپست<br>مزه‌ی خونه، تو قلب اروپا'
   },
   hu: {
@@ -435,6 +482,7 @@ const T = {
     c_addr_label:'Cím', c_phone_label:'Telefon / WhatsApp', c_ig_label:'Instagram',
     c_hours_label:'Nyitvatartás', c_hours:'H–P: 10:00–13:00, 15:00–20:00 | Szo: 10:00–14:00 | V: Zárva',
     contact_order_btn:'Rendelés →',
+    contact_maps_btn:'Megnyitás Google Térképen →',
     footer_text:'Eredeti perzsa és közel-keleti termékek Budapesten<br>مزه‌ی خونه، تو قلب اروپا'
   }
 };
@@ -453,6 +501,7 @@ function setLang(lang) {
   });
   // Update form placeholder language
   document.getElementById('forder').placeholder = lang==='fa'?'محصولاتی که می‌خواهید سفارش دهید...':lang==='hu'?'Listázza a rendelni kívánt termékeket...':'List the products you want to order...';
+  document.getElementById('productSearch').placeholder = lang==='fa'?'جستجوی محصول با نام یا قیمت...':lang==='hu'?'Termék keresése név vagy ár szerint...':'Search products by name or price…';
   if (typeof buildCategoryTabs === 'function' && products) {
     buildCategoryTabs();
     buildProducts(currentCat);
@@ -532,13 +581,14 @@ async function loadSiteSettings() {
 
 let products = [];
 let currentCat = 'all';
+let searchQuery = '';
 
 const CAT_LABELS = { all: { en:'All', fa:'همه', hu:'Összes' } };
 
 async function loadProducts() {
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?select=*&show_on_website=eq.true&order=category.asc,name.asc`,
+      `${SUPABASE_URL}/rest/v1/products?select=*&show_on_website=eq.true&stock=gt.0&order=category.asc,name.asc`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     if (!res.ok) throw new Error('Request failed: ' + res.status);
@@ -579,7 +629,19 @@ function buildProducts(filter='all') {
     grid.innerHTML = `<p style="color:#C8B89A;text-align:center;width:100%">${currentLang==='fa'?'در حال حاضر محصولی برای نمایش نیست.':currentLang==='hu'?'Jelenleg nincs megjeleníthető termék.':'No products to show right now.'}</p>`;
     return;
   }
-  const filtered = filter==='all' ? products : products.filter(p=>p.cat===filter);
+  let filtered = filter==='all' ? products : products.filter(p=>p.cat===filter);
+  if (searchQuery) {
+    filtered = filtered.filter(p =>
+      p.name.en.toLowerCase().includes(searchQuery) ||
+      p.name.fa.toLowerCase().includes(searchQuery) ||
+      p.name.hu.toLowerCase().includes(searchQuery) ||
+      p.price.toLowerCase().includes(searchQuery)
+    );
+  }
+  if (!filtered.length) {
+    grid.innerHTML = `<p style="color:#C8B89A;text-align:center;width:100%">${currentLang==='fa'?'محصولی مطابق جستجوی شما پیدا نشد.':currentLang==='hu'?'Nincs a keresésnek megfelelő termék.':'No products match your search.'}</p>`;
+    return;
+  }
   grid.innerHTML = filtered.map(p => `
     <div class="product-card">
       <div class="product-img"><img src="${p.img}" alt="${p.name.en}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'"></div>
@@ -590,6 +652,11 @@ function buildProducts(filter='all') {
       </div>
     </div>
   `).join('');
+}
+
+function handleProductSearch(q) {
+  searchQuery = q.trim().toLowerCase();
+  buildProducts(currentCat);
 }
 
 function buildHandcrafts() {
@@ -625,7 +692,7 @@ function submitOrder() {
   const addr = document.getElementById('faddress').value;
   const note = document.getElementById('fnote').value;
   const msg = `🛒 New Order from aradimarket.com\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n\n📦 Order:\n${order}${addr?'\n\n📍 Address: '+addr:''}${note?'\n\n📝 Note: '+note:''}`;
-  const waUrl = `https://wa.me/36302511086?text=${encodeURIComponent(msg)}`;
+  const waUrl = `https://wa.me/36705945722?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
   document.getElementById('formSuccess').style.display='block';
   document.getElementById('formSuccess').scrollIntoView({behavior:'smooth'});
@@ -642,6 +709,10 @@ setLang('en');
 document.querySelector('.lang-btn').classList.add('active');
 loadProducts();
 loadSiteSettings();
+
+// Auto-refresh products every 60 seconds so sold-out items disappear
+// and newly added / restocked items appear without needing a page reload.
+setInterval(loadProducts, 60000);
 </script>
 </body>
 </html>
