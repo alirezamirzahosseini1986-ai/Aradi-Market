@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیریت محصولات - Arádi Market</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --gold:#C9933A; --gold-light:#F0D9A8; --dark:#1A1410; --dark2:#2D2318;
+    --cream:#FAF6EF; --cream2:#F2EAD8; --text:#3D2F1E; --gray:#8A7968; --green:#2E6B3E; --red:#B23A2E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);direction:rtl;padding:20px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:22px;color:var(--dark);margin-bottom:4px}
+  .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+
+  /* Login */
+  #loginBox{max-width:360px;margin:80px auto;background:#fff;border:1px solid var(--gold-light);border-radius:12px;padding:32px;text-align:center}
+  #loginBox h2{color:var(--dark);margin-bottom:16px;font-size:18px}
+  #loginBox input{width:100%;padding:12px;border:1px solid var(--gold-light);border-radius:8px;font-size:15px;margin-bottom:12px;font-family:inherit;text-align:center}
+  #loginBox button, .btn{background:var(--gold);color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  #loginBox button:hover, .btn:hover{background:var(--dark2)}
+  #loginError{color:var(--red);font-size:13px;margin-top:8px;display:none}
+
+  /* App */
+  #app{display:none}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+  .btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:10px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:600}
+  .btn-outline:hover{background:var(--gold);color:#fff}
+
+  .card{background:#fff;border:1px solid var(--gold-light);border-radius:12px;padding:16px;margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+  .card img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:var(--cream2);flex-shrink:0}
+  .card .fields{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;min-width:280px}
+  .field label{font-size:11px;color:var(--gray);display:block;margin-bottom:3px}
+  .field input, .field select{width:100%;padding:8px;border:1px solid var(--gold-light);border-radius:6px;font-size:13px;font-family:inherit;text-align:right}
+  .card .actions{display:flex;flex-direction:column;gap:8px;justify-content:center;min-width:110px}
+  .actions button{font-size:12px;padding:8px 10px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;font-weight:600}
+  .save-btn{background:var(--green);color:#fff}
+  .save-btn:hover{background:#204d2c}
+  .hide-btn{background:var(--cream2);color:var(--text)}
+  .hide-btn:hover{background:var(--gold-light)}
+  .upload-label{display:inline-block;background:var(--dark2);color:#fff;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;text-align:center}
+  .status{font-size:11px;margin-top:6px;color:var(--green)}
+  .status.error{color:var(--red)}
+  .badge-hidden{display:inline-block;background:var(--red);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+  #newForm{background:#fff;border:2px dashed var(--gold);border-radius:12px;padding:20px;margin-bottom:20px;display:none}
+  #newForm h3{margin-bottom:14px;font-size:15px}
+  #newForm .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+  #loadingMsg, #emptyMsg{text-align:center;color:var(--gray);padding:40px 0}
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+  <h2>🔒 پنل مدیریت آرادی مارکت</h2>
+  <input type="password" id="pwInput" placeholder="رمز عبور را وارد کنید" onkeydown="if(event.key==='Enter')doLogin()">
+  <button onclick="doLogin()">ورود</button>
+  <div id="loginError">رمز عبور اشتباه است</div>
+</div>
+
+<div class="wrap" id="app">
+  <h1>مدیریت محصولات سایت</h1>
+  <div class="sub">تغییرات همین‌جا بلافاصله روی سایت اعمال می‌شود. اطلاعات POS (بارکد، موجودی) دست‌نخورده باقی می‌ماند.</div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="toggleNewForm()">+ افزودن محصول جدید</button>
+    <button class="btn-outline" onclick="loadAll()">🔄 بروزرسانی لیست</button>
+  </div>
+
+  <div id="newForm">
+    <h3>محصول جدید</h3>
+    <div class="fields">
+      <div class="field"><label>نام (فارسی)</label><input id="new_name" placeholder="مثلاً زعفران"></div>
+      <div class="field"><label>نام (انگلیسی)</label><input id="new_name_en" placeholder="e.g. Saffron"></div>
+      <div class="field"><label>نام (مجاری)</label><input id="new_name_hu" placeholder="pl. Sáfrány"></div>
+      <div class="field"><label>قیمت (Ft)</label><input id="new_price" type="number"></div>
+      <div class="field"><label>دسته‌بندی</label><input id="new_category" placeholder="مثلاً لبنیات"></div>
+      <div class="field"><label>موجودی</label><input id="new_stock" type="number" value="0"></div>
+    </div>
+    <button class="btn save-btn" onclick="createProduct()">ذخیره محصول</button>
+    <button class="btn-outline" onclick="toggleNewForm()" style="margin-right:8px">انصراف</button>
+  </div>
+
+  <div id="loadingMsg">در حال بارگذاری محصولات…</div>
+  <div id="emptyMsg" style="display:none">هیچ محصولی یافت نشد.</div>
+  <div id="list"></div>
+</div>
+
+<script>
+// ⚠️ رمز عبور ساده — برای امنیت بیشتر این متن را به رمز دلخواه خودتان تغییر دهید
+const PANEL_PASSWORD = "aradi2026";
+
+const SUPABASE_URL = 'https://dddzyaezhjccfpaalhpc.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_8bVTyqj08oBZxdVrwHquiA_aAkIfKyu';
+const BUCKET = 'product-images';
+
+function doLogin(){
+  const val = document.getElementById('pwInput').value;
+  if(val === PANEL_PASSWORD){
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('app').style.display='block';
+    sessionStorage.setItem('aradi_admin_ok','1');
+    loadAll();
+  } else {
+    document.getElementById('loginError').style.display='block';
+  }
+}
+if(sessionStorage.getItem('aradi_admin_ok')==='1'){
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+function toggleNewForm(){
+  const f = document.getElementById('newForm');
+  f.style.display = f.style.display==='block' ? 'none' : 'block';
+}
+
+async function sbFetch(path, options={}){
+  const res = await fetch(`${SUPABASE_URL}${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      ...(options.headers||{})
+    }
+  });
+  return res;
+}
+
+async function loadAll(){
+  document.getElementById('loadingMsg').style.display='block';
+  document.getElementById('emptyMsg').style.display='none';
+  document.getElementById('list').innerHTML='';
+  try{
+    const res = await sbFetch('/rest/v1/products?select=*&order=category.asc,name.asc');
+    const rows = await res.json();
+    document.getElementById('loadingMsg').style.display='none';
+    if(!Array.isArray(rows) || rows.length===0){
+      document.getElementById('emptyMsg').style.display='block';
+      return;
+    }
+    renderList(rows);
+  } catch(e){
+    document.getElementById('loadingMsg').textContent = 'خطا در دریافت محصولات. اتصال اینترنت را بررسی کنید.';
+  }
+}
+
+function renderList(rows){
+  const list = document.getElementById('list');
+  list.innerHTML = rows.map(p => `
+    <div class="card" id="card_${p.id}">
+      <img src="${p.image_url || 'https://images.unsplash.com/photo-1543168256-418811576931?w=200&q=80'}" id="img_${p.id}">
+      <div class="fields">
+        <div class="field"><label>${p.show_on_website===false ? '<span class="badge-hidden">مخفی</span>' : ''}نام (فارسی)</label><input id="name_${p.id}" value="${escAttr(p.name||'')}"></div>
+        <div class="field"><label>نام (انگلیسی)</label><input id="name_en_${p.id}" value="${escAttr(p.name_en||'')}"></div>
+        <div class="field"><label>نام (مجاری)</label><input id="name_hu_${p.id}" value="${escAttr(p.name_hu||'')}"></div>
+        <div class="field"><label>قیمت (Ft)</label><input id="price_${p.id}" type="number" value="${p.price||0}"></div>
+        <div class="field"><label>دسته‌بندی</label><input id="category_${p.id}" value="${escAttr(p.category||'')}"></div>
+        <div class="field"><label>موجودی</label><input id="stock_${p.id}" type="number" value="${p.stock||0}"></div>
+        <div class="field">
+          <label>عکس محصول</label>
+          <label class="upload-label" for="file_${p.id}">📷 آپلود / تعویض عکس</label>
+          <input type="file" id="file_${p.id}" accept="image/*" style="display:none" onchange="uploadImage(${p.id}, this)">
+        </div>
+        <div class="field">
+          <label>نمایش در سایت</label>
+          <select id="show_${p.id}">
+            <option value="true" ${p.show_on_website!==false?'selected':''}>نمایش داده شود</option>
+            <option value="false" ${p.show_on_website===false?'selected':''}>مخفی باشد</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="save-btn" onclick="saveProduct(${p.id})">💾 ذخیره</button>
+        <div class="status" id="status_${p.id}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escAttr(str){
+  return String(str).replace(/"/g,'&quot;');
+}
+
+async function uploadImage(id, input){
+  const file = input.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('status_'+id);
+  statusEl.textContent = 'در حال آپلود عکس…';
+  statusEl.className = 'status';
+  const path = `${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
+  try{
+    const res = await sbFetch(`/storage/v1/object/${BUCKET}/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file
+    });
+    if(!res.ok) throw new Error('upload failed');
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+    document.getElementById('img_'+id).src = publicUrl;
+    document.getElementById('card_'+id).dataset.newImage = publicUrl;
+    statusEl.textContent = 'عکس آپلود شد — حالا روی «ذخیره» بزنید';
+  } catch(e){
+    statusEl.textContent = 'خطا در آپلود عکس';
+    statusEl.className = 'status error';
+  }
+}
+
+async function saveProduct(id){
+  const statusEl = document.getElementById('status_'+id);
+  statusEl.textContent = 'در حال ذخیره…';
+  statusEl.className = 'status';
+  const card = document.getElementById('card_'+id);
+  const body = {
+    name: document.getElementById('name_'+id).value,
+    name_en: document.getElementById('name_en_'+id).value,
+    name_hu: document.getElementById('name_hu_'+id).value,
+    price: Number(document.getElementById('price_'+id).value)||0,
+    category: document.getElementById('category_'+id).value,
+    stock: Number(document.getElementById('stock_'+id).value)||0,
+    show_on_website: document.getElementById('show_'+id).value === 'true'
+  };
+  if(card.dataset.newImage){ body.image_url = card.dataset.newImage; }
+  try{
+    const res = await sbFetch(`/rest/v1/products?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error('save failed');
+    statusEl.textContent = '✅ ذخیره شد';
+  } catch(e){
+    statusEl.textContent = '❌ خطا در ذخیره';
+    statusEl.className = 'status error';
+  }
+}
+
+async function createProduct(){
+  const body = {
+    name: document.getElementById('new_name').value,
+    name_en: document.getElementById('new_name_en').value,
+    name_hu: document.getElementById('new_name_hu').value,
+    price: Number(document.getElementById('new_price').value)||0,
+    category: document.getElementById('new_category').value,
+    stock: Number(document.getElementById('new_stock').value)||0,
+    show_on_website: true
+  };
+  if(!body.name){ alert('لطفاً حداقل نام فارسی محصول را وارد کنید'); return; }
+  try{
+    const res = await sbFetch('/rest/v1/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error('create failed');
+    toggleNewForm();
+    ['new_name','new_name_en','new_name_hu','new_price','new_category','new_stock'].forEach(id=>document.getElementById(id).value='');
+    loadAll();
+  } catch(e){
+    alert('خطا در ایجاد محصول جدید');
+  }
+}
+</script>
+</body>
+</html>
