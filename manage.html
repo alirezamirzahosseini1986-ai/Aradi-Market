@@ -155,6 +155,21 @@
       </div>
     </div>
 
+    <div class="design-card">
+      <h3>🖼️ عکس بخش «درباره ما»</h3>
+      <label class="upload-label" for="d_about_image_file">📷 آپلود عکس جدید</label>
+      <input type="file" id="d_about_image_file" accept="image/*" style="display:none" onchange="uploadSectionImage(this,'about_image_url','aboutImgPreview')">
+      <div class="status" id="aboutImgStatus"></div>
+      <img id="aboutImgPreview" src="" style="max-width:220px;border-radius:8px;margin-top:10px;display:none">
+    </div>
+
+    <div id="contentFieldsContainer"></div>
+
+    <div class="design-card">
+      <h3>🖼️ صنایع دستی (عکس هر محصول)</h3>
+      <div class="design-fields" id="handcraftImagesContainer"></div>
+    </div>
+
     <button class="btn save-btn" style="padding:12px 24px;font-size:14px" onclick="saveDesignSettings()">💾 ذخیره تنظیمات طراحی</button>
     <div class="status" id="designStatus" style="margin-top:8px"></div>
   </div>
@@ -338,12 +353,94 @@ async function createProduct(){
 // ===== SITE DESIGN PAGE =====
 let designLoaded = false;
 
+// Config for all simple translated text fields across the site.
+// key must match the data-i attribute used in index.html
+const CONTENT_GROUPS = [
+  { title: '📝 بخش «درباره ما»', fields: [
+      { key:'about_label', label:'برچسب کوچک' },
+      { key:'about_title', label:'عنوان بخش' },
+      { key:'about_text', label:'متن معرفی', textarea:true }
+  ]},
+  { title: '🌿 چهار ویژگی (زیر بخش درباره ما)', fields: [
+      { key:'f1_title', label:'ویژگی ۱ - عنوان' }, { key:'f1_text', label:'ویژگی ۱ - توضیح' },
+      { key:'f2_title', label:'ویژگی ۲ - عنوان' }, { key:'f2_text', label:'ویژگی ۲ - توضیح' },
+      { key:'f3_title', label:'ویژگی ۳ - عنوان' }, { key:'f3_text', label:'ویژگی ۳ - توضیح' },
+      { key:'f4_title', label:'ویژگی ۴ - عنوان' }, { key:'f4_text', label:'ویژگی ۴ - توضیح' }
+  ]},
+  { title: '🎨 بخش صنایع دستی (عنوان کلی)', fields: [
+      { key:'craft_label', label:'برچسب کوچک' },
+      { key:'craft_title', label:'عنوان بخش' },
+      { key:'craft_text', label:'متن معرفی', textarea:true }
+  ]},
+  { title: '⭐ بخش «چرا ما را انتخاب کنید»', fields: [
+      { key:'why_label', label:'برچسب کوچک' },
+      { key:'why_title', label:'عنوان بخش' },
+      { key:'why1_title', label:'کارت ۱ - عنوان' }, { key:'why1_text', label:'کارت ۱ - توضیح' },
+      { key:'why2_title', label:'کارت ۲ - عنوان' }, { key:'why2_text', label:'کارت ۲ - توضیح' },
+      { key:'why3_title', label:'کارت ۳ - عنوان' }, { key:'why3_text', label:'کارت ۳ - توضیح' }
+  ]}
+];
+const LANGS = [ {code:'fa', label:'فارسی'}, {code:'en', label:'English'}, {code:'hu', label:'Magyar'} ];
+
+function renderContentFields(){
+  const container = document.getElementById('contentFieldsContainer');
+  container.innerHTML = CONTENT_GROUPS.map(group => `
+    <div class="design-card">
+      <h3>${group.title}</h3>
+      ${LANGS.map(lang => `
+        <div class="design-fields lang-block">
+          <b>${lang.label}</b>
+          ${group.fields.map(f => `
+            <div class="field">
+              <label>${f.label}</label>
+              ${f.textarea
+                ? `<textarea id="c_${f.key}_${lang.code}" rows="2" style="width:100%;padding:8px;border:1px solid var(--gold-light);border-radius:6px;font-family:inherit;text-align:right"></textarea>`
+                : `<input id="c_${f.key}_${lang.code}">`}
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+  `).join('') + handcraftTextFieldsHtml();
+
+  // Handcraft image upload inputs (3 items)
+  const hcContainer = document.getElementById('handcraftImagesContainer');
+  hcContainer.innerHTML = [1,2,3].map(i => `
+    <div class="field">
+      <label>عکس صنایع دستی شماره ${i}</label>
+      <label class="upload-label" for="d_handcraft${i}_file">📷 آپلود عکس</label>
+      <input type="file" id="d_handcraft${i}_file" accept="image/*" style="display:none" onchange="uploadSectionImage(this,'handcraft${i}_img','handcraft${i}Preview')">
+      <div class="status" id="handcraft${i}Status"></div>
+      <img id="handcraft${i}Preview" src="" style="max-width:140px;border-radius:8px;margin-top:8px;display:none">
+    </div>
+  `).join('');
+}
+
+// Handcraft tag/name/desc text fields (3 items x 3 languages)
+function handcraftTextFieldsHtml(){
+  let html = '';
+  for(let i=1;i<=3;i++){
+    html += `<div class="design-card"><h3>✍️ متن صنایع دستی شماره ${i}</h3>`;
+    html += LANGS.map(lang => `
+      <div class="design-fields lang-block">
+        <b>${lang.label}</b>
+        <div class="field"><label>برچسب کوتاه</label><input id="d_handcraft${i}_tag_${lang.code}"></div>
+        <div class="field"><label>نام محصول</label><input id="d_handcraft${i}_name_${lang.code}"></div>
+        <div class="field"><label>توضیح</label><input id="d_handcraft${i}_desc_${lang.code}"></div>
+      </div>
+    `).join('');
+    html += `</div>`;
+  }
+  return html;
+}
+
 function showPage(page){
   document.getElementById('page_products').style.display = page==='products' ? 'block' : 'none';
   document.getElementById('page_design').style.display = page==='design' ? 'block' : 'none';
   document.getElementById('tabBtn_products').classList.toggle('active', page==='products');
   document.getElementById('tabBtn_design').classList.toggle('active', page==='design');
   if(page==='design' && !designLoaded){
+    renderContentFields();
     loadDesignSettings();
     designLoaded = true;
   }
@@ -370,8 +467,61 @@ async function loadDesignSettings(){
       if(S['hero_title_'+l]) document.getElementById('d_hero_title_'+l).value = S['hero_title_'+l];
       if(S['hero_sub_'+l]) document.getElementById('d_hero_sub_'+l).value = S['hero_sub_'+l];
     });
+
+    if(S.about_image_url){
+      document.getElementById('aboutImgPreview').src = S.about_image_url;
+      document.getElementById('aboutImgPreview').style.display = 'block';
+    }
+
+    // Generic content_ fields
+    CONTENT_GROUPS.forEach(group => {
+      group.fields.forEach(f => {
+        LANGS.forEach(lang => {
+          const val = S['content_'+f.key+'_'+lang.code];
+          const el = document.getElementById('c_'+f.key+'_'+lang.code);
+          if(val && el) el.value = val;
+        });
+      });
+    });
+
+    // Handcraft items
+    for(let i=1;i<=3;i++){
+      if(S['handcraft'+i+'_img']){
+        const prev = document.getElementById('handcraft'+i+'Preview');
+        prev.src = S['handcraft'+i+'_img'];
+        prev.style.display = 'block';
+      }
+      ['fa','en','hu'].forEach(l => {
+        const tagEl = document.getElementById('d_handcraft'+i+'_tag_'+l);
+        const nameEl = document.getElementById('d_handcraft'+i+'_name_'+l);
+        const descEl = document.getElementById('d_handcraft'+i+'_desc_'+l);
+        if(S['handcraft'+i+'_tag_'+l] && tagEl) tagEl.value = S['handcraft'+i+'_tag_'+l];
+        if(S['handcraft'+i+'_name_'+l] && nameEl) nameEl.value = S['handcraft'+i+'_name_'+l];
+        if(S['handcraft'+i+'_desc_'+l] && descEl) descEl.value = S['handcraft'+i+'_desc_'+l];
+      });
+    }
   } catch(e){
     console.error('could not load design settings', e);
+  }
+}
+
+async function uploadSectionImage(input, settingsKey, previewId){
+  const file = input.files[0];
+  if(!file) return;
+  const path = `site/${settingsKey}_${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
+  try{
+    const res = await sbFetch(`/storage/v1/object/product-images/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file
+    });
+    if(!res.ok) throw new Error('upload failed');
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
+    const prev = document.getElementById(previewId);
+    if(prev){ prev.src = publicUrl; prev.style.display = 'block'; }
+    document.getElementById('page_design').dataset[settingsKey] = publicUrl;
+  } catch(e){
+    alert('خطا در آپلود عکس');
   }
 }
 
@@ -419,10 +569,36 @@ async function saveDesignSettings(){
     rows.push({ key:'hero_title_'+l, value: document.getElementById('d_hero_title_'+l).value });
     rows.push({ key:'hero_sub_'+l, value: document.getElementById('d_hero_sub_'+l).value });
   });
-  const newImg = document.getElementById('page_design').dataset.newHeroImage;
-  const newVid = document.getElementById('page_design').dataset.newHeroVideo;
-  if(newImg) rows.push({ key:'hero_image_url', value: newImg });
-  if(newVid) rows.push({ key:'hero_video_url', value: newVid });
+
+  const ds = document.getElementById('page_design').dataset;
+  if(ds.newHeroImage) rows.push({ key:'hero_image_url', value: ds.newHeroImage });
+  if(ds.newHeroVideo) rows.push({ key:'hero_video_url', value: ds.newHeroVideo });
+  if(ds.about_image_url) rows.push({ key:'about_image_url', value: ds.about_image_url });
+  for(let i=1;i<=3;i++){
+    if(ds['handcraft'+i+'_img']) rows.push({ key:'handcraft'+i+'_img', value: ds['handcraft'+i+'_img'] });
+  }
+
+  // Generic content fields (about/features/craft/why sections)
+  CONTENT_GROUPS.forEach(group => {
+    group.fields.forEach(f => {
+      LANGS.forEach(lang => {
+        const el = document.getElementById('c_'+f.key+'_'+lang.code);
+        if(el) rows.push({ key:'content_'+f.key+'_'+lang.code, value: el.value });
+      });
+    });
+  });
+
+  // Handcraft text fields (3 items x 3 languages)
+  for(let i=1;i<=3;i++){
+    ['fa','en','hu'].forEach(l => {
+      const tagEl = document.getElementById('d_handcraft'+i+'_tag_'+l);
+      const nameEl = document.getElementById('d_handcraft'+i+'_name_'+l);
+      const descEl = document.getElementById('d_handcraft'+i+'_desc_'+l);
+      if(tagEl) rows.push({ key:'handcraft'+i+'_tag_'+l, value: tagEl.value });
+      if(nameEl) rows.push({ key:'handcraft'+i+'_name_'+l, value: nameEl.value });
+      if(descEl) rows.push({ key:'handcraft'+i+'_desc_'+l, value: descEl.value });
+    });
+  }
 
   try{
     const res = await sbFetch('/rest/v1/site_settings?on_conflict=key', {
