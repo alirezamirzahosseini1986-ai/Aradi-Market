@@ -50,6 +50,16 @@
   #newForm h3{margin-bottom:14px;font-size:15px}
   #newForm .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
   #loadingMsg, #emptyMsg{text-align:center;color:var(--gray);padding:40px 0}
+
+  .page-nav{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--gold-light);padding-bottom:10px}
+  .page-tab{background:transparent;border:none;color:var(--gray);padding:10px 16px;border-radius:8px 8px 0 0;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  .page-tab.active{background:var(--gold);color:#fff}
+  .design-card{background:#fff;border:1px solid var(--gold-light);border-radius:12px;padding:18px;margin-bottom:16px}
+  .design-card h3{font-size:15px;margin-bottom:14px}
+  .design-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:6px}
+  .design-fields .field input[type="color"]{height:40px;padding:2px;cursor:pointer}
+  .lang-block{border-top:1px dashed var(--gold-light);padding-top:12px;margin-top:12px}
+  .lang-block b{grid-column:1/-1;color:var(--dark2);font-size:13px}
 </style>
 </head>
 <body>
@@ -62,32 +72,94 @@
 </div>
 
 <div class="wrap" id="app">
-  <h1>مدیریت محصولات سایت</h1>
+  <h1>پنل مدیریت Arádi Market</h1>
   <div class="sub">تغییرات همین‌جا بلافاصله روی سایت اعمال می‌شود. اطلاعات POS (بارکد، موجودی) دست‌نخورده باقی می‌ماند.</div>
 
-  <div class="toolbar">
-    <button class="btn" onclick="toggleNewForm()">+ افزودن محصول جدید</button>
-    <button class="btn-outline" onclick="loadAll()">🔄 بروزرسانی لیست</button>
+  <div class="page-nav">
+    <button class="page-tab active" id="tabBtn_products" onclick="showPage('products')">🛒 محصولات</button>
+    <button class="page-tab" id="tabBtn_design" onclick="showPage('design')">🎨 طراحی سایت</button>
   </div>
 
-  <div id="newForm">
-    <h3>محصول جدید</h3>
-    <div class="fields">
-      <div class="field"><label>نام (فارسی)</label><input id="new_name" placeholder="مثلاً زعفران"></div>
-      <div class="field"><label>نام (انگلیسی)</label><input id="new_name_en" placeholder="e.g. Saffron"></div>
-      <div class="field"><label>نام (مجاری)</label><input id="new_name_hu" placeholder="pl. Sáfrány"></div>
-      <div class="field"><label>قیمت (Ft)</label><input id="new_price" type="number"></div>
-      <div class="field"><label>دسته‌بندی</label><input id="new_category" placeholder="مثلاً لبنیات"></div>
-      <div class="field"><label>موجودی</label><input id="new_stock" type="number" value="0"></div>
+  <div id="page_products">
+    <div class="toolbar">
+      <button class="btn" onclick="toggleNewForm()">+ افزودن محصول جدید</button>
+      <button class="btn-outline" onclick="loadAll()">🔄 بروزرسانی لیست</button>
     </div>
-    <button class="btn save-btn" onclick="createProduct()">ذخیره محصول</button>
-    <button class="btn-outline" onclick="toggleNewForm()" style="margin-right:8px">انصراف</button>
+
+    <div id="newForm">
+      <h3>محصول جدید</h3>
+      <div class="fields">
+        <div class="field"><label>نام (فارسی)</label><input id="new_name" placeholder="مثلاً زعفران"></div>
+        <div class="field"><label>نام (انگلیسی)</label><input id="new_name_en" placeholder="e.g. Saffron"></div>
+        <div class="field"><label>نام (مجاری)</label><input id="new_name_hu" placeholder="pl. Sáfrány"></div>
+        <div class="field"><label>قیمت (Ft)</label><input id="new_price" type="number"></div>
+        <div class="field"><label>دسته‌بندی</label><input id="new_category" placeholder="مثلاً لبنیات"></div>
+        <div class="field"><label>موجودی</label><input id="new_stock" type="number" value="0"></div>
+      </div>
+      <button class="btn save-btn" onclick="createProduct()">ذخیره محصول</button>
+      <button class="btn-outline" onclick="toggleNewForm()" style="margin-right:8px">انصراف</button>
+    </div>
+
+    <div id="loadingMsg">در حال بارگذاری محصولات…</div>
+    <div id="emptyMsg" style="display:none">هیچ محصولی یافت نشد.</div>
+    <div id="list"></div>
   </div>
 
-  <div id="loadingMsg">در حال بارگذاری محصولات…</div>
-  <div id="emptyMsg" style="display:none">هیچ محصولی یافت نشد.</div>
-  <div id="list"></div>
+  <div id="page_design" style="display:none">
+    <div class="design-card">
+      <h3>🎨 رنگ‌بندی سایت</h3>
+      <div class="design-fields">
+        <div class="field"><label>رنگ طلایی اصلی</label><input type="color" id="d_color_gold" value="#C9933A"></div>
+        <div class="field"><label>رنگ تیره پس‌زمینه</label><input type="color" id="d_color_dark" value="#1A1410"></div>
+        <div class="field"><label>رنگ کِرم روشن</label><input type="color" id="d_color_cream" value="#FAF6EF"></div>
+      </div>
+    </div>
+
+    <div class="design-card">
+      <h3>🖼️ عکس یا ویدیوی بالای صفحه (Hero)</h3>
+      <div class="design-fields">
+        <div class="field">
+          <label>عکس جدید</label>
+          <label class="upload-label" for="d_hero_image_file">📷 آپلود عکس</label>
+          <input type="file" id="d_hero_image_file" accept="image/*" style="display:none" onchange="uploadHeroAsset(this,'image')">
+        </div>
+        <div class="field">
+          <label>ویدیوی جدید (اولویت با ویدیوست)</label>
+          <label class="upload-label" for="d_hero_video_file">🎬 آپلود ویدیو</label>
+          <input type="file" id="d_hero_video_file" accept="video/*" style="display:none" onchange="uploadHeroAsset(this,'video')">
+        </div>
+      </div>
+      <div class="status" id="heroUploadStatus"></div>
+      <img id="heroPreview" src="" style="max-width:220px;border-radius:8px;margin-top:10px;display:none">
+    </div>
+
+    <div class="design-card">
+      <h3>✍️ متن‌های بالای صفحه (Hero)</h3>
+      <div class="design-fields lang-block">
+        <b>فارسی</b>
+        <div class="field"><label>زیرعنوان کوچک</label><input id="d_hero_eyebrow_fa"></div>
+        <div class="field"><label>عنوان اصلی (می‌توانید از &lt;br&gt; و &lt;span&gt; استفاده کنید)</label><input id="d_hero_title_fa"></div>
+        <div class="field"><label>توضیح کوتاه</label><input id="d_hero_sub_fa"></div>
+      </div>
+      <div class="design-fields lang-block">
+        <b>English</b>
+        <div class="field"><label>Eyebrow</label><input id="d_hero_eyebrow_en"></div>
+        <div class="field"><label>Main title</label><input id="d_hero_title_en"></div>
+        <div class="field"><label>Subtitle</label><input id="d_hero_sub_en"></div>
+      </div>
+      <div class="design-fields lang-block">
+        <b>Magyar</b>
+        <div class="field"><label>Eyebrow</label><input id="d_hero_eyebrow_hu"></div>
+        <div class="field"><label>Fő cím</label><input id="d_hero_title_hu"></div>
+        <div class="field"><label>Alcím</label><input id="d_hero_sub_hu"></div>
+      </div>
+    </div>
+
+    <button class="btn save-btn" style="padding:12px 24px;font-size:14px" onclick="saveDesignSettings()">💾 ذخیره تنظیمات طراحی</button>
+    <div class="status" id="designStatus" style="margin-top:8px"></div>
+  </div>
 </div>
+
 
 <script>
 // ⚠️ رمز عبور ساده — برای امنیت بیشتر این متن را به رمز دلخواه خودتان تغییر دهید
@@ -261,6 +333,108 @@ async function createProduct(){
     loadAll();
   } catch(e){
     alert('خطا در ایجاد محصول جدید');
+  }
+}
+// ===== SITE DESIGN PAGE =====
+let designLoaded = false;
+
+function showPage(page){
+  document.getElementById('page_products').style.display = page==='products' ? 'block' : 'none';
+  document.getElementById('page_design').style.display = page==='design' ? 'block' : 'none';
+  document.getElementById('tabBtn_products').classList.toggle('active', page==='products');
+  document.getElementById('tabBtn_design').classList.toggle('active', page==='design');
+  if(page==='design' && !designLoaded){
+    loadDesignSettings();
+    designLoaded = true;
+  }
+}
+
+async function loadDesignSettings(){
+  try{
+    const res = await sbFetch('/rest/v1/site_settings?select=*');
+    const rows = await res.json();
+    const S = {};
+    rows.forEach(r => { S[r.key] = r.value; });
+
+    if(S.color_gold) document.getElementById('d_color_gold').value = S.color_gold;
+    if(S.color_dark) document.getElementById('d_color_dark').value = S.color_dark;
+    if(S.color_cream) document.getElementById('d_color_cream').value = S.color_cream;
+
+    if(S.hero_image_url){
+      document.getElementById('heroPreview').src = S.hero_image_url;
+      document.getElementById('heroPreview').style.display = 'block';
+    }
+
+    ['fa','en','hu'].forEach(l => {
+      if(S['hero_eyebrow_'+l]) document.getElementById('d_hero_eyebrow_'+l).value = S['hero_eyebrow_'+l];
+      if(S['hero_title_'+l]) document.getElementById('d_hero_title_'+l).value = S['hero_title_'+l];
+      if(S['hero_sub_'+l]) document.getElementById('d_hero_sub_'+l).value = S['hero_sub_'+l];
+    });
+  } catch(e){
+    console.error('could not load design settings', e);
+  }
+}
+
+async function uploadHeroAsset(input, kind){
+  const file = input.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('heroUploadStatus');
+  statusEl.textContent = 'در حال آپلود...';
+  statusEl.className = 'status';
+  const path = `site/${kind}_${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
+  try{
+    const res = await sbFetch(`/storage/v1/object/product-images/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file
+    });
+    if(!res.ok) throw new Error('upload failed');
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
+    if(kind==='image'){
+      document.getElementById('heroPreview').src = publicUrl;
+      document.getElementById('heroPreview').style.display = 'block';
+      document.getElementById('page_design').dataset.newHeroImage = publicUrl;
+    } else {
+      document.getElementById('page_design').dataset.newHeroVideo = publicUrl;
+    }
+    statusEl.textContent = '✅ آپلود شد — حالا روی «ذخیره تنظیمات طراحی» بزنید';
+  } catch(e){
+    statusEl.textContent = '❌ خطا در آپلود';
+    statusEl.className = 'status error';
+  }
+}
+
+async function saveDesignSettings(){
+  const statusEl = document.getElementById('designStatus');
+  statusEl.textContent = 'در حال ذخیره...';
+  statusEl.className = 'status';
+
+  const rows = [
+    { key:'color_gold', value: document.getElementById('d_color_gold').value },
+    { key:'color_dark', value: document.getElementById('d_color_dark').value },
+    { key:'color_cream', value: document.getElementById('d_color_cream').value }
+  ];
+  ['fa','en','hu'].forEach(l => {
+    rows.push({ key:'hero_eyebrow_'+l, value: document.getElementById('d_hero_eyebrow_'+l).value });
+    rows.push({ key:'hero_title_'+l, value: document.getElementById('d_hero_title_'+l).value });
+    rows.push({ key:'hero_sub_'+l, value: document.getElementById('d_hero_sub_'+l).value });
+  });
+  const newImg = document.getElementById('page_design').dataset.newHeroImage;
+  const newVid = document.getElementById('page_design').dataset.newHeroVideo;
+  if(newImg) rows.push({ key:'hero_image_url', value: newImg });
+  if(newVid) rows.push({ key:'hero_video_url', value: newVid });
+
+  try{
+    const res = await sbFetch('/rest/v1/site_settings?on_conflict=key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    if(!res.ok) throw new Error('save failed');
+    statusEl.textContent = '✅ تنظیمات ذخیره شد — سایت را رفرش کنید تا تغییرات را ببینید';
+  } catch(e){
+    statusEl.textContent = '❌ خطا در ذخیره تنظیمات';
+    statusEl.className = 'status error';
   }
 }
 </script>
