@@ -239,16 +239,8 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
   <div class="container">
     <div class="section-label" data-i="prod_label">What We Offer</div>
     <h2 class="section-title" style="color:#FAF6EF" data-i="prod_title">Persian & Middle Eastern Foods</h2>
-    <div class="products-tabs">
-      <button class="tab-btn active" onclick="filterProducts('all',this)" data-i="tab_all">All</button>
-      <button class="tab-btn" onclick="filterProducts('dairy',this)" data-i="tab_dairy">Dairy</button>
-      <button class="tab-btn" onclick="filterProducts('spice',this)" data-i="tab_spice">Spices</button>
-      <button class="tab-btn" onclick="filterProducts('pickle',this)" data-i="tab_pickle">Pickles & Jams</button>
-      <button class="tab-btn" onclick="filterProducts('rice',this)" data-i="tab_rice">Rice & Legumes</button>
-      <button class="tab-btn" onclick="filterProducts('drink',this)" data-i="tab_drink">Drinks</button>
-      <button class="tab-btn" onclick="filterProducts('snack',this)" data-i="tab_snack">Snacks</button>
-    </div>
-    <div class="products-grid" id="productsGrid"></div>
+    <div class="products-tabs" id="productsTabs"></div>
+    <div class="products-grid" id="productsGrid"><p style="color:#C8B89A;text-align:center;width:100%" id="productsLoading">Loading products…</p></div>
   </div>
 </section>
 
@@ -311,10 +303,10 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
     <h2 class="section-title" data-i="contact_title">Visit Arádi Market</h2>
     <div class="contact-grid">
       <div>
-        <div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label" data-i="c_addr_label">Address</div><span class="contact-value">Budapest, Hungary</span></div></div>
+        <div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label" data-i="c_addr_label">Address</div><span class="contact-value">1094 Budapest, Balázs Béla utca 39</span></div></div>
         <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label" data-i="c_phone_label">Phone / WhatsApp</div><a href="tel:+36302511086" class="contact-value">+36 30 251 1086</a></div></div>
         <div class="contact-item"><div class="contact-icon">📸</div><div><div class="contact-label" data-i="c_ig_label">Instagram</div><a href="https://instagram.com/aradimarket" target="_blank" class="contact-value">@aradimarket</a></div></div>
-        <div class="contact-item"><div class="contact-icon">🕐</div><div><div class="contact-label" data-i="c_hours_label">Opening Hours</div><span class="contact-value" data-i="c_hours">Mon–Sat: 9:00–19:00</span></div></div>
+        <div class="contact-item"><div class="contact-icon">🕐</div><div><div class="contact-label" data-i="c_hours_label">Opening Hours</div><span class="contact-value" data-i="c_hours">Mon–Fri: 10:00–13:00, 15:00–20:00 | Sat: 10:00–14:00 | Sun: Closed</span></div></div>
         <div class="social-row">
           <a href="https://instagram.com/aradimarket" target="_blank" class="social-btn">📸</a>
           <a href="https://t.me/aradimarket" target="_blank" class="social-btn">✈️</a>
@@ -325,7 +317,7 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
         </div>
       </div>
       <div class="map-placeholder">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d86154.42!2d19.0402!3d47.4979!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4741c334d1d4cfc9%3A0x400c4290c1e1160!2sBudapest!5e0!3m2!1sen!2shu!4v1" allowfullscreen loading="lazy"></iframe>
+        <iframe src="https://www.google.com/maps?q=1094+Budapest,+Bal%C3%A1zs+B%C3%A9la+utca+39&output=embed" allowfullscreen loading="lazy"></iframe>
       </div>
     </div>
   </div>
@@ -371,7 +363,7 @@ const T = {
     success_title:'✅ Order Received!', success_text:'Thank you! We will contact you shortly to confirm your order.',
     contact_label:'Find Us', contact_title:'Visit Arádi Market',
     c_addr_label:'Address', c_phone_label:'Phone / WhatsApp', c_ig_label:'Instagram',
-    c_hours_label:'Opening Hours', c_hours:'Mon–Sat: 9:00–19:00',
+    c_hours_label:'Opening Hours', c_hours:'Mon–Fri: 10:00–13:00, 15:00–20:00 | Sat: 10:00–14:00 | Sun: Closed',
     contact_order_btn:'Order Now →',
     footer_text:'Authentic Persian & Middle Eastern products in Budapest<br>مزه‌ی خونه، تو قلب اروپا'
   },
@@ -405,7 +397,7 @@ const T = {
     success_title:'✅ سفارش دریافت شد!', success_text:'ممنون! به زودی با شما تماس می‌گیریم.',
     contact_label:'ما را پیدا کنید', contact_title:'به آرادی مارکت بیایید',
     c_addr_label:'آدرس', c_phone_label:'تلفن / واتساپ', c_ig_label:'اینستاگرام',
-    c_hours_label:'ساعت کاری', c_hours:'شنبه تا پنجشنبه: ۹:۰۰–۱۹:۰۰',
+    c_hours_label:'ساعت کاری', c_hours:'دوشنبه تا جمعه: ۱۰:۰۰–۱۳:۰۰ و ۱۵:۰۰–۲۰:۰۰ | شنبه: ۱۰:۰۰–۱۴:۰۰ | یکشنبه تعطیل',
     contact_order_btn:'ثبت سفارش ←',
     footer_text:'محصولات اصیل ایرانی و خاورمیانه در بوداپست<br>مزه‌ی خونه، تو قلب اروپا'
   },
@@ -439,7 +431,7 @@ const T = {
     success_title:'✅ Rendelés beérkezett!', success_text:'Köszönjük! Hamarosan felvesszük Önnel a kapcsolatot.',
     contact_label:'Találjon meg minket', contact_title:'Látogasson el az Arádi Marketbe',
     c_addr_label:'Cím', c_phone_label:'Telefon / WhatsApp', c_ig_label:'Instagram',
-    c_hours_label:'Nyitvatartás', c_hours:'H–Szo: 9:00–19:00',
+    c_hours_label:'Nyitvatartás', c_hours:'H–P: 10:00–13:00, 15:00–20:00 | Szo: 10:00–14:00 | V: Zárva',
     contact_order_btn:'Rendelés →',
     footer_text:'Eredeti perzsa és közel-keleti termékek Budapesten<br>مزه‌ی خونه، تو قلب اروپا'
   }
@@ -457,33 +449,56 @@ function setLang(lang) {
   document.querySelectorAll('.lang-btn').forEach(b => {
     b.classList.toggle('active', b.textContent.toLowerCase()===lang);
   });
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    const key = b.getAttribute('data-i');
-    if(key && T[lang][key]) b.textContent = T[lang][key];
-  });
   // Update form placeholder language
   document.getElementById('forder').placeholder = lang==='fa'?'محصولاتی که می‌خواهید سفارش دهید...':lang==='hu'?'Listázza a rendelni kívánt termékeket...':'List the products you want to order...';
+  if (typeof buildCategoryTabs === 'function' && products) {
+    buildCategoryTabs();
+    buildProducts(currentCat);
+    buildHandcrafts();
+  }
 }
 
-// ===== PRODUCTS DATA =====
-const products = [
-  {cat:'dairy', name:{en:'Strained Yogurt',fa:'ماست چکیده',hu:'Sűrített joghurt'}, price:'890 Ft', img:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=80'},
-  {cat:'dairy', name:{en:'Persian Cheese',fa:'پنیر ایرانی',hu:'Perzsa sajt'}, price:'1,250 Ft', img:'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=400&q=80'},
-  {cat:'dairy', name:{en:'Kashk',fa:'کشک',hu:'Kashk'}, price:'2,800 Ft', img:'https://images.unsplash.com/photo-1559598467-f8b76c8155d0?w=400&q=80'},
-  {cat:'spice', name:{en:'Persian Saffron',fa:'زعفران',hu:'Perzsa sáfrány'}, price:'2,400 Ft', img:'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80'},
-  {cat:'spice', name:{en:'Turmeric',fa:'زردچوبه',hu:'Kurkuma'}, price:'850 Ft', img:'https://images.unsplash.com/photo-1615485500704-8e3b85be4d0a?w=400&q=80'},
-  {cat:'spice', name:{en:'Dried Fenugreek',fa:'شنبلیله خشک',hu:'Szárított görögszéna'}, price:'1,300 Ft', img:'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=400&q=80'},
-  {cat:'pickle', name:{en:'Mixed Pickle',fa:'ترشی مخلوط',hu:'Vegyes savanyúság'}, price:'1,550 Ft', img:'https://images.unsplash.com/photo-1597714026720-8f74c62310ba?w=400&q=80'},
-  {cat:'pickle', name:{en:'Sour Cherry Jam',fa:'مربا آلبالو',hu:'Meggy lekvár'}, price:'1,350 Ft', img:'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&q=80'},
-  {cat:'rice', name:{en:'Persian Rice 1kg',fa:'برنج ۷ ستاره ۱ کیلو',hu:'Perzsa rizs 1 kg'}, price:'2,000 Ft', img:'https://images.unsplash.com/photo-1536304993881-ff86e0c9aeb1?w=400&q=80'},
-  {cat:'rice', name:{en:'Barberries',fa:'زرشک',hu:'Sóska bogyó'}, price:'2,750 Ft', img:'https://images.unsplash.com/photo-1574226516831-e1dff420e562?w=400&q=80'},
-  {cat:'drink', name:{en:'Doogh Sparkling 1.5L',fa:'دوغ گازدار دربند',hu:'Szénsavas ayran 1.5L'}, price:'1,600 Ft', img:'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=400&q=80'},
-  {cat:'drink', name:{en:'Rose Water',fa:'گلاب یک و یک',hu:'Rózsavíz'}, price:'1,100 Ft', img:'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&q=80'},
-  {cat:'snack', name:{en:'Salted Chickpeas',fa:'نخودچی با نمک',hu:'Sós csicseriborsó'}, price:'1,450 Ft', img:'https://images.unsplash.com/photo-1515543904379-3d757aca5a98?w=400&q=80'},
-  {cat:'snack', name:{en:'Lavashak',fa:'لواشک',hu:'Lavashak'}, price:'1,600 Ft', img:'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&q=80'},
-  {cat:'snack', name:{en:'Dates',fa:'خرما',hu:'Dátum'}, price:'1,700 Ft', img:'https://images.unsplash.com/photo-1598569304088-5b5c56f8d3ff?w=400&q=80'},
-  {cat:'dairy', name:{en:'Cream',fa:'خامه',hu:'Tejszín'}, price:'1,500 Ft', img:'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=400&q=80'},
-];
+// ===== SUPABASE CONNECTION =====
+const SUPABASE_URL = 'https://dddzyaezhjccfpaalhpc.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_8bVTyqj08oBZxdVrwHquiA_aAkIfKyu';
+const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1543168256-418811576931?w=400&q=80';
+
+let products = [];
+let currentCat = 'all';
+
+const CAT_LABELS = { all: { en:'All', fa:'همه', hu:'Összes' } };
+
+async function loadProducts() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/products?select=*&show_on_website=eq.true&order=category.asc,name.asc`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!res.ok) throw new Error('Request failed: ' + res.status);
+    const rows = await res.json();
+    products = rows.map(p => ({
+      id: p.id,
+      cat: (p.category || 'other').trim(),
+      name: { en: p.name_en || p.name, fa: p.name, hu: p.name_hu || p.name_en || p.name },
+      price: (Number(p.price) || 0).toLocaleString('hu-HU') + ' Ft',
+      img: p.image_url || PLACEHOLDER_IMG
+    }));
+  } catch (e) {
+    console.error('Could not load products from Supabase:', e);
+    products = [];
+  }
+  buildCategoryTabs();
+  buildProducts(currentCat);
+}
+
+function buildCategoryTabs() {
+  const cats = [...new Set(products.map(p => p.cat))];
+  const tabs = document.getElementById('productsTabs');
+  const allLabel = CAT_LABELS.all[currentLang] || CAT_LABELS.all.en;
+  let html = `<button class="tab-btn${currentCat==='all'?' active':''}" onclick="filterProducts('all',this)">${allLabel}</button>`;
+  html += cats.map(c => `<button class="tab-btn${currentCat===c?' active':''}" onclick="filterProducts('${c.replace(/'/g,"\\'")}',this)">${c}</button>`).join('');
+  tabs.innerHTML = html;
+}
 
 const handcrafts = [
   {tag:{en:'Copper Art',fa:'مسگری',hu:'Rézmívesség'}, name:{en:'Handcrafted Copper Set',fa:'سرویس مسی دست‌ساز',hu:'Kézzel készített rézgarnitúra'}, desc:{en:'Master-crafted copper vessels with intricate engravings',fa:'ظروف مسی با نقوش ظریف دست‌ساز',hu:'Kézzel vésett réztárgyak'}, img:'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80'},
@@ -493,10 +508,14 @@ const handcrafts = [
 
 function buildProducts(filter='all') {
   const grid = document.getElementById('productsGrid');
+  if (!products.length) {
+    grid.innerHTML = `<p style="color:#C8B89A;text-align:center;width:100%">${currentLang==='fa'?'در حال حاضر محصولی برای نمایش نیست.':currentLang==='hu'?'Jelenleg nincs megjeleníthető termék.':'No products to show right now.'}</p>`;
+    return;
+  }
   const filtered = filter==='all' ? products : products.filter(p=>p.cat===filter);
   grid.innerHTML = filtered.map(p => `
     <div class="product-card">
-      <div class="product-img"><img src="${p.img}" alt="${p.name.en}" loading="lazy"></div>
+      <div class="product-img"><img src="${p.img}" alt="${p.name.en}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'"></div>
       <div class="product-info">
         <div class="product-category">${p.cat}</div>
         <div class="product-name">${p.name[currentLang]||p.name.en}</div>
@@ -520,6 +539,7 @@ function buildHandcrafts() {
 }
 
 function filterProducts(cat, btn) {
+  currentCat = cat;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   buildProducts(cat);
@@ -550,10 +570,10 @@ function toggleMenu() {
 }
 
 // ===== INIT =====
-buildProducts();
 buildHandcrafts();
 setLang('en');
 document.querySelector('.lang-btn').classList.add('active');
+loadProducts();
 </script>
 </body>
 </html>
