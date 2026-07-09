@@ -156,6 +156,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(26,20,16,0.9
 
 /* ORDER FORM */
 .order-section{background:var(--dark2);padding:80px 24px}
+.loyalty-section{background:var(--dark);padding:80px 24px;border-top:1px solid rgba(201,147,58,0.15);border-bottom:1px solid rgba(201,147,58,0.15)}
+.loyalty-inner{max-width:700px;margin:0 auto}
 .order-inner{max-width:680px;margin:0 auto}
 .order-section .section-title{color:#FAF6EF}
 .order-section .section-text{color:#C8B89A}
@@ -212,6 +214,7 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
     <a href="#about" data-i="nav_about">About</a>
     <a href="#products" data-i="nav_products">Products</a>
     <a href="#handcraft" data-i="nav_handcraft">Handcraft</a>
+    <a href="#loyalty" data-i="nav_loyalty">Loyalty Club</a>
     <a href="#contact" data-i="nav_contact">Contact</a>
     <div class="lang-btns">
       <button class="lang-btn" onclick="setLang('en')">EN</button>
@@ -229,6 +232,7 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
   <a href="#about" onclick="toggleMenu()" data-i="nav_about">About</a>
   <a href="#products" onclick="toggleMenu()" data-i="nav_products">Products</a>
   <a href="#handcraft" onclick="toggleMenu()" data-i="nav_handcraft">Handcraft</a>
+  <a href="#loyalty" onclick="toggleMenu()" data-i="nav_loyalty">Loyalty Club</a>
   <a href="#contact" onclick="toggleMenu()" data-i="nav_contact">Contact</a>
   <div class="lang-btns" style="margin-top:8px">
     <button class="lang-btn" onclick="setLang('en');toggleMenu()">EN</button>
@@ -313,6 +317,28 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
   </div>
 </section>
 
+<!-- LOYALTY CLUB -->
+<section class="loyalty-section" id="loyalty">
+  <div class="loyalty-inner" style="text-align:center">
+    <div class="section-label" style="text-align:center" data-i="loyalty_label">Loyalty Club</div>
+    <h2 class="section-title" style="text-align:center;margin:0 auto 16px;color:#FAF6EF" data-i="loyalty_title">Join Our Loyalty Club</h2>
+    <p class="section-text" style="text-align:center;margin:0 auto 32px;max-width:560px;color:#C8B89A" data-i="loyalty_text">Sign up and earn points with every purchase. We remember your birthday — and celebrate it with you.</p>
+    <div class="form-grid">
+      <div class="form-group"><label data-i="loyalty_name">Full Name *</label><input type="text" id="lname" required></div>
+      <div class="form-group"><label data-i="loyalty_phone">Phone *</label><input type="tel" id="lphone" required></div>
+      <div class="form-group"><label data-i="loyalty_email">Email</label><input type="email" id="lemail"></div>
+      <div class="form-group"><label data-i="loyalty_birthday">Birthday</label><input type="date" id="lbirthday"></div>
+      <div class="form-group"><label data-i="loyalty_city">City</label><input type="text" id="lcity"></div>
+      <div class="form-group"><label data-i="loyalty_referral">How did you hear about us?</label><input type="text" id="lreferral"></div>
+    </div>
+    <button class="submit-btn" onclick="joinLoyaltyClub()" data-i="loyalty_submit">Join Now</button>
+    <div class="form-success" id="loyaltySuccess">
+      <h3 data-i="loyalty_success_title">✅ Welcome to the Club!</h3>
+      <p data-i="loyalty_success_text">Thank you for joining. We'll keep you updated on offers and special occasions.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ORDER FORM -->
 <section class="order-section" id="order">
   <div class="order-inner">
@@ -382,7 +408,7 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
 const T = {
   en: {
     nav_about:'About', nav_products:'Products', nav_handcraft:'Handcraft',
-    nav_contact:'Contact', nav_order:'Order Now',
+    nav_contact:'Contact', nav_order:'Order Now', nav_loyalty:'Loyalty Club',
     hero_eyebrow:'Persian Market · Budapest',
     hero_title:'A Taste of Home,<br>in the Heart of <span>Europe</span>',
     hero_sub:'Authentic Persian food, spices, and handcrafted Middle Eastern art — all in one place in Budapest.',
@@ -413,11 +439,18 @@ const T = {
     c_hours_label:'Opening Hours', c_hours:'Mon–Fri: 10:00–13:00, 15:00–20:00 | Sat: 10:00–14:00 | Sun: Closed',
     contact_order_btn:'Order Now →',
     contact_maps_btn:'Open in Google Maps →',
+    loyalty_label:'Loyalty Club', loyalty_title:'Join Our Loyalty Club',
+    loyalty_text:'Sign up and earn points with every purchase. We remember your birthday — and celebrate it with you.',
+    loyalty_name:'Full Name *', loyalty_phone:'Phone *', loyalty_email:'Email',
+    loyalty_birthday:'Birthday', loyalty_city:'City', loyalty_referral:'How did you hear about us?',
+    loyalty_submit:'Join Now',
+    loyalty_success_title:'✅ Welcome to the Club!',
+    loyalty_success_text:"Thank you for joining. We'll keep you updated on offers and special occasions.",
     footer_text:'Authentic Persian & Middle Eastern products in Budapest<br>مزه‌ی خونه، تو قلب اروپا'
   },
   fa: {
     nav_about:'درباره ما', nav_products:'محصولات', nav_handcraft:'صنایع دستی',
-    nav_contact:'تماس', nav_order:'ثبت سفارش',
+    nav_contact:'تماس', nav_order:'ثبت سفارش', nav_loyalty:'باشگاه مشتریان',
     hero_eyebrow:'سوپرمارکت ایرانی · بوداپست',
     hero_title:'مزه‌ی خونه،<br>تو قلب <span>اروپا</span>',
     hero_sub:'محصولات اصیل ایرانی، ادویه‌جات، و صنایع دستی خاورمیانه — همه در یک جا در بوداپست.',
@@ -448,11 +481,18 @@ const T = {
     c_hours_label:'ساعت کاری', c_hours:'دوشنبه تا جمعه: ۱۰:۰۰–۱۳:۰۰ و ۱۵:۰۰–۲۰:۰۰ | شنبه: ۱۰:۰۰–۱۴:۰۰ | یکشنبه تعطیل',
     contact_order_btn:'ثبت سفارش ←',
     contact_maps_btn:'مسیریابی در گوگل مپ ←',
+    loyalty_label:'باشگاه مشتریان', loyalty_title:'به باشگاه مشتریان بپیوندید',
+    loyalty_text:'ثبت‌نام کنید و با هر خرید امتیاز جمع کنید. تولدتان را به‌خاطر می‌سپاریم — و با شما جشن می‌گیریم.',
+    loyalty_name:'نام و نام‌خانوادگی *', loyalty_phone:'شماره تماس *', loyalty_email:'ایمیل',
+    loyalty_birthday:'تاریخ تولد', loyalty_city:'شهر', loyalty_referral:'چطور با ما آشنا شدید؟',
+    loyalty_submit:'عضویت',
+    loyalty_success_title:'✅ به باشگاه خوش آمدید!',
+    loyalty_success_text:'از عضویت شما متشکریم. شما را از تخفیف‌ها و مناسبت‌های ویژه باخبر خواهیم کرد.',
     footer_text:'محصولات اصیل ایرانی و خاورمیانه در بوداپست<br>مزه‌ی خونه، تو قلب اروپا'
   },
   hu: {
     nav_about:'Rólunk', nav_products:'Termékek', nav_handcraft:'Kézművesség',
-    nav_contact:'Kapcsolat', nav_order:'Rendelés',
+    nav_contact:'Kapcsolat', nav_order:'Rendelés', nav_loyalty:'Törzsvásárlói klub',
     hero_eyebrow:'Perzsa Piac · Budapest',
     hero_title:'Az otthon íze,<br><span>Európa</span> szívében',
     hero_sub:'Eredeti perzsa élelmiszerek, fűszerek és közel-keleti kézműves alkotások — egy helyen Budapesten.',
@@ -483,6 +523,13 @@ const T = {
     c_hours_label:'Nyitvatartás', c_hours:'H–P: 10:00–13:00, 15:00–20:00 | Szo: 10:00–14:00 | V: Zárva',
     contact_order_btn:'Rendelés →',
     contact_maps_btn:'Megnyitás Google Térképen →',
+    loyalty_label:'Törzsvásárlói klub', loyalty_title:'Csatlakozzon törzsvásárlói klubunkhoz',
+    loyalty_text:'Iratkozzon fel, és gyűjtsön pontokat minden vásárlással. Emlékezünk a születésnapjára — és megünnepeljük Önnel.',
+    loyalty_name:'Teljes név *', loyalty_phone:'Telefonszám *', loyalty_email:'Email',
+    loyalty_birthday:'Születésnap', loyalty_city:'Város', loyalty_referral:'Honnan hallott rólunk?',
+    loyalty_submit:'Csatlakozás',
+    loyalty_success_title:'✅ Üdvözöljük a klubban!',
+    loyalty_success_text:'Köszönjük, hogy csatlakozott. Értesíteni fogjuk az akciókról és a különleges alkalmakról.',
     footer_text:'Eredeti perzsa és közel-keleti termékek Budapesten<br>مزه‌ی خونه، تو قلب اروپا'
   }
 };
@@ -696,6 +743,43 @@ function submitOrder() {
   window.open(waUrl, '_blank');
   document.getElementById('formSuccess').style.display='block';
   document.getElementById('formSuccess').scrollIntoView({behavior:'smooth'});
+}
+
+// ===== LOYALTY CLUB =====
+async function joinLoyaltyClub() {
+  const name = document.getElementById('lname').value.trim();
+  const phone = document.getElementById('lphone').value.trim();
+  if (!name || !phone) {
+    alert(currentLang==='fa'?'لطفاً نام و شماره تماس را وارد کنید':currentLang==='hu'?'Kérjük, adja meg a nevét és telefonszámát':'Please enter your name and phone number');
+    return;
+  }
+  const body = {
+    full_name: name,
+    phone: phone,
+    email: document.getElementById('lemail').value.trim() || null,
+    birthday: document.getElementById('lbirthday').value || null,
+    city: document.getElementById('lcity').value.trim() || null,
+    referral_source: document.getElementById('lreferral').value.trim() || null,
+    loyalty_points: 0
+  };
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('signup failed');
+    document.getElementById('loyaltySuccess').style.display = 'block';
+    document.getElementById('loyaltySuccess').scrollIntoView({behavior:'smooth'});
+    ['lname','lphone','lemail','lbirthday','lcity','lreferral'].forEach(id => document.getElementById(id).value = '');
+  } catch (e) {
+    alert(currentLang==='fa'?'مشکلی در ثبت‌نام پیش آمد. لطفاً دوباره تلاش کنید یا از طریق واتساپ با ما در تماس باشید.':currentLang==='hu'?'Hiba történt a feliratkozás során. Próbálja újra, vagy vegye fel velünk a kapcsolatot WhatsAppon.':'Something went wrong. Please try again or contact us via WhatsApp.');
+  }
 }
 
 // ===== MOBILE MENU =====
