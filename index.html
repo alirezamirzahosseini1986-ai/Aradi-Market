@@ -230,7 +230,7 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
         </div>
       </div>
       <div class="about-img">
-        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=700&q=80" alt="Arádi Market">
+        <img id="aboutImg" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=700&q=80" alt="Arádi Market">
       </div>
     </div>
   </div>
@@ -495,6 +495,35 @@ async function loadSiteSettings() {
       if (S['hero_title_'+l]) T[l].hero_title = S['hero_title_'+l];
       if (S['hero_sub_'+l]) T[l].hero_sub = S['hero_sub_'+l];
     });
+
+    // Generic override for any other translated text on the site.
+    // Keys are stored as content_<data-i key>_<lang>, e.g. content_about_title_fa
+    Object.keys(S).forEach(k => {
+      if (!k.startsWith('content_')) return;
+      const m = k.match(/^content_(.+)_(fa|en|hu)$/);
+      if (!m) return;
+      const [, dataKey, lang] = m;
+      if (T[lang] && S[k]) T[lang][dataKey] = S[k];
+    });
+
+    // About section image
+    if (S.about_image_url) {
+      const el = document.getElementById('aboutImg');
+      if (el) el.src = S.about_image_url;
+    }
+
+    // Handcraft items (image + tag/name/desc per language)
+    for (let i = 1; i <= 3; i++) {
+      const idx = i - 1;
+      if (!handcrafts[idx]) continue;
+      if (S['handcraft'+i+'_img']) handcrafts[idx].img = S['handcraft'+i+'_img'];
+      ['fa','en','hu'].forEach(l => {
+        if (S['handcraft'+i+'_tag_'+l]) handcrafts[idx].tag[l] = S['handcraft'+i+'_tag_'+l];
+        if (S['handcraft'+i+'_name_'+l]) handcrafts[idx].name[l] = S['handcraft'+i+'_name_'+l];
+        if (S['handcraft'+i+'_desc_'+l]) handcrafts[idx].desc[l] = S['handcraft'+i+'_desc_'+l];
+      });
+    }
+
     setLang(currentLang);
   } catch (e) {
     console.error('Could not load site settings:', e);
