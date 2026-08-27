@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ARÁDI Market — کاتالوگ محصولات</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1a7a4a;--green-l:#e8f5ee;--green-d:#0f5c35;
+  --red:#c0392b;--red-l:#fdecea;--orange:#e67e22;
+  --gold:#c9933a;--gold-l:#f5e6c8;
+  --gray:#6c757d;--border:#e0e0e0;
+  --bg:#f8f9fa;--white:#ffffff;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --radius:12px;
+}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:#222;direction:rtl;min-height:100vh}
+body.en,body.hu{direction:ltr}
+
+/* HEADER */
+header{background:var(--green);color:white;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:1200px;margin:0 auto}
+.logo{font-size:20px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.logo small{font-size:11px;font-weight:400;opacity:.8;display:block;letter-spacing:0}
+.lang-btns{display:flex;gap:6px}
+.lang-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;font-size:11px;padding:5px 10px;border-radius:20px;cursor:pointer;font-weight:600;transition:all .2s}
+.lang-btn.active,.lang-btn:hover{background:white;color:var(--green)}
+.cart-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all .2s}
+.cart-btn:hover{background:white;color:var(--green)}
+.cart-count{background:var(--orange);color:white;border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* SEARCH BAR */
+.search-wrap{background:var(--green-d);padding:10px 16px 14px}
+.search-inner{max-width:1200px;margin:0 auto}
+.search-box{display:flex;gap:8px;background:white;border-radius:10px;padding:4px 4px 4px 12px;align-items:center}
+.search-box input{flex:1;border:none;outline:none;font-size:14px;background:transparent;direction:inherit}
+.search-box button{background:var(--green);color:white;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px}
+
+/* CATEGORIES */
+.cats-wrap{background:white;border-bottom:1px solid var(--border);position:sticky;top:60px;z-index:90}
+.cats-scroll{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;max-width:1200px;margin:0 auto;scrollbar-width:none}
+.cats-scroll::-webkit-scrollbar{display:none}
+.cat-btn{background:#f0f0f0;border:none;color:#555;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.cat-btn.active,.cat-btn:hover{background:var(--green);color:white}
+
+/* MAIN */
+main{max-width:1200px;margin:0 auto;padding:16px}
+.section-title{font-size:16px;font-weight:700;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* PRODUCTS GRID */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+@media(max-width:400px){.products-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:768px){.products-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
+
+/* PRODUCT CARD */
+.product-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer;position:relative}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.12)}
+.product-card.sold-out{opacity:.6;cursor:not-allowed}
+.product-card.sold-out:hover{transform:none}
+.product-img-wrap{position:relative;aspect-ratio:1;background:#f5f5f5;overflow:hidden}
+.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.product-card:hover:not(.sold-out) .product-img-wrap img{transform:scale(1.05)}
+.product-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(135deg,#f5f5f5,#e8e8e8)}
+.stock-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.75);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
+.stock-badge.low{background:var(--orange)}
+.stock-badge.out{background:var(--red)}
+.sold-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px}
+.product-info{padding:10px}
+.product-cat{font-size:10px;color:var(--gray);margin-bottom:3px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.product-name{font-size:13px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.4}
+.product-price{font-size:15px;font-weight:700;color:var(--green)}
+.product-price small{font-size:10px;color:var(--gray);font-weight:400}
+.add-btn{width:100%;background:var(--green);color:white;border:none;padding:8px;border-radius:0 0 var(--radius) var(--radius);font-size:12px;font-weight:600;cursor:pointer;transition:background .2s;margin-top:4px}
+.add-btn:hover{background:var(--green-d)}
+.add-btn:disabled{background:#ccc;cursor:not-allowed}
+
+/* CART SIDEBAR */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none}
+.cart-overlay.open{display:block}
+.cart-sidebar{position:fixed;top:0;left:0;width:360px;max-width:100vw;height:100%;background:white;z-index:201;transform:translateX(-100%);transition:transform .3s;display:flex;flex-direction:column;box-shadow:4px 0 20px rgba(0,0,0,0.15)}
+body.en .cart-sidebar,body.hu .cart-sidebar{left:auto;right:0;transform:translateX(100%)}
+.cart-sidebar.open{transform:translateX(0)}
+body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
+.cart-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--green);color:white}
+.cart-header h3{font-size:16px}
+.cart-close{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:0}
+.cart-body{flex:1;overflow-y:auto;padding:12px}
+.cart-empty{text-align:center;color:var(--gray);padding:40px 20px;font-size:14px}
+.cart-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5;align-items:center}
+.cart-item-img{width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f5f5f5;flex-shrink:0}
+.cart-item-info{flex:1}
+.cart-item-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.cart-item-price{font-size:12px;color:var(--green);font-weight:600}
+.cart-item-qty{display:flex;align-items:center;gap:6px}
+.qty-btn{width:26px;height:26px;border:1px solid var(--border);background:#f8f9fa;border-radius:6px;cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.qty-btn:hover{background:var(--green-l)}
+.cart-footer{padding:14px;border-top:2px solid var(--border);background:#fafafa}
+.cart-total{display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin-bottom:12px}
+.cart-total span:last-child{color:var(--green)}
+.checkout-btn{width:100%;background:var(--green);color:white;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+.checkout-btn:hover{background:var(--green-d)}
+
+/* ORDER MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:none;align-items:flex-end;justify-content:center;padding:0}
+@media(min-width:600px){.modal-ov{align-items:center;padding:20px}}
+.modal-ov.open{display:flex}
+.modal-box{background:white;border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:20px}
+@media(min-width:600px){.modal-box{border-radius:16px}}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:16px;color:var(--green)}
+.coming-soon-banner{background:linear-gradient(135deg,var(--gold-l),#fff);border:2px dashed var(--gold);border-radius:10px;padding:14px;text-align:center;margin-bottom:16px}
+.coming-soon-banner p{font-size:12px;color:var(--gray);margin-top:4px}
+.form-group{margin-bottom:12px}
+.form-group label{font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;font-family:inherit}
+.form-group input:focus,.form-group select:focus{border-color:var(--green)}
+.delivery-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.delivery-opt{border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:all .2s}
+.delivery-opt.selected{border-color:var(--green);background:var(--green-l)}
+.delivery-opt input{display:none}
+.delivery-opt-icon{font-size:24px;margin-bottom:4px}
+.delivery-opt-label{font-size:13px;font-weight:600}
+.delivery-opt-sub{font-size:11px;color:var(--gray)}
+.time-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.time-slot{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;text-align:center;font-size:12px;transition:all .2s}
+.time-slot.selected{border-color:var(--green);background:var(--green-l);font-weight:600;color:var(--green)}
+.order-summary{background:#f8f9fa;border-radius:10px;padding:12px;margin-bottom:14px}
+.order-summary-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+.order-summary-total{display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding-top:8px;border-top:1px solid var(--border);margin-top:6px;color:var(--green)}
+.submit-order-btn{width:100%;background:var(--green);color:white;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+.order-success{display:none;text-align:center;padding:20px}
+.order-success h3{color:var(--green);font-size:20px;margin:12px 0 8px}
+
+/* LOADING */
+.loading-wrap{text-align:center;padding:60px 20px;color:var(--gray)}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* CONN STATUS */
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block}
+.conn-dot.online{background:#27ae60}
+
+@media(max-width:600px){
+  .cart-sidebar{width:100%}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">
+      🛒 ARÁDI Market
+      <small id="hSub">کاتالوگ محصولات</small>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="conn-dot" id="connDot" title="وضعیت اتصال"></span>
+      <div class="lang-btns">
+        <button class="lang-btn active" onclick="setLang('fa')">FA</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('hu')">HU</button>
+      </div>
+      <button class="cart-btn" onclick="toggleCart()">
+        🛒 <span id="cartLabel">سبد</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-inner">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="جستجوی محصول..." oninput="doSearch(this.value)">
+        <button onclick="doSearch(document.getElementById('searchInput').value)">🔍</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="cats-wrap">
+  <div class="cats-scroll" id="catsScroll"></div>
+</div>
+
+<main>
+  <div id="loadingWrap" class="loading-wrap">
+    <div class="spinner"></div>
+    <div id="loadingText">در حال بارگذاری...</div>
+  </div>
+  <div id="mainContent" style="display:none">
+    <div id="productsSection"></div>
+  </div>
+</main>
+
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h3 id="cartTitle">🛒 سبد خرید</h3>
+    <button class="cart-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody">
+    <div class="cart-empty" id="cartEmpty">سبد خرید خالی است</div>
+    <div id="cartItems"></div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total">
+      <span id="cartTotalLabel">جمع کل:</span>
+      <span id="cartTotalAmt">0 Ft</span>
+    </div>
+    <button class="checkout-btn" onclick="openOrderModal()" id="checkoutBtn">ثبت سفارش →</button>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-ov" id="orderModal">
+  <div class="modal-box">
+    <div id="orderForm">
+      <div class="modal-title" id="orderTitle">📦 ثبت سفارش</div>
+
+      <div class="coming-soon-banner">
+        <div style="font-size:20px">🚀</div>
+        <strong id="csBannerTitle">پرداخت آنلاین — به زودی!</strong>
+        <p id="csBannerSub">امکان پرداخت آنلاین به زودی راه‌اندازی می‌شود. فعلاً سفارش شما ثبت می‌شود و با شما تماس می‌گیریم.</p>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px" id="deliveryLabel">نحوه دریافت:</div>
+      <div class="delivery-opts">
+        <div class="delivery-opt selected" id="opt-pickup" onclick="selectDelivery('pickup')">
+          <div class="delivery-opt-icon">🏪</div>
+          <div class="delivery-opt-label" id="pickupLabel">تحویل از فروشگاه</div>
+          <div class="delivery-opt-sub" id="pickupSub">رایگان</div>
+        </div>
+        <div class="delivery-opt" id="opt-delivery" onclick="selectDelivery('delivery')">
+          <div class="delivery-opt-icon">🚚</div>
+          <div class="delivery-opt-label" id="delivLabel">ارسال به درب منزل</div>
+          <div class="delivery-opt-sub" id="delivSub">+ هزینه ارسال</div>
+        </div>
+      </div>
+
+      <div id="deliveryFields" style="display:none">
+        <div class="form-group">
+          <label id="addrLabel">آدرس کامل *</label>
+          <input type="text" id="oAddress" placeholder="بوداپست، خیابان...">
+        </div>
+        <div class="form-group">
+          <label id="delivCostLabel">هزینه ارسال:</label>
+          <div style="font-size:14px;font-weight:700;color:var(--orange)" id="delivCostVal">1,000 Ft</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="timeLabel">زمان تحویل / دریافت:</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <select id="oDay" class="form-group" style="flex:1;padding:9px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none" onchange="renderTimeSlots()">
+          </select>
+        </div>
+        <div class="time-slots" id="timeSlots"></div>
+      </div>
+
+      <div class="form-group">
+        <label id="nameLabel">نام *</label>
+        <input type="text" id="oName" placeholder="">
+      </div>
+      <div class="form-group">
+        <label id="phoneLabel">شماره تماس *</label>
+        <input type="tel" id="oPhone" placeholder="+36..." style="direction:ltr">
+      </div>
+      <div class="form-group">
+        <label id="noteLabel">یادداشت</label>
+        <input type="text" id="oNote" placeholder="">
+      </div>
+
+      <div class="order-summary" id="orderSummaryBox"></div>
+
+      <button class="submit-order-btn" onclick="submitOrder()" id="submitOrderBtn">✅ ثبت سفارش</button>
+      <button onclick="closeOrderModal()" style="width:100%;background:none;border:none;color:var(--gray);margin-top:8px;padding:10px;cursor:pointer;font-size:13px" id="cancelOrderBtn">انصراف</button>
+    </div>
+    <div class="order-success" id="orderSuccess">
+      <div style="font-size:48px">🎉</div>
+      <h3 id="successTitle">سفارش ثبت شد!</h3>
+      <p id="successMsg" style="color:var(--gray);font-size:13px;line-height:1.7"></p>
+      <button onclick="closeOrderModal()" style="margin-top:16px;background:var(--green);color:white;border:none;padding:12px 28px;border-radius:10px;font-size:14px;cursor:pointer" id="successBtn">بستن</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://dddzyaezhjccfpaalhpc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_8bVTyqj08oBZxdVrwHquiA_aAkIfKyu";
+const DELIVERY_COST = 1000;
+const WA_NUMBER = "36705945722";
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let products = [];
+let cart = [];
+let currentLang = 'fa';
+let currentCat = 'all';
+let searchQ = '';
+let selectedDelivery = 'pickup';
+let selectedSlot = null;
+
+// ===== TRANSLATIONS =====
+const T = {
+  fa:{
+    hSub:'کاتالوگ محصولات', cartLabel:'سبد', searchPh:'جستجوی محصول...',
+    loading:'در حال بارگذاری...', allCat:'همه',
+    cats:{
+      all:'همه', dairy:'🥛 لبنیات', drink:'🥤 نوشیدنی', pickle:'🫙 ترشیجات و مربا',
+      rice:'🌾 برنج و حبوبات', spice:'🌿 ادویه و چاشنی', canned:'🥫 کنسرو',
+      bread:'🍪 نان و شیرینی', snack:'🍿 تنقلات', frozen:'❄️ فریزری',
+      dry_herbs:'🌱 سبزیجات خشک', dried:'🫘 خشکبار', sausage:'🌭 سوسیس و کالباس',
+      sauce:'🍅 رب و سس', herbal:'🌸 عرقیات', craft:'🎨 صنایع دستی'
+    },
+    inStock:'موجود', lowStock:'فقط {n} عدد', outOfStock:'ناموجود', expired:'منقضی',
+    addToCart:'افزودن به سبد', cartTitle:'🛒 سبد خرید', cartEmpty:'سبد خرید خالی است',
+    cartTotal:'جمع کل:', checkout:'ثبت سفارش →',
+    orderTitle:'📦 ثبت سفارش', csBannerTitle:'پرداخت آنلاین — به زودی!',
+    csBannerSub:'امکان پرداخت آنلاین به زودی راه‌اندازی می‌شود. فعلاً سفارش شما ثبت می‌شود و با شما تماس می‌گیریم.',
+    deliveryLabel:'نحوه دریافت:', pickupLabel:'تحویل از فروشگاه', pickupSub:'رایگان',
+    delivLabel:'ارسال به درب منزل', delivSub:'+ هزینه ارسال',
+    addrLabel:'آدرس کامل *', delivCostLabel:'هزینه ارسال:', timeLabel:'زمان تحویل / دریافت:',
+    nameLabel:'نام *', phoneLabel:'شماره تماس *', noteLabel:'یادداشت',
+    today:'امروز', tomorrow:'فردا', submitOrder:'✅ ثبت سفارش', cancel:'انصراف',
+    successTitle:'سفارش ثبت شد!', successBtn:'بستن', noResults:'محصولی یافت نشد',
+    ft:'Ft', deliveryCost:'هزینه ارسال'
+  },
+  en:{
+    hSub:'Product Catalog', cartLabel:'Cart', searchPh:'Search products...',
+    loading:'Loading...', allCat:'All',
+    cats:{
+      all:'All', dairy:'🥛 Dairy', drink:'🥤 Drinks', pickle:'🫙 Pickles & Jams',
+      rice:'🌾 Rice & Legumes', spice:'🌿 Spices', canned:'🥫 Canned Food',
+      bread:'🍪 Bread & Sweets', snack:'🍿 Snacks', frozen:'❄️ Frozen',
+      dry_herbs:'🌱 Dried Herbs', dried:'🫘 Dried Fruits & Nuts', sausage:'🌭 Sausages',
+      sauce:'🍅 Sauces', herbal:'🌸 Herbal Waters', craft:'🎨 Handicrafts'
+    },
+    inStock:'In Stock', lowStock:'Only {n} left', outOfStock:'Out of Stock', expired:'Expired',
+    addToCart:'Add to Cart', cartTitle:'🛒 Cart', cartEmpty:'Your cart is empty',
+    cartTotal:'Total:', checkout:'Place Order →',
+    orderTitle:'📦 Place Order', csBannerTitle:'Online Payment — Coming Soon!',
+    csBannerSub:'Online payment will be available soon. Your order will be registered and we will contact you.',
+    deliveryLabel:'Delivery method:', pickupLabel:'Store Pickup', pickupSub:'Free',
+    delivLabel:'Home Delivery', delivSub:'+ delivery fee',
+    addrLabel:'Full Address *', delivCostLabel:'Delivery fee:', timeLabel:'Pickup / Delivery time:',
+    nameLabel:'Name *', phoneLabel:'Phone *', noteLabel:'Note',
+    today:'Today', tomorrow:'Tomorrow', submitOrder:'✅ Place Order', cancel:'Cancel',
+    successTitle:'Order Placed!', successBtn:'Close', noResults:'No products found',
+    ft:'Ft', deliveryCost:'Delivery fee'
+  },
+  hu:{
+    hSub:'Termékkatalógus', cartLabel:'Kosár', searchPh:'Termékek keresése...',
+    loading:'Betöltés...', allCat:'Összes',
+    cats:{
+      all:'Összes', dairy:'🥛 Tejtermékek', drink:'🥤 Italok', pickle:'🫙 Savanyúság & Lekvár',
+      rice:'🌾 Rizs & Hüvelyesek', spice:'🌿 Fűszerek', canned:'🥫 Konzerv',
+      bread:'🍪 Kenyér & Édességek', snack:'🍿 Rágcsálnivalók', frozen:'❄️ Fagyasztott',
+      dry_herbs:'🌱 Szárított zöldségek', dried:'🫘 Aszalt gyümölcsök', sausage:'🌭 Kolbász',
+      sauce:'🍅 Szószok', herbal:'🌸 Gyógynövény vizek', craft:'🎨 Kézművesség'
+    },
+    inStock:'Elérhető', lowStock:'Csak {n} db', outOfStock:'Nem elérhető', expired:'Lejárt',
+    addToCart:'Kosárba', cartTitle:'🛒 Kosár', cartEmpty:'A kosár üres',
+    cartTotal:'Összesen:', checkout:'Rendelés →',
+    orderTitle:'📦 Rendelés leadása', csBannerTitle:'Online fizetés — Hamarosan!',
+    csBannerSub:'Az online fizetés hamarosan elérhető lesz. Rendelése rögzítésre kerül és felvesszük Önnel a kapcsolatot.',
+    deliveryLabel:'Átvétel módja:', pickupLabel:'Bolti átvétel', pickupSub:'Ingyenes',
+    delivLabel:'Házhozszállítás', delivSub:'+ szállítási díj',
+    addrLabel:'Teljes cím *', delivCostLabel:'Szállítási díj:', timeLabel:'Átvétel ideje:',
+    nameLabel:'Név *', phoneLabel:'Telefon *', noteLabel:'Megjegyzés',
+    today:'Ma', tomorrow:'Holnap', submitOrder:'✅ Rendelés leadása', cancel:'Mégsem',
+    successTitle:'Rendelés leadva!', successBtn:'Bezárás', noResults:'Nem található termék',
+    ft:'Ft', deliveryCost:'Szállítási díj'
+  }
+};
+
+// ===== CATEGORY MAPPING =====
+const CATS = [
+  {id:'all'}, {id:'dairy'}, {id:'drink'}, {id:'pickle'}, {id:'rice'},
+  {id:'spice'}, {id:'canned'}, {id:'bread'}, {id:'snack'}, {id:'frozen'},
+  {id:'dry_herbs'}, {id:'dried'}, {id:'sausage'}, {id:'sauce'}, {id:'herbal'}, {id:'craft'}
+];
+
+function categorize(name){
+  const n = name.toLowerCase();
+  const cats = [];
+  if(/ماست|پنیر|کشک|خامه|دوغ/.test(n)) cats.push('dairy');
+  if(/دوغ|شربت|عرق نعنا|عرق|گلاب|آبلیمو|آب لیمو|ایستک|شیره|آبغوره/.test(n)) cats.push('drink');
+  if(/ترشی|خیارشور|مربا|شور مخلوط|زیتون|سیرترشی|سیر ترشی|ترشک|غوره/.test(n)) cats.push('pickle');
+  if(/برنج|لپه|لوبیا|نخودچی|باقالی/.test(n)) cats.push('rice');
+  if(/زعفران|زردچوبه|سماق|گلپر|شنبلیله|ترخون|نعنا خشک|گشنیز|ادویه|پودر پیاز|پودر زنجبیل|پودر دارچین|گرد لیمو|برگ بو|هل|فلافل/.test(n)) cats.push('spice');
+  if(/کنسرو|آش|حلیم|فسنجان|سمنو|قورمه سبزی|قیمه|باقالی قاتوق|میرزا قاسمی|خورشت|بادمجان سرخ|سبزی کوکو|قلیه ماهی|سیرداغ/.test(n)) cats.push('canned');
+  if(/نان|شیرینی نخودچی|سوهان|نبات|کیک|بیسکویت|کلوچه|گز/.test(n)) cats.push('bread');
+  if(/پفک|آلوچه|لواشک|تنقلات|ترشک/.test(n)) cats.push('snack');
+  if(/منجمد|بستنی|فالوده/.test(n)) { cats.push('frozen'); cats.push('snack'); }
+  if(/سبزی|رشته آش|رشته پلو/.test(n)) cats.push('dry_herbs');
+  if(/زرشک|آلو بخارا|کشمش|خرما|آلبالو خشک|لیمو عمانی|توت/.test(n)) cats.push('dried');
+  if(/سوسیس|هات داگ/.test(n)) cats.push('sausage');
+  if(/رب|سرکه/.test(n)) cats.push('sauce');
+  if(/گل گاوزبان|گل سرخ|عرق کاسنی/.test(n)) cats.push('herbal');
+  if(/صنایع|مسی|آینه|تخته نرد|شطرنج/.test(n)) cats.push('craft');
+  return cats.length ? cats : ['snack'];
+}
+
+// ===== INIT =====
+async function init(){
+  try {
+    const { data, error } = await db.from('products').select('*').order('name');
+    if(error) throw error;
+    products = data || [];
+    // Add categories to each product
+    products.forEach(p => { p._cats = categorize(p.name); });
+    document.getElementById('connDot').className = 'conn-dot online';
+    document.getElementById('loadingWrap').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    buildCats();
+    renderProducts();
+    initDays();
+    // Realtime
+    db.channel('catalog').on('postgres_changes',{event:'*',schema:'public',table:'products'},async()=>{
+      const r = await db.from('products').select('*').order('name');
+      products = (r.data||[]).map(p=>({...p,_cats:categorize(p.name)}));
+      renderProducts();
+    }).subscribe();
+  } catch(e){
+    document.getElementById('loadingText').textContent = 'خطا در اتصال — ' + e.message;
+  }
+}
+
+// ===== LANG =====
+function setLang(lang){
+  currentLang = lang;
+  document.body.className = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='fa'?'rtl':'ltr';
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===lang));
+  const t = T[lang];
+  document.getElementById('hSub').textContent = t.hSub;
+  document.getElementById('cartLabel').textContent = t.cartLabel;
+  document.getElementById('searchInput').placeholder = t.searchPh;
+  document.getElementById('cartTitle').textContent = t.cartTitle;
+  document.getElementById('cartEmpty').textContent = t.cartEmpty;
+  document.getElementById('cartTotalLabel').textContent = t.cartTotal;
+  document.getElementById('checkoutBtn').textContent = t.checkout;
+  document.getElementById('orderTitle').textContent = t.orderTitle;
+  document.getElementById('csBannerTitle').textContent = t.csBannerTitle;
+  document.getElementById('csBannerSub').textContent = t.csBannerSub;
+  document.getElementById('deliveryLabel').textContent = t.deliveryLabel;
+  document.getElementById('pickupLabel').textContent = t.pickupLabel;
+  document.getElementById('pickupSub').textContent = t.pickupSub;
+  document.getElementById('delivLabel').textContent = t.delivLabel;
+  document.getElementById('delivSub').textContent = t.delivSub;
+  document.getElementById('addrLabel').textContent = t.addrLabel;
+  document.getElementById('delivCostLabel').textContent = t.delivCostLabel;
+  document.getElementById('timeLabel').textContent = t.timeLabel;
+  document.getElementById('nameLabel').textContent = t.nameLabel;
+  document.getElementById('phoneLabel').textContent = t.phoneLabel;
+  document.getElementById('noteLabel').textContent = t.noteLabel;
+  document.getElementById('submitOrderBtn').textContent = t.submitOrder;
+  document.getElementById('cancelOrderBtn').textContent = t.cancel;
+  document.getElementById('successTitle').textContent = t.successTitle;
+  document.getElementById('successBtn').textContent = t.successBtn;
+  buildCats();
+  renderProducts();
+  renderCart();
+  initDays();
+}
+
+// ===== CATEGORIES =====
+function buildCats(){
+  const t = T[currentLang];
+  const scroll = document.getElementById('catsScroll');
+  scroll.innerHTML = CATS.map(c=>`
+    <button class="cat-btn ${currentCat===c.id?'active':''}" onclick="filterCat('${c.id}')">
+      ${t.cats[c.id]}
+    </button>`).join('');
+}
+
+function filterCat(cat){
+  currentCat = cat;
+  buildCats();
+  renderProducts();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== SEARCH =====
+function doSearch(q){
+  searchQ = q.trim();
+  renderProducts();
+}
+
+// ===== PRODUCTS =====
+function isExpired(expire){
+  if(!expire) return false;
+  const d = new Date(expire.replace(/\./g,'-'));
+  return d < new Date();
+}
+function isLow(stock){ return stock!==null && stock>0 && stock<=3; }
+function isOut(p){ return (p.stock!==null && p.stock<=0) || isExpired(p.expire); }
+
+function renderProducts(){
+  const t = T[currentLang];
+  const today = new Date(); today.setHours(0,0,0,0);
+  let list = products.filter(p=>{
+    if(currentCat!=='all' && !p._cats.includes(currentCat)) return false;
+    if(searchQ && !p.name.includes(searchQ) && !(p.name.toLowerCase().includes(searchQ.toLowerCase()))) return false;
+    return true;
+  });
+  // Sort: available first, then low stock, then out of stock/expired
+  list.sort((a,b)=>{
+    const aOut=isOut(a), bOut=isOut(b);
+    if(aOut && !bOut) return 1;
+    if(!aOut && bOut) return -1;
+    return a.name.localeCompare(b.name,'fa');
+  });
+  const sec = document.getElementById('productsSection');
+  if(!list.length){
+    sec.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--gray)">${t.noResults}</div>`;
+    return;
+  }
+  sec.innerHTML = `<div class="products-grid">${list.map(p=>productCard(p,t)).join('')}</div>`;
+}
+
+function productCard(p, t){
+  const out = isOut(p);
+  const expired = isExpired(p.expire);
+  const low = isLow(p.stock);
+  let badge='', overlay='';
+  if(expired){ badge=`<div class="stock-badge out">${t.expired}</div>`; overlay=`<div class="sold-overlay">${t.expired}</div>`; }
+  else if(p.stock!==null && p.stock<=0){ badge=`<div class="stock-badge out">${t.outOfStock}</div>`; overlay=`<div class="sold-overlay">${t.outOfStock}</div>`; }
+  else if(low){ badge=`<div class="stock-badge low">${t.lowStock.replace('{n}',p.stock)}</div>`; }
+  const imgHtml = p.image_url
+    ? `<img src="${p.image_url}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const emoji = getEmoji(p._cats);
+  const priceHtml = p.price!==null
+    ? `<div class="product-price">${p.price.toLocaleString()} <small>${t.ft}</small></div>`
+    : '';
+  return `<div class="product-card ${out?'sold-out':''}" onclick="${out?'':'addToCart('+p.id+')'}">
+    <div class="product-img-wrap">
+      ${imgHtml}
+      <div class="product-img-placeholder" ${p.image_url?'style="display:none"':''}>${emoji}</div>
+      ${badge}${overlay}
+    </div>
+    <div class="product-info">
+      <div class="product-name">${p.name}</div>
+      ${priceHtml}
+    </div>
+    ${!out?`<button class="add-btn" onclick="event.stopPropagation();addToCart(${p.id})">${t.addToCart}</button>`:''}
+  </div>`;
+}
+
+function getEmoji(cats){
+  const map={dairy:'🥛',drink:'🥤',pickle:'🫙',rice:'🌾',spice:'🌿',canned:'🥫',bread:'🍪',snack:'🍿',frozen:'❄️',dry_herbs:'🌱',dried:'🫘',sausage:'🌭',sauce:'🍅',herbal:'🌸',craft:'🎨'};
+  for(const c of (cats||[])) if(map[c]) return map[c];
+  return '🛒';
+}
+
+// ===== CART =====
+function addToCart(id){
+  const p = products.find(x=>x.id===id); if(!p||isOut(p)) return;
+  const ex = cart.find(c=>c.id===id);
+  if(ex){ if(p.stock!==null&&ex.qty>=p.stock) return; ex.qty++; }
+  else cart.push({id:p.id,name:p.name,price:p.price,qty:1,image_url:p.image_url,cats:p._cats});
+  renderCart();
+  // Flash add
+  const cards = document.querySelectorAll('.product-card');
+  // open cart briefly
+  if(!document.getElementById('cartSidebar').classList.contains('open')) toggleCart();
+}
+
+function changeQty(id,d){
+  const item=cart.find(c=>c.id===id); if(!item) return;
+  item.qty+=d; if(item.qty<=0) cart=cart.filter(c=>c.id!==id);
+  renderCart(); updateOrderSummary();
+}
+
+function renderCart(){
+  const t=T[currentLang];
+  const count=cart.reduce((s,i)=>s+i.qty,0);
+  const total=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  document.getElementById('cartCount').textContent=count;
+  const itemsEl=document.getElementById('cartItems');
+  const emptyEl=document.getElementById('cartEmpty');
+  const footerEl=document.getElementById('cartFooter');
+  if(!cart.length){ itemsEl.innerHTML=''; emptyEl.style.display='block'; footerEl.style.display='none'; return; }
+  emptyEl.style.display='none'; footerEl.style.display='block';
+  itemsEl.innerHTML=cart.map(item=>`<div class="cart-item">
+    ${item.image_url?`<img src="${item.image_url}" class="cart-item-img" alt="${item.name}">`:`<div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:24px">${getEmoji(item.cats)}</div>`}
+    <div class="cart-item-info">
+      <div class="cart-item-name">${item.name}</div>
+      <div class="cart-item-price">${item.price!==null?(item.price*item.qty).toLocaleString()+' '+t.ft:'—'}</div>
+    </div>
+    <div class="cart-item-qty">
+      <span class="qty-btn" onclick="changeQty(${item.id},-1)">−</span>
+      <span style="font-weight:700;min-width:20px;text-align:center">${item.qty}</span>
+      <span class="qty-btn" onclick="changeQty(${item.id},1)">+</span>
+    </div>
+  </div>`).join('');
+  document.getElementById('cartTotalAmt').textContent=total.toLocaleString()+' '+t.ft;
+}
+
+function toggleCart(){
+  document.getElementById('cartSidebar').classList.toggle('open');
+  document.getElementById('cartOverlay').classList.toggle('open');
+}
+
+// ===== ORDER MODAL =====
+function initDays(){
+  const t=T[currentLang];
+  const sel=document.getElementById('oDay');
+  const today=new Date(), tomorrow=new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+  const fmt=d=>d.toLocaleDateString(currentLang==='fa'?'fa-IR':currentLang==='hu'?'hu-HU':'en-GB',{weekday:'long',month:'long',day:'numeric'});
+  sel.innerHTML=`<option value="today">${t.today} — ${fmt(today)}</option><option value="tomorrow">${t.tomorrow} — ${fmt(tomorrow)}</option>`;
+  renderTimeSlots();
+}
+
+function renderTimeSlots(){
+  const slots=['09:00–11:00','11:00–13:00','13:00–15:00','15:00–17:00','17:00–19:00'];
+  document.getElementById('timeSlots').innerHTML=slots.map(s=>`
+    <div class="time-slot ${selectedSlot===s?'selected':''}" onclick="selectSlot('${s}')">${s}</div>`).join('');
+}
+
+function selectSlot(s){ selectedSlot=s; renderTimeSlots(); }
+
+function selectDelivery(type){
+  selectedDelivery=type;
+  document.getElementById('opt-pickup').classList.toggle('selected',type==='pickup');
+  document.getElementById('opt-delivery').classList.toggle('selected',type==='delivery');
+  document.getElementById('deliveryFields').style.display=type==='delivery'?'block':'none';
+  updateOrderSummary();
+}
+
+function updateOrderSummary(){
+  const t=T[currentLang];
+  const sub=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  const deliv=selectedDelivery==='delivery'?DELIVERY_COST:0;
+  const total=sub+deliv;
+  document.getElementById('orderSummaryBox').innerHTML=`
+    <div class="order-summary-row"><span>${t.cartTotal}</span><span>${sub.toLocaleString()} ${t.ft}</span></div>
+    ${deliv?`<div class="order-summary-row" style="color:var(--orange)"><span>${t.deliveryCost}</span><span>+ ${deliv.toLocaleString()} ${t.ft}</span></div>`:''}
+    <div class="order-summary-total"><span>💰 Total:</span><span>${total.toLocaleString()} ${t.ft}</span></div>`;
+}
+
+function openOrderModal(){
+  if(!cart.length) return;
+  updateOrderSummary();
+  document.getElementById('orderModal').classList.add('open');
+  document.getElementById('orderForm').style.display='block';
+  document.getElementById('orderSuccess').style.display='none';
+}
+
+function closeOrderModal(){
+  document.getElementById('orderModal').classList.remove('open');
+}
+
+async function submitOrder(){
+  const name=document.getElementById('oName').value.trim();
+  const phone=document.getElementById('oPhone').value.trim();
+  const address=document.getElementById('oAddress').value.trim();
+  const note=document.getElementById('oNote').value.trim();
+  const day=document.getElementById('oDay').value;
+  if(!name||!phone){ alert(currentLang==='fa'?'نام و شماره تماس الزامی است':'Name and phone are required'); return; }
+  if(selectedDelivery==='delivery'&&!address){ alert(currentLang==='fa'?'آدرس را وارد کنید':'Please enter delivery address'); return; }
+  if(!selectedSlot){ alert(currentLang==='fa'?'لطفاً زمان تحویل را انتخاب کنید':'Please select delivery time'); return; }
+  const t=T[currentLang];
+  const sub=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  const deliv=selectedDelivery==='delivery'?DELIVERY_COST:0;
+  const total=sub+deliv;
+  const itemsList=cart.map(i=>`${i.name} × ${i.qty} = ${(i.price*i.qty).toLocaleString()} Ft`).join('\n');
+  const msg=`🛒 *سفارش جدید — ARÁDI Market*\n\n👤 نام: ${name}\n📞 تلفن: ${phone}\n${selectedDelivery==='delivery'?`📍 آدرس: ${address}\n`:''}\n📦 محصولات:\n${itemsList}\n\n🚚 نحوه دریافت: ${selectedDelivery==='pickup'?t.pickupLabel:t.delivLabel}\n📅 زمان: ${day==='today'?t.today:t.tomorrow} — ${selectedSlot}\n💰 جمع کل: ${total.toLocaleString()} Ft${note?'\n📝 یادداشت: '+note:''}`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)},'_blank'`);
+  document.getElementById('orderForm').style.display='none';
+  document.getElementById('orderSuccess').style.display='block';
+  document.getElementById('successTitle').textContent=t.successTitle;
+  document.getElementById('successBtn').textContent=t.successBtn;
+  document.getElementById('successMsg').textContent=currentLang==='fa'?`سفارش شما ثبت شد. به زودی با شماره ${phone} تماس می‌گیریم.`:`Your order has been placed. We will contact you at ${phone} shortly.`;
+  cart=[]; renderCart();
+}
+
+document.getElementById('orderModal').addEventListener('click',function(e){ if(e.target===this) closeOrderModal(); });
+
+init();
+</script>
+</body>
+</html>
