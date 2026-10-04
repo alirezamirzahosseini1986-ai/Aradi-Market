@@ -654,7 +654,7 @@ const T = {
     hSub:'کاتالوگ محصولات', cartLabel:'سبد', searchPh:'جستجوی محصول...',
     loading:'در حال بارگذاری...', allCat:'همه',
     cats:{
-      all:'همه', dairy:'🥛 لبنیات', drink:'🥤 نوشیدنی', pickle:'🫙 ترشیجات و مربا',
+      all:'همه', sale:'🔥 تخفیفات ویژه', dairy:'🥛 لبنیات', drink:'🥤 نوشیدنی', pickle:'🫙 ترشیجات و مربا',
       rice:'🌾 برنج و حبوبات', spice:'🌿 ادویه و چاشنی', canned:'🥫 کنسرو',
       bread:'🍪 نان و شیرینی', snack:'🍿 تنقلات', frozen:'❄️ فریزری',
       dry_herbs:'🌱 سبزیجات خشک', dried:'🫘 خشکبار', sausage:'🌭 سوسیس و کالباس',
@@ -677,7 +677,7 @@ const T = {
     hSub:'Product Catalog', cartLabel:'Cart', searchPh:'Search products...',
     loading:'Loading...', allCat:'All',
     cats:{
-      all:'All', dairy:'🥛 Dairy', drink:'🥤 Drinks', pickle:'🫙 Pickles & Jams',
+      all:'All', sale:'🔥 Special Offers', dairy:'🥛 Dairy', drink:'🥤 Drinks', pickle:'🫙 Pickles & Jams',
       rice:'🌾 Rice & Legumes', spice:'🌿 Spices', canned:'🥫 Canned Food',
       bread:'🍪 Bread & Sweets', snack:'🍿 Snacks', frozen:'❄️ Frozen',
       dry_herbs:'🌱 Dried Herbs', dried:'🫘 Dried Fruits & Nuts', sausage:'🌭 Sausages',
@@ -700,7 +700,7 @@ const T = {
     hSub:'Termékkatalógus', cartLabel:'Kosár', searchPh:'Termékek keresése...',
     loading:'Betöltés...', allCat:'Összes',
     cats:{
-      all:'Összes', dairy:'🥛 Tejtermékek', drink:'🥤 Italok', pickle:'🫙 Savanyúság & Lekvár',
+      all:'Összes', sale:'🔥 Akciók', dairy:'🥛 Tejtermékek', drink:'🥤 Italok', pickle:'🫙 Savanyúság & Lekvár',
       rice:'🌾 Rizs & Hüvelyesek', spice:'🌿 Fűszerek', canned:'🥫 Konzerv',
       bread:'🍪 Kenyér & Édességek', snack:'🍿 Rágcsálnivalók', frozen:'❄️ Fagyasztott',
       dry_herbs:'🌱 Szárított zöldségek', dried:'🫘 Aszalt gyümölcsök', sausage:'🌭 Kolbász',
@@ -723,7 +723,7 @@ const T = {
 
 // ===== CATEGORY MAPPING =====
 const CATS = [
-  {id:'all'}, {id:'dairy'}, {id:'drink'}, {id:'pickle'}, {id:'rice'},
+  {id:'all'}, {id:'sale'}, {id:'dairy'}, {id:'drink'}, {id:'pickle'}, {id:'rice'},
   {id:'spice'}, {id:'canned'}, {id:'bread'}, {id:'snack'}, {id:'frozen'},
   {id:'dry_herbs'}, {id:'dried'}, {id:'sausage'}, {id:'sauce'}, {id:'herbal'}, {id:'craft'}
 ];
@@ -1199,14 +1199,28 @@ function setLang(lang){
 
 
 // ===== CATEGORIES =====
+// A product is a "special offer" when a discounted lot or an active discount lowers its price (B2B prices do not count).
+function isSpecialOffer(p){
+  if(p.price===null||p.price===undefined||isOut(p)) return false;
+  if(getSaleBatch(p)) return true;
+  const d=getDiscountedPrice(p);
+  return d!==null && d<p.price;
+}
+function hasSpecialOffers(){ return products.some(isSpecialOffer); }
+
 function buildCats(){
   const t=T[currentLang];
   const scroll=document.getElementById('catsScroll');
   if(!scroll) return;
-  scroll.innerHTML=CATS.map(cat=>`
-    <button class="cat-btn ${currentCat===cat.id?'active':''}" onclick="filterCat('${cat.id}')">
+  const showSale=hasSpecialOffers();
+  // the «تخفیفات ویژه» button exists only while something is on offer
+  scroll.innerHTML=CATS.filter(cat=>cat.id!=='sale'||showSale).map(cat=>{
+    const active=currentCat===cat.id;
+    const style=cat.id==='sale'?(active?'style="background:var(--red);color:white"':'style="background:var(--red-l);color:var(--red)"'):'';
+    return `
+    <button class="cat-btn ${active?'active':''}" ${style} onclick="filterCat('${cat.id}')">
       ${t.cats[cat.id]}
-    </button>`).join('');
+    </button>`; }).join('');
 }
 
 function filterCat(cat){
@@ -1237,17 +1251,23 @@ function isOut(p){
 
 function renderProducts(){
   const t = T[currentLang];
-  const today = new Date(); today.setHours(0,0,0,0);
+  if(currentCat==='sale' && !hasSpecialOffers()) currentCat='all';   // the last offer just ended
+  buildCats();
   let list = products.filter(p=>{
-    if(currentCat!=='all' && !p._cats.includes(currentCat)) return false;
+    if(p.price===null||p.price===undefined) return false;            // no price yet: not ready to be sold online
+    if(currentCat==='sale'){ if(!isSpecialOffer(p)) return false; }
+    else if(currentCat!=='all' && !p._cats.includes(currentCat)) return false;
     if(searchQ && !p.name.includes(searchQ) && !(p.name.toLowerCase().includes(searchQ.toLowerCase()))) return false;
     return true;
   });
-  // Sort: available first, then low stock, then out of stock/expired
+  // Sort: special offers first, then other available products, then out of stock/expired
   list.sort((a,b)=>{
     const aOut=isOut(a), bOut=isOut(b);
     if(aOut && !bOut) return 1;
     if(!aOut && bOut) return -1;
+    const aSale=isSpecialOffer(a), bSale=isSpecialOffer(b);
+    if(aSale && !bSale) return -1;
+    if(!aSale && bSale) return 1;
     return a.name.localeCompare(b.name,'fa');
   });
   const sec = document.getElementById('productsSection');
@@ -1266,7 +1286,7 @@ function productCard(p, t){
   const finalPrice = getEffectivePrice(p);
   const onSale = origPrice!==null && origPrice!==undefined && finalPrice<origPrice;
   const discPct = onSale ? Math.round((1-finalPrice/origPrice)*100) : 0;
-  const discBadge = discPct>0 ? `<div style="position:absolute;top:8px;left:8px;background:var(--red);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">-${discPct}%</div>` : '';
+  const discBadge = discPct>0 ? `<div style="position:absolute;top:8px;left:8px;background:var(--red);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;direction:ltr">−${discPct}%</div>` : '';
   let badge='', overlay='';
   if(out){ badge=`<div class="stock-badge out">${t.outOfStock}</div>`; overlay=`<div class="sold-overlay">${t.outOfStock}</div>`; }
   else if(low){ badge=`<div class="stock-badge low">${t.lowStock.replace('{n}',qty)}</div>`; }
