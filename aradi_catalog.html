@@ -527,7 +527,7 @@ body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
         <div class="delivery-opt" id="opt-delivery" onclick="selectDelivery('delivery')">
           <div class="delivery-opt-icon">🚚</div>
           <div class="delivery-opt-label" id="delivLabel">ارسال به درب منزل</div>
-          <div class="delivery-opt-sub" id="delivSub">مناطق ۷،۸،۹: ۲۰۰۰ Ft | سایر: ۳۰۰۰ Ft</div>
+          <div class="delivery-opt-sub" id="delivSub">مناطق ۷،۸،۹،۱۱: ۲۰۰۰ Ft | سایر: ۳۰۰۰ Ft</div>
         </div>
       </div>
 
@@ -545,7 +545,7 @@ body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
             <option value="5">District V</option><option value="6">District VI</option>
             <option value="7">District VII ★</option><option value="8">District VIII ★</option>
             <option value="9">District IX ★</option><option value="10">District X</option>
-            <option value="11">District XI</option><option value="12">District XII</option>
+            <option value="11">District XI ★</option><option value="12">District XII</option>
             <option value="13">District XIII</option><option value="14">District XIV</option>
             <option value="15">District XV</option><option value="16">District XVI</option>
             <option value="17">District XVII</option><option value="18">District XVIII</option>
@@ -628,7 +628,7 @@ body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
 <script>
 const SUPABASE_URL = "https://dddzyaezhjccfpaalhpc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_8bVTyqj08oBZxdVrwHquiA_aAkIfKyu";
-const DELIVERY_COST_NEAR = 2000;  // مناطق ۷،۸،۹
+const DELIVERY_COST_NEAR = 2000;  // مناطق ۷،۸،۹،۱۱
 const DELIVERY_COST_FAR = 3000;   // سایر مناطق
 const NEAR_DISTRICTS = ['7','8','9','11','VII','VIII','IX','XI'];
 const BOT_TOKEN = "8986826792:AAEa-EDU2Znx5VAFCnGoNr6CGe663iuStVs";
@@ -1061,6 +1061,18 @@ function trackOrder(total){
 
 function saveAnalytics(){ localStorage.setItem('aradi_analytics', JSON.stringify(analyticsData)); }
 
+// Adds the category list (manual catalog categories first, then the shop category, then auto-detect).
+function decorateProduct(p){
+  const ov = catalogOverrides[p.id]||{};
+  if(ov.extra_cats && ov.extra_cats.length){
+    const catMap2={'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle','برنج و حبوبات':'rice','ادویه و چاشنی':'spice','کنسرو':'canned','نان و شیرینی':'bread','تنقلات':'snack','فریزری':'frozen','سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage','رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'};
+    p._cats = ov.extra_cats.map(c=>catMap2[c]||c).filter(Boolean);
+  } else {
+    p._cats = categorize(p.name, p.category);
+  }
+  if(ov.name) p._displayName=ov.name;
+}
+
 async function init(){
   try {
     const { data, error } = await db.from('products').select('*').order('name');
@@ -1086,16 +1098,7 @@ async function init(){
       });
     }
     // Add categories to each product
-    products.forEach(p => {
-    const ov = catalogOverrides[p.id]||{};
-    if(ov.extra_cats && ov.extra_cats.length){
-      const catMap2={'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle','برنج و حبوبات':'rice','ادویه و چاشنی':'spice','کنسرو':'canned','نان و شیرینی':'bread','تنقلات':'snack','فریزری':'frozen','سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage','رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'};
-      p._cats = ov.extra_cats.map(c=>catMap2[c]||c).filter(Boolean);
-    } else {
-      p._cats = categorize(p.name, p.category);
-    }
-    if(ov.name) p._displayName=ov.name;
-  });
+    products.forEach(decorateProduct);
     document.getElementById('connDot').className = 'conn-dot online';
     document.getElementById('loadingWrap').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
@@ -1110,8 +1113,10 @@ async function init(){
     // Realtime
     db.channel('catalog').on('postgres_changes',{event:'*',schema:'public',table:'products'},async()=>{
       const r = await db.from('products').select('*').order('name');
-      products = (r.data||[]).map(p=>({...p,_cats:categorize(p.name)}));
+      products = r.data||[];
+      products.forEach(decorateProduct);
       renderProducts();
+      renderCart();
     }).subscribe();
   } catch(e){
     document.getElementById('loadingText').textContent = 'خطا در اتصال — ' + e.message;
@@ -1294,18 +1299,79 @@ function getEmoji(cats){
   return '🛒';
 }
 
+// ===== SHARED HELPERS =====
+function showFlash(msg,type){
+  let t=document.getElementById('flashToast');
+  if(!t){
+    t=document.createElement('div'); t.id='flashToast';
+    t.style.cssText='position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:900;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;color:white;box-shadow:0 4px 16px rgba(0,0,0,0.25);max-width:90vw;text-align:center;display:none';
+    document.body.appendChild(t);
+  }
+  t.style.background = type==='err'?'#c0392b':type==='warn'?'#e67e22':'#1a7a4a';
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(t._t); t._t=setTimeout(()=>{ t.style.display='none'; },2500);
+}
+
+// The price the customer actually pays: B2B price first, then the active discount, then the list price.
+function getEffectivePrice(p){
+  if(p.price===null||p.price===undefined) return p.price;
+  const ws=getWholesalePrice(p); if(ws!==null) return ws;
+  const d=getDiscountedPrice(p); if(d!==null) return d;
+  return p.price;
+}
+// Keep cart lines in step with the current price (discount switched on, B2B login, price change in the shop).
+function refreshCartPrices(){
+  cart.forEach(item=>{
+    const p=products.find(x=>x.id===item.id); if(!p) return;
+    item.orig_price=p.price;
+    item.price=getEffectivePrice(p);
+  });
+}
+
+// Insert that survives a missing column: on PGRST204 the unknown field is dropped and the insert retried.
+async function insertTolerant(table,row){
+  const r=Object.assign({},row); let res;
+  for(let i=0;i<12;i++){
+    res = await db.from(table).insert(r);
+    if(!res.error) return res;
+    const m=/'([^']+)' column/.exec(res.error.message||'');
+    if(res.error.code==='PGRST204' && m && (m[1] in r)){ delete r[m[1]]; continue; }
+    return res;
+  }
+  return res;
+}
+
+// Telegram rejects a Markdown message when a name or note contains _ or *; retry as plain text.
+async function sendTelegram(text){
+  const url='https://api.telegram.org/bot'+BOT_TOKEN+'/sendMessage';
+  const post=body=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  try {
+    let r=await post({chat_id:CHAT_ID,text,parse_mode:'Markdown'});
+    if(!r.ok) r=await post({chat_id:CHAT_ID,text});
+    return r.ok;
+  } catch(e){ console.log('Telegram error:', e); return false; }
+}
+
 // ===== CART =====
 function addToCart(id){
   const p = products.find(x=>x.id===id); if(!p||isOut(p)) return;
   const ex = cart.find(c=>c.id===id);
-  if(ex){ if(p.stock!==null&&ex.qty>=p.stock) return; ex.qty++; }
-  else cart.push({id:p.id,name:p.name,price:p.price,qty:1,image_url:p.image_url,cats:p._cats});
+  if(ex){
+    if(p.stock!==null&&ex.qty>=p.stock){
+      showFlash(currentLang==='fa'?'بیشتر از این موجود نیست':currentLang==='hu'?'Nincs több készleten':'No more in stock','warn');
+      return;
+    }
+    ex.qty++;
+  }
+  else cart.push({id:p.id,name:p.name,price:getEffectivePrice(p),orig_price:p.price,qty:1,image_url:p.image_url,cats:p._cats});
   renderCart();
   // Show flash notification instead of opening cart
   const totalItems = cart.reduce((s,x)=>s+x.qty,0);
-  showFlash('✅ افزوده شد — سبد: '+totalItems+' محصول','ok');
-  // Update cart badge
+  showFlash(currentLang==='fa'?'✅ افزوده شد — سبد: '+totalItems+' محصول'
+    :currentLang==='hu'?'✅ Hozzáadva — kosár: '+totalItems+' db'
+    :'✅ Added — cart: '+totalItems+' item'+(totalItems>1?'s':''),'ok');
   updateCartBadge();
+  trackAddToCart(p.id,p.name,getEffectivePrice(p));
 }
 
 function updateCartBadge(){
@@ -1316,21 +1382,24 @@ function updateCartBadge(){
     if(cartBtn){
       badge = document.createElement('span');
       badge.id = 'cartBadge';
-      badge.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#e53935;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1';
+      badge.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#e53935;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;line-height:1';
       cartBtn.style.position = 'relative';
       cartBtn.appendChild(badge);
     }
   }
-  if(badge) badge.textContent = total > 0 ? total : '';
+  if(badge){ badge.textContent = total > 0 ? total : ''; badge.style.display = total > 0 ? 'flex' : 'none'; }
 }
 
 function changeQty(id,d){
   const item=cart.find(c=>c.id===id); if(!item) return;
+  const p=products.find(x=>x.id===id);
+  if(d>0&&p&&p.stock!==null&&item.qty>=p.stock) return;
   item.qty+=d; if(item.qty<=0) cart=cart.filter(c=>c.id!==id);
-  renderCart(); updateOrderSummary();
+  renderCart(); updateOrderSummary(); updateCartBadge();
 }
 
 function renderCart(){
+  refreshCartPrices();
   const t=T[currentLang];
   const count=cart.reduce((s,i)=>s+i.qty,0);
   const total=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
@@ -1344,7 +1413,7 @@ function renderCart(){
     ${item.image_url?`<img src="${item.image_url}" class="cart-item-img" alt="${item.name}">`:`<div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:24px">${getEmoji(item.cats)}</div>`}
     <div class="cart-item-info">
       <div class="cart-item-name">${getProductNameById(item.id)}</div>
-      <div class="cart-item-price">${item.price!==null?(item.price*item.qty).toLocaleString()+' '+t.ft:'—'}</div>
+      <div class="cart-item-price">${item.price!==null?((item.orig_price&&item.orig_price>item.price?`<span style="text-decoration:line-through;color:#bbb;font-weight:400;font-size:11px">${(item.orig_price*item.qty).toLocaleString()}</span> `:'')+(item.price*item.qty).toLocaleString()+' '+t.ft):'—'}</div>
     </div>
     <div class="cart-item-qty">
       <span class="qty-btn" onclick="changeQty(${item.id},-1)">−</span>
@@ -1501,14 +1570,26 @@ function selectDelivery(type){
   initDays();
 }
 
-function updateOrderSummary(){
-  const t=T[currentLang];
+// Totals used by the order summary, the Telegram message and the saved order.
+function getOrderTotals(){
+  refreshCartPrices();
+  const listSub=cart.reduce((s,i)=>s+((i.orig_price!==undefined&&i.orig_price!==null?i.orig_price:i.price)||0)*i.qty,0);
   const sub=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  const saved=Math.max(0,listSub-sub);
   const deliv=selectedDelivery==='delivery'?getDeliveryCost():0;
   const refDisc=getReferralDiscount(sub);
   const total=Math.max(0,sub+deliv-refDisc);
+  return {listSub,sub,saved,deliv,refDisc,total};
+}
+
+function updateOrderSummary(){
+  const t=T[currentLang];
+  const {listSub,sub,saved,deliv,refDisc,total}=getOrderTotals();
+  const discLabel=activeWholesale?('🏪 B2B −'+activeWholesale.discount+'%')
+    :(currentLang==='fa'?'🎁 تخفیف':currentLang==='hu'?'🎁 Kedvezmény':'🎁 Discount');
   document.getElementById('orderSummaryBox').innerHTML=`
-    <div class="order-summary-row"><span>${t.cartTotal}</span><span>${sub.toLocaleString()} ${t.ft}</span></div>
+    <div class="order-summary-row"><span>${t.cartTotal}</span><span>${(saved?listSub:sub).toLocaleString()} ${t.ft}</span></div>
+    ${saved?`<div class="order-summary-row" style="color:var(--red)"><span>${discLabel}</span><span>− ${saved.toLocaleString()} ${t.ft}</span></div>`:''}
     ${deliv?`<div class="order-summary-row" style="color:var(--orange)"><span>${t.deliveryCost}</span><span>+ ${deliv.toLocaleString()} ${t.ft}</span></div>`:''}
     ${refDisc?`<div class="order-summary-row" style="color:var(--green)"><span>🎁 تخفیف کد ${appliedReferral?.code||''}</span><span>− ${refDisc.toLocaleString()} ${t.ft}</span></div>`:''}
     <div class="order-summary-total"><span>💰 Total:</span><span>${total.toLocaleString()} ${t.ft}</span></div>`;
@@ -1526,7 +1607,9 @@ function closeOrderModal(){
   document.getElementById('orderModal').classList.remove('open');
 }
 
+let _orderBusy=false;
 async function submitOrder(){
+  if(_orderBusy||!cart.length) return;
   const name=document.getElementById('oName').value.trim();
   const phone=document.getElementById('oPhone').value.trim();
   const address=document.getElementById('oAddress').value.trim();
@@ -1538,66 +1621,83 @@ async function submitOrder(){
   if(selectedDelivery==='delivery'&&!district){ alert(currentLang==='fa'?'لطفاً منطقه را انتخاب کنید':'Please select your district'); return; }
   if(selectedDelivery==='delivery'&&!selectedDate){ alert(currentLang==='fa'?'لطفاً تاریخ دلیوری را انتخاب کنید':'Please select delivery date'); return; }
   if(!selectedSlot){ alert(currentLang==='fa'?'لطفاً زمان تحویل را انتخاب کنید':'Please select delivery time'); return; }
-  const t=T[currentLang];
-  const sub=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
-  const deliv=selectedDelivery==='delivery'?getDeliveryCost():0;
-  const refDisc=getReferralDiscount(sub);
-  const total=Math.max(0,sub+deliv-refDisc);
-  const itemsList=cart.map(i=>`${i.name} × ${i.qty} = ${(i.price*i.qty).toLocaleString()} Ft`).join('\n');
-  const referralCode = document.getElementById('oReferral').value.trim().toUpperCase();
-  const orderId = 'ORD-' + Date.now().toString().slice(-6);
-  const msg=`🛒 *سفارش جدید — ARÁDI Market*
-🔖 شماره سفارش: ${orderId}
-
-👤 نام: ${name}
-📞 تلفن: ${phone}
-${selectedDelivery==='delivery'?`📍 آدرس: ${address}
-🏙️ منطقه: District ${district} (${NEAR_DISTRICTS.includes(district)?'نزدیک':'دور'})`:''} 
-
-📦 محصولات:
-${itemsList}
-
-🚚 نحوه دریافت: ${selectedDelivery==='pickup'?'تحویل از فروشگاه':'ارسال به درب منزل'}\n💳 پرداخت: ${selectedPayment==='revolut'?'Revolut':selectedPayment==='wise'?'Wise':'نقدی (Cash)'}
-📅 زمان: ${selectedDate||day} — ${selectedSlot}
-💰 جمع کل: ${total.toLocaleString()} Ft
-${note?'📝 یادداشت: '+note:''}`;
-
-  // Send to Telegram
+  _orderBusy=true;
   try {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:CHAT_ID, text:msg, parse_mode:'Markdown'})
-    });
-  } catch(e){ console.log('Telegram error:', e); }
+    const t=T[currentLang];
+    const {listSub,sub,saved,deliv,refDisc,total}=getOrderTotals();
+    const itemsList=cart.map(i=>`${i.name} × ${i.qty} = ${((i.price||0)*i.qty).toLocaleString()} Ft`).join('\n');
+    const referralCode = appliedReferral ? appliedReferral.code : '';
+    const orderId = 'ORD-' + Date.now().toString().slice(-6);
+    const payName = selectedPayment==='revolut'?'Revolut':selectedPayment==='wise'?'Wise':'نقدی (Cash)';
+    const lines=[
+      '🛒 *سفارش جدید — ARÁDI Market*',
+      '🔖 شماره سفارش: '+orderId,
+      '',
+      '👤 نام: '+name,
+      '📞 تلفن: '+phone
+    ];
+    if(selectedDelivery==='delivery'){
+      lines.push('📍 آدرس: '+address);
+      lines.push('🏙️ منطقه: District '+district+' ('+(NEAR_DISTRICTS.includes(district)?'نزدیک':'دور')+')');
+    }
+    lines.push('','📦 محصولات:',itemsList,'');
+    if(saved) lines.push('🎁 تخفیف'+(activeWholesale?' B2B ('+activeWholesale.name+' — '+activeWholesale.discount+'%)':(activeDiscount&&activeDiscount.percent?' ('+activeDiscount.percent+'%)':''))+': − '+saved.toLocaleString()+' Ft');
+    if(refDisc) lines.push('🎟️ کد '+referralCode+': − '+refDisc.toLocaleString()+' Ft');
+    lines.push('🚚 نحوه دریافت: '+(selectedDelivery==='pickup'?'تحویل از فروشگاه':'ارسال به درب منزل')+(deliv?' (+ '+deliv.toLocaleString()+' Ft)':''));
+    lines.push('💳 پرداخت: '+payName);
+    lines.push('📅 زمان: '+(selectedDate||day)+' — '+selectedSlot);
+    lines.push('💰 جمع کل: '+total.toLocaleString()+' Ft');
+    if(note) lines.push('📝 یادداشت: '+note);
+    const msg=lines.join('\n');
 
-  trackOrder(total);
-  // Save to Supabase orders history
-  try {
-    await db.from('catalog_orders').insert({
-      order_id: orderId,
-      customer_name: name,
-      phone: phone,
-      address: selectedDelivery==='delivery'?address+', District '+district:'',
-      delivery_type: selectedDelivery,
-      items: cart,
-      subtotal: sub,
-      delivery_cost: deliv,
-      total: total,
-      time_slot: (selectedDate||day) + ' ' + selectedSlot,
-      note: note,
-      created_at: new Date().toISOString()
-    });
-  } catch(e){ console.log('Save order error:', e); }
+    // Send to Telegram
+    const tgOk = await sendTelegram(msg);
 
-  document.getElementById('orderForm').style.display='none';
-  document.getElementById('orderSuccess').style.display='block';
-  document.getElementById('successTitle').textContent=t.successTitle;
-  document.getElementById('successBtn').textContent=t.successBtn;
-  document.getElementById('successMsg').textContent=currentLang==='fa'
-    ?`سفارش شما با شماره ${orderId} ثبت شد. به زودی با شما تماس می‌گیریم.`
-    :`Your order ${orderId} has been placed. We will contact you shortly.`;
-  cart=[]; renderCart();
+    // Save to Supabase orders history
+    let dbOk=false;
+    try {
+      const res = await insertTolerant('catalog_orders',{
+        order_id: orderId,
+        customer_name: name,
+        phone: phone,
+        address: selectedDelivery==='delivery'?address+', District '+district:'',
+        district: selectedDelivery==='delivery'?district:null,
+        delivery_type: selectedDelivery,
+        items: cart,
+        subtotal: sub,
+        delivery_cost: deliv,
+        total: total,
+        time_slot: (selectedDate||day) + ' ' + selectedSlot,
+        delivery_date: selectedDate||null,
+        payment_method: selectedPayment,
+        note: note,
+        referral_code: referralCode||null,
+        created_at: new Date().toISOString()
+      });
+      dbOk = !res.error;
+      if(res.error) console.log('Save order error:', res.error.message);
+    } catch(e){ console.log('Save order error:', e); }
+
+    // Neither channel got the order: do not tell the customer it was placed.
+    if(!tgOk && !dbOk){
+      alert(currentLang==='fa'?'متأسفانه سفارش ارسال نشد. لطفاً اینترنت را بررسی کنید و دوباره امتحان کنید، یا با +36 70 594 5722 تماس بگیرید.'
+        :currentLang==='hu'?'Sajnos a rendelést nem sikerült elküldeni. Kérjük, próbálja újra, vagy hívjon minket: +36 70 594 5722'
+        :'Sorry, your order could not be sent. Please try again or call us: +36 70 594 5722');
+      return;
+    }
+    trackOrder(total);
+
+    document.getElementById('orderForm').style.display='none';
+    document.getElementById('orderSuccess').style.display='block';
+    document.getElementById('successTitle').textContent=t.successTitle;
+    document.getElementById('successBtn').textContent=t.successBtn;
+    document.getElementById('successMsg').textContent=currentLang==='fa'
+      ?`سفارش شما با شماره ${orderId} ثبت شد. به زودی با شما تماس می‌گیریم.`
+      :currentLang==='hu'
+      ?`Rendelését ${orderId} számon rögzítettük. Hamarosan felvesszük Önnel a kapcsolatot.`
+      :`Your order ${orderId} has been placed. We will contact you shortly.`;
+    cart=[]; renderCart(); updateCartBadge();
+  } finally { _orderBusy=false; }
 }
 
 document.getElementById('orderModal').addEventListener('click',function(e){ if(e.target===this) closeOrderModal(); });
@@ -2047,15 +2147,15 @@ function sendChatMsg(){
 
   // Hours
   } else if(q.includes('ساعت')||q.includes('باز')||q.includes('تعطیل')||q.includes('open')||q.includes('close')||q.includes('nyit')||q.includes('zár')||q.includes('hour')||q.includes('working')||q.includes('mikor')){
-    if(lang==='fa') reply='🕐 ساعت کاری:\nدوشنبه تا شنبه:\n09:00 – 19:00\n\nیکشنبه تعطیل است';
-    else if(lang==='hu') reply='🕐 Nyitvatartás:\nHétfő – Szombat:\n09:00 – 19:00\n\nVasárnap zárva';
-    else reply='🕐 Opening Hours:\nMonday – Saturday:\n09:00 – 19:00\n\nClosed on Sundays';
+    if(lang==='fa') reply='🕐 ساعت کاری:\n\nدوشنبه تا جمعه:\n10:00–13:00 و 15:00–20:00\n\nشنبه:\n10:00–14:00\n\nیکشنبه تعطیل است';
+    else if(lang==='hu') reply='🕐 Nyitvatartás:\n\nHétfő – Péntek:\n10:00–13:00 és 15:00–20:00\n\nSzombat:\n10:00–14:00\n\nVasárnap zárva';
+    else reply='🕐 Opening Hours:\n\nMonday – Friday:\n10:00–13:00 and 15:00–20:00\n\nSaturday:\n10:00–14:00\n\nClosed on Sundays';
 
   // Delivery
   } else if(q.includes('دلیور')||q.includes('ارسال')||q.includes('حمل')||q.includes('delivery')||q.includes('szállít')||q.includes('kiszállít')||q.includes('házhozszállít')||q.includes('futar')){
-    if(lang==='fa') reply='🚚 هزینه ارسال به درب منزل:\n\nمناطق ۷، ۸، ۹ بوداپست:\n2,000 Ft\n\nسایر مناطق بوداپست:\n3,000 Ft\n\nحداقل سفارش: ندارد\nزمان تحویل: همان روز یا روز بعد';
-    else if(lang==='hu') reply='🚚 Házhozszállítás:\n\nVII., VIII., IX. kerület:\n2,000 Ft\n\nEgyéb Budapest kerületek:\n3,000 Ft\n\nMinimum rendelés: nincs\nSzállítási idő: aznap vagy másnap';
-    else reply='🚚 Home Delivery:\n\nDistricts VII, VIII, IX:\n2,000 Ft\n\nOther Budapest districts:\n3,000 Ft\n\nMinimum order: none\nDelivery time: same day or next day';
+    if(lang==='fa') reply='🚚 هزینه ارسال به درب منزل:\n\nمناطق ۷، ۸، ۹ و ۱۱ بوداپست:\n2,000 Ft\n\nسایر مناطق بوداپست:\n3,000 Ft\n\nحداقل سفارش: ندارد\nزمان تحویل: همان روز یا روز بعد';
+    else if(lang==='hu') reply='🚚 Házhozszállítás:\n\nVII., VIII., IX., XI. kerület:\n2,000 Ft\n\nEgyéb Budapest kerületek:\n3,000 Ft\n\nMinimum rendelés: nincs\nSzállítási idő: aznap vagy másnap';
+    else reply='🚚 Home Delivery:\n\nDistricts VII, VIII, IX, XI:\n2,000 Ft\n\nOther Budapest districts:\n3,000 Ft\n\nMinimum order: none\nDelivery time: same day or next day';
 
   // Payment
   } else if(q.includes('پرداخت')||q.includes('کارت')||q.includes('نقد')||q.includes('payment')||q.includes('pay')||q.includes('fizetés')||q.includes('kártya')||q.includes('készpénz')){
@@ -2422,7 +2522,7 @@ async function joinLoyaltyClub(){
   if(addr) msgParts.push('📍 '+addr);
   msgParts.push('🌐 '+lang,'🔖 کد: '+memberCode);
   const msg=msgParts.join('\n');
-  try { await fetch('https://api.telegram.org/bot'+BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:CHAT_ID,text:msg,parse_mode:'Markdown'})}); } catch(e){}
+  await sendTelegram(msg);
   // Show success
   document.getElementById('loyaltyFormView').style.display='none';
   document.getElementById('loyaltySuccessView').style.display='block';
@@ -2586,6 +2686,28 @@ function saveDaySettings(){
   saveCalEntry(entry);
   renderCalendar();
   showFlash('✅ روز '+calSelectedDate+' ذخیره شد','ok');
+}
+
+// «اضافه کردن ۷ روز آینده»: enables delivery for the next 7 days (Sunday skipped) with default slots.
+function addTestDeliveryDays(){
+  const now=new Date(); let added=0;
+  for(let i=1;i<=7;i++){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i,12,0,0);
+    if(d.getDay()===0) continue;
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(getCalendarEntry(ds)) continue;
+    deliveryCalendar.push({date:ds,enabled:true,slots:['10:00–13:00','15:00–18:00']});
+    added++;
+  }
+  saveDeliveryCalendar();
+  renderCalendar();
+  showFlash(added?('✅ '+added+' روز اضافه شد'):'روز جدیدی برای اضافه کردن نبود',added?'ok':'warn');
+}
+
+// «+ بنر جدید»: the page has three banner slots, so this only opens the editor for them.
+function addNewBanner(){
+  loadAdsAdmin();
+  showFlash('کاتالوگ ۳ جای بنر دارد — یکی از سه بنر بالا را ویرایش و فعال کنید','warn');
 }
 
 function loadAnalytics(){
