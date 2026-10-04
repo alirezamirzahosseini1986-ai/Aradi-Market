@@ -926,6 +926,14 @@ async function loadProductsFromSupabase(){
       fetch(SUPABASE_URL+'/rest/v1/products?select=id,name,price,image_url,category,stock&order=name&limit=300', {headers}),
       fetch(SUPABASE_URL+'/rest/v1/catalog_overrides?select=*', {headers})
     ]);
+    // lots defined in the shop program (a lot with a sale price is shown as: old price struck + sale price)
+    let batches = [];
+    try {
+      const bRes = await fetch(SUPABASE_URL+'/rest/v1/batches?select=product_id,stock,sale_price,expiry_date', {headers});
+      const bJson = await bRes.json();
+      if(Array.isArray(bJson)) batches = bJson;
+    } catch(e){ console.log('batches load:', e); }
+    const batchOk = b => !(b.stock!==null && b.stock<=0) && !(b.expiry_date && new Date(b.expiry_date+'T23:59:59') < new Date());
     
     liveProducts = await prodRes.json();
     const overrides = await overRes.json();
@@ -951,10 +959,19 @@ async function loadProductsFromSupabase(){
       };
     });
     
+    // attach the discounted lot (if any) and the extra stock held in lots
+    liveProducts.forEach(p=>{
+      const mine = batches.filter(b=>String(b.product_id)===String(p.id) && batchOk(b));
+      p.batch_stock = mine.reduce((s,b)=>s+(b.stock||0),0);
+      const sale = mine.filter(b=>b.sale_price!==null && p.price && Number(b.sale_price)<Number(p.price))
+        .sort((a,b)=>String(a.expiry_date||'9999').localeCompare(String(b.expiry_date||'9999')) || Number(a.sale_price)-Number(b.sale_price))[0];
+      p.sale_price = sale ? Number(sale.sale_price) : null;
+    });
+
     // Group by category
     const bycat = {};
     liveProducts.forEach(p=>{
-      if(p.stock!==null&&p.stock<=0) return;
+      if(p.stock!==null&&(p.stock+(p.batch_stock||0))<=0&&!p.sale_price) return;
       const cat = p.category ? catFromFa(p.category) : categorize(p.name);
       if(!bycat[cat]) bycat[cat]=[];
       bycat[cat].push(p);
@@ -1030,7 +1047,7 @@ function buildAccordion(){
       const card=document.createElement('div');
       card.className='product-card';
       const displayName=getProductName(p);
-      const price=p.price?p.price.toLocaleString()+' Ft':'';
+      const price=priceHtml(p);
       const discounted = p.price_override || p.price;
       card.innerHTML=(p.image_url?`<div class="product-img"><img src="${p.image_url}" alt="${displayName}" loading="lazy"></div>`:`<div class="product-img" style="display:flex;align-items:center;justify-content:center;font-size:36px;background:#2D2318">${info.emoji}</div>`)
         +`<div class="product-info"><div class="product-name">${displayName}</div><div class="product-price">${price}</div></div>`;
@@ -1069,6 +1086,13 @@ function openProduct(ci,pi){
   document.getElementById('prodModalOv').classList.add('open');
 }
 function closeProdModal(){ document.getElementById('prodModalOv').classList.remove('open'); }
+
+// Price text for a product: plain price, or old price struck through + sale price.
+function priceHtml(p){
+  if(!p.price) return '';
+  if(p.sale_price) return '<span style="text-decoration:line-through;opacity:.55;font-weight:400;margin-inline-end:6px">'+p.price.toLocaleString()+' Ft</span><span style="color:#ff8a80;font-weight:700">'+p.sale_price.toLocaleString()+' Ft</span>';
+  return p.price.toLocaleString()+' Ft';
+}
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeProdModal(); });
 
 // Popup for a live (Supabase) product: photo, category, name, price and the benefits/history text.
@@ -1080,7 +1104,7 @@ function openLiveProduct(p,info){
   const catName=currentLang==='fa'?info.fa:currentLang==='hu'?info.hu:info.en;
   document.getElementById('pmTag').textContent=((info.emoji||'')+' '+(catName||'')).trim();
   document.getElementById('pmName').textContent=getProductName(p);
-  document.getElementById('pmPrice').textContent=p.price?p.price.toLocaleString()+' Ft':'';
+  document.getElementById('pmPrice').innerHTML=priceHtml(p);
   document.getElementById('pmDesc').textContent=getProductBenefits(p);
   document.getElementById('pmBenefitsWrap').style.display='none';
   document.getElementById('prodModalOv').classList.add('open');

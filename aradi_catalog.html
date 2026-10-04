@@ -1105,12 +1105,18 @@ async function init(){
     setLang('fa');
     trackPageView();
     await loadDeliveryFromDB();
+    await loadBatches();
     buildCats();
     updateCartBadge();
     renderProducts();
     initDays();
     initWholesaleUI();
     // Realtime
+    db.channel('catalog-batches').on('postgres_changes',{event:'*',schema:'public',table:'batches'},async()=>{
+      await loadBatches();
+      renderProducts();
+      renderCart();
+    }).subscribe();
     db.channel('catalog').on('postgres_changes',{event:'*',schema:'public',table:'products'},async()=>{
       const r = await db.from('products').select('*').order('name');
       products = r.data||[];
@@ -1223,7 +1229,11 @@ function isExpired(expire){
   return d < new Date();
 }
 function isLow(stock){ return stock!==null && stock>0 && stock<=3; }
-function isOut(p){ return (p.stock!==null && p.stock<=0) || isExpired(p.expire); }
+function isOut(p){
+  if(getSaleBatch(p)) return false;                 // a discounted lot is on offer
+  const q=availableQty(p);
+  return (q!==null && q<=0) || isExpired(p.expire);
+}
 
 function renderProducts(){
   const t = T[currentLang];
@@ -1250,27 +1260,23 @@ function renderProducts(){
 
 function productCard(p, t){
   const out = isOut(p);
-  const expired = isExpired(p.expire);
-  const low = isLow(p.stock);
+  const qty = availableQty(p);
+  const low = qty!==null && qty>0 && qty<=3;
+  const origPrice = p.price;
+  const finalPrice = getEffectivePrice(p);
+  const onSale = origPrice!==null && origPrice!==undefined && finalPrice<origPrice;
+  const discPct = onSale ? Math.round((1-finalPrice/origPrice)*100) : 0;
+  const discBadge = discPct>0 ? `<div style="position:absolute;top:8px;left:8px;background:var(--red);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">-${discPct}%</div>` : '';
   let badge='', overlay='';
-  const wsP=getWholesalePrice(p);
-  const discP=getDiscountedPrice(p);
-  const discPct = wsP!==null ? activeWholesale?.discount : (discP!==null ? activeDiscount?.percent : null);
-  const discBadge = discPct ? `<div style="position:absolute;top:8px;left:8px;background:var(--red);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">-${discPct}%</div>` : '';
-  if(expired || (p.stock!==null && p.stock<=0)){ badge=`<div class="stock-badge out">${t.outOfStock}</div>`; overlay=`<div class="sold-overlay">${t.outOfStock}</div>`; }
-  else if(low){ badge=`<div class="stock-badge low">${t.lowStock.replace('{n}',p.stock)}</div>`; }
+  if(out){ badge=`<div class="stock-badge out">${t.outOfStock}</div>`; overlay=`<div class="sold-overlay">${t.outOfStock}</div>`; }
+  else if(low){ badge=`<div class="stock-badge low">${t.lowStock.replace('{n}',qty)}</div>`; }
   const imgHtml = p.image_url
     ? `<img src="${p.image_url}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
     : '';
   const emoji = getEmoji(p._cats);
-  const wsPrice = getWholesalePrice(p);
-  const discPrice = getDiscountedPrice(p);
-  const finalPrice = wsPrice!==null ? wsPrice : (discPrice!==null ? discPrice : p.price);
-  const origPrice = p.price;
   let priceHtml = '';
-  if(origPrice!==null){
-    if(finalPrice!==null && finalPrice!==origPrice){
-      const pct = wsPrice!==null ? activeWholesale.discount : activeDiscount?.percent;
+  if(origPrice!==null && origPrice!==undefined){
+    if(onSale){
       priceHtml = `<div>
         <span style="text-decoration:line-through;color:#bbb;font-size:11px">${origPrice.toLocaleString()} ${t.ft}</span>
         <div class="product-price" style="color:var(--red)">${finalPrice.toLocaleString()} <small>${t.ft}</small></div>
@@ -1283,7 +1289,7 @@ function productCard(p, t){
     <div class="product-img-wrap">
       ${imgHtml}
       <div class="product-img-placeholder" ${p.image_url?'style="display:none"':''}>${emoji}</div>
-      ${badge}${overlay}${discBadge||''}
+      ${badge}${overlay}${discBadge}
     </div>
     <div class="product-info">
       <div class="product-name">${getProductName(p)}</div>
@@ -1313,11 +1319,49 @@ function showFlash(msg,type){
 }
 
 // The price the customer actually pays: B2B price first, then the active discount, then the list price.
+// ----- batches (lots) defined in the shop program -----
+let batches = [];
+async function loadBatches(){
+  try { const r = await db.from('batches').select('*'); if(!r.error) batches = r.data||[]; } catch(e){ console.log('batches load:', e.message); }
+}
+function batchActive(b){
+  if(b.stock!==null && b.stock!==undefined && b.stock<=0) return false;
+  if(b.expiry_date && new Date(b.expiry_date+'T23:59:59') < new Date()) return false;   // past its date: never offered
+  return true;
+}
+function productBatches(p){ return batches.filter(b=>String(b.product_id)===String(p.id) && batchActive(b)); }
+// The discounted lot of this product, if there is one (earliest date first).
+function getSaleBatch(p){
+  if(p.price===null||p.price===undefined) return null;
+  const list = productBatches(p).filter(b=>b.sale_price!==null && b.sale_price!==undefined && Number(b.sale_price)<Number(p.price));
+  if(!list.length) return null;
+  list.sort((a,b)=>String(a.expiry_date||'9999').localeCompare(String(b.expiry_date||'9999')) || Number(a.sale_price)-Number(b.sale_price));
+  return list[0];
+}
+// True when the price shown for this product is the sale lot's price.
+function saleBatchApplies(p){
+  const sb=getSaleBatch(p);
+  return (sb && getEffectivePrice(p)===Number(sb.sale_price)) ? sb : null;
+}
+// How many the customer can order: the sale lot's stock while it is on offer, otherwise shelf stock plus other lots.
+function availableQty(p){
+  const sb=saleBatchApplies(p);
+  if(sb) return (sb.stock===null||sb.stock===undefined) ? null : sb.stock;
+  if(p.stock===null||p.stock===undefined) return null;
+  return p.stock + productBatches(p).reduce((s,b)=>s+(b.stock||0),0);
+}
+function batchNote(b){
+  return 'دسته تخفیفی'+(b.label?' «'+b.label+'»':'')+(b.expiry_date?' — انقضا '+b.expiry_date:'');
+}
+
+// The price the customer actually pays: the lowest of list price, B2B price, active discount and sale lot.
 function getEffectivePrice(p){
   if(p.price===null||p.price===undefined) return p.price;
-  const ws=getWholesalePrice(p); if(ws!==null) return ws;
-  const d=getDiscountedPrice(p); if(d!==null) return d;
-  return p.price;
+  let best=p.price;
+  const ws=getWholesalePrice(p); if(ws!==null) best=Math.min(best,ws);
+  const d=getDiscountedPrice(p); if(d!==null) best=Math.min(best,d);
+  const sb=getSaleBatch(p); if(sb) best=Math.min(best,Number(sb.sale_price));
+  return best;
 }
 // Keep cart lines in step with the current price (discount switched on, B2B login, price change in the shop).
 function refreshCartPrices(){
@@ -1325,6 +1369,10 @@ function refreshCartPrices(){
     const p=products.find(x=>x.id===item.id); if(!p) return;
     item.orig_price=p.price;
     item.price=getEffectivePrice(p);
+    const sb=saleBatchApplies(p);
+    if(sb){ item.batch_id=sb.id; item.batch_note=batchNote(sb); } else { delete item.batch_id; delete item.batch_note; }
+    const max=availableQty(p);
+    if(max!==null && max>0 && item.qty>max) item.qty=max;
   });
 }
 
@@ -1357,7 +1405,8 @@ function addToCart(id){
   const p = products.find(x=>x.id===id); if(!p||isOut(p)) return;
   const ex = cart.find(c=>c.id===id);
   if(ex){
-    if(p.stock!==null&&ex.qty>=p.stock){
+    const max=availableQty(p);
+    if(max!==null&&ex.qty>=max){
       showFlash(currentLang==='fa'?'بیشتر از این موجود نیست':currentLang==='hu'?'Nincs több készleten':'No more in stock','warn');
       return;
     }
@@ -1393,7 +1442,8 @@ function updateCartBadge(){
 function changeQty(id,d){
   const item=cart.find(c=>c.id===id); if(!item) return;
   const p=products.find(x=>x.id===id);
-  if(d>0&&p&&p.stock!==null&&item.qty>=p.stock) return;
+  const max=p?availableQty(p):null;
+  if(d>0&&max!==null&&item.qty>=max) return;
   item.qty+=d; if(item.qty<=0) cart=cart.filter(c=>c.id!==id);
   renderCart(); updateOrderSummary(); updateCartBadge();
 }
@@ -1625,7 +1675,7 @@ async function submitOrder(){
   try {
     const t=T[currentLang];
     const {listSub,sub,saved,deliv,refDisc,total}=getOrderTotals();
-    const itemsList=cart.map(i=>`${i.name} × ${i.qty} = ${((i.price||0)*i.qty).toLocaleString()} Ft`).join('\n');
+    const itemsList=cart.map(i=>`${i.name}${i.batch_note?' ['+i.batch_note+']':''} × ${i.qty} = ${((i.price||0)*i.qty).toLocaleString()} Ft`).join('\n');
     const referralCode = appliedReferral ? appliedReferral.code : '';
     const orderId = 'ORD-' + Date.now().toString().slice(-6);
     const payName = selectedPayment==='revolut'?'Revolut':selectedPayment==='wise'?'Wise':'نقدی (Cash)';
