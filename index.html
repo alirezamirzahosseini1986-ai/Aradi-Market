@@ -471,9 +471,10 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
     </div>
     <div id="adminLoginWrap" class="admin-login">
       <h3>🔐 Admin Access</h3>
-      <input type="password" id="adminPassInput" placeholder="Password" onkeydown="if(event.key==='Enter')checkAdminPass()">
-      <button class="admin-save-btn" onclick="checkAdminPass()" style="margin-top:14px">Login</button>
-      <div id="adminPassErr" style="color:#ff6b6b;font-size:13px;margin-top:10px;display:none">Incorrect password</div>
+      <input type="email" id="adminEmailInput" placeholder="Email" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('adminPassInput').focus()">
+      <input type="password" id="adminPassInput" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')checkAdminPass()">
+      <button class="admin-save-btn" id="adminLoginBtn" onclick="checkAdminPass()" style="margin-top:14px">Login</button>
+      <div id="adminPassErr" style="color:#ff6b6b;font-size:13px;margin-top:10px;display:none;direction:rtl"></div>
     </div>
     <div id="adminPanelWrap" style="display:none">
       <div class="admin-tabs">
@@ -560,7 +561,48 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
 </div>
 
 <script>
-const ADMIN_PASS = 'aradi2024';
+// The admin panel opens with the shop's own account (Supabase sign-in); no password is written in this page.
+let _db=null;
+function getDb(){ if(!_db) _db=supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return _db; }
+// Make a picture light before it is uploaded (longest side `maxSide`, WebP or JPEG). Falls back to the original file.
+async function shrinkImage(file, maxSide){
+  maxSide = maxSide || 800;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide/Math.max(bmp.width,bmp.height));
+    const w = Math.max(1,Math.round(bmp.width*scale)), h = Math.max(1,Math.round(bmp.height*scale));
+    const c = document.createElement('canvas'); c.width=w; c.height=h;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(bmp,0,0,w,h);
+    let out = await new Promise(r=>c.toBlob(r,'image/webp',0.82));
+    if(!out || out.type!=='image/webp'){
+      ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h); ctx.drawImage(bmp,0,0,w,h);
+      out = await new Promise(r=>c.toBlob(r,'image/jpeg',0.82));
+    }
+    if(bmp.close) bmp.close();
+    if(out && out.size < file.size) return {blob:out, ext:out.type==='image/webp'?'webp':'jpg', type:out.type};
+  } catch(e){ console.log('picture kept as it is:', e && e.message); }
+  return {blob:file, ext:String(file.name||'x.jpg').split('.').pop().toLowerCase(), type:file.type||'image/jpeg'};
+}
+// Turns a Supabase sign-in error into a short Persian message.
+function authErrorText(e){
+  const m=(e&&e.message)||'';
+  if(/Invalid login credentials/i.test(m)) return 'ایمیل یا رمز اشتباه است.';
+  if(/Failed to fetch|NetworkError|network/i.test(m)) return 'اینترنت وصل نیست. دوباره امتحان کنید.';
+  if(/Email not confirmed/i.test(m)) return 'این حساب هنوز تأیید نشده است.';
+  return 'ورود انجام نشد'+(m?': '+m:'.');
+}
+// Signs in and makes sure the account belongs to the shop (the database function is_staff says so).
+async function staffSignIn(client, email, password){
+  let res; try { res = await client.auth.signInWithPassword({email, password}); } catch(e){ res={error:e}; }
+  if(res.error || !res.data || !res.data.session) return {error: authErrorText(res.error)};
+  try {
+    const r = await client.rpc('is_staff');
+    if(!r.error && r.data===false){ await client.auth.signOut(); return {error:'این حساب اجازه ورود ندارد.'}; }
+  } catch(e){}
+  return {session: res.data.session};
+}
+
 const CATALOG_URL = 'aradi_catalog.html';
 const LOYALTY_FORM = 'https://forms.gle/6V5cmsp9RJ2wpFDR6';
 
@@ -1141,17 +1183,36 @@ function submitOrder(){
 function toggleMenu(){ document.getElementById('mobileMenu').classList.toggle('open'); }
 
 // ===== ADMIN PANEL =====
-function openAdmin(){ document.getElementById('adminOv').classList.add('open'); }
-function closeAdmin(){ document.getElementById('adminOv').classList.remove('open'); }
-function checkAdminPass(){
-  if(document.getElementById('adminPassInput').value===ADMIN_PASS){
-    document.getElementById('adminLoginWrap').style.display='none';
-    document.getElementById('adminPanelWrap').style.display='block';
-    loadAdminData();
-  } else {
-    document.getElementById('adminPassErr').style.display='block';
-    document.getElementById('adminPassInput').value='';
+async function openAdmin(){
+  document.getElementById('adminOv').classList.add('open');
+  let session=null;
+  try { session=(await getDb().auth.getSession()).data.session; } catch(e){}
+  if(session) enterAdmin();                              // already signed in on this browser
+  else {
+    const em=document.getElementById('adminEmailInput');
+    if(!em.value){ try { em.value=localStorage.getItem('aradi_last_email')||''; } catch(e){} }
   }
+}
+function closeAdmin(){ document.getElementById('adminOv').classList.remove('open'); }
+function enterAdmin(){
+  document.getElementById('adminLoginWrap').style.display='none';
+  document.getElementById('adminPanelWrap').style.display='block';
+  loadAdminData();
+}
+async function checkAdminPass(){
+  const email=document.getElementById('adminEmailInput').value.trim();
+  const pass=document.getElementById('adminPassInput').value;
+  const err=document.getElementById('adminPassErr');
+  const fail=msg=>{ err.textContent=msg; err.style.display='block'; };
+  if(!email||!pass){ fail('ایمیل و رمز را وارد کنید.'); return; }
+  const btn=document.getElementById('adminLoginBtn'); btn.disabled=true;
+  const res=await staffSignIn(getDb(), email, pass);
+  btn.disabled=false;
+  if(res.error){ fail(res.error); document.getElementById('adminPassInput').value=''; return; }
+  try { localStorage.setItem('aradi_last_email',email); } catch(e){}
+  document.getElementById('adminPassInput').value='';
+  err.style.display='none';
+  enterAdmin();
 }
 function showAdminTab(tab){
   document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(tab.replace('_',' '))||b.getAttribute('onclick').includes("'"+tab+"'")));
@@ -1266,26 +1327,25 @@ function saveImages(){
 async function uploadProductImageAdmin(productId, input){
   const file = input.files[0];
   if(!file) return;
-  const btn = input.parentElement;
-  btn.textContent='⏳ Uploading...';
+  const label = input.parentElement;
+  label.style.opacity='0.5';
   try {
-    // Create supabase client
-    const {createClient} = supabase;
-    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-    const ext = file.name.split('.').pop();
-    const path = 'product_'+productId+'_'+Date.now()+'.'+ext;
-    const {error:upErr} = await db.storage.from('product-images').upload(path, file, {upsert:true});
+    const db = getDb();
+    const img = await shrinkImage(file, 800);
+    const path = 'opt/p'+productId+'_'+Date.now()+'.'+img.ext;
+    const {error:upErr} = await db.storage.from('product-images').upload(path, img.blob, {contentType:img.type, cacheControl:'31536000', upsert:false});
     if(upErr) throw upErr;
     const {data} = db.storage.from('product-images').getPublicUrl(path);
-    await db.from('products').update({image_url:data.publicUrl}).eq('id',productId);
+    const upd = await db.from('products').update({image_url:data.publicUrl}).eq('id',productId);
+    if(upd.error) throw upd.error;
     // Update in liveProducts array
     const p = liveProducts.find(x=>x.id===productId);
     if(p) p.image_url = data.publicUrl;
     buildAccordion();
-    btn.innerHTML='📷 Upload';
+    loadAdminData();
     alert('✅ Image uploaded successfully!');
   } catch(e){
-    btn.innerHTML='📷 Upload';
+    label.style.opacity='1';
     alert('Error: '+e.message);
   }
   input.value='';
