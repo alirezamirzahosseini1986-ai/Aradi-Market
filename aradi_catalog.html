@@ -1864,9 +1864,9 @@ async function submitOrder(){
     document.getElementById('successTitle').textContent=t.successTitle;
     document.getElementById('successBtn').textContent=t.successBtn;
     document.getElementById('successMsg').innerHTML=L3(
-      `سفارش شما با شماره <b dir="ltr">${escH(orderId)}</b> ثبت شد. مبلغ قابل پرداخت: <b>${Number(out.total||total).toLocaleString()} Ft</b>. به زودی با شما تماس می‌گیریم.`,
-      `Your order <b>${escH(orderId)}</b> has been placed. Amount to pay: <b>${Number(out.total||total).toLocaleString()} Ft</b>. We will contact you shortly.`,
-      `Rendelését <b>${escH(orderId)}</b> számon rögzítettük. Fizetendő: <b>${Number(out.total||total).toLocaleString()} Ft</b>. Hamarosan felvesszük Önnel a kapcsolatot.`);
+      `سفارش شما با شماره <b dir="ltr">${escH(orderId)}</b> ثبت شد. مبلغ قابل پرداخت: <b>${Number(out.total||total).toLocaleString()} Ft</b>.`,
+      `Your order <b>${escH(orderId)}</b> has been placed. Amount to pay: <b>${Number(out.total||total).toLocaleString()} Ft</b>.`,
+      `Rendelését <b>${escH(orderId)}</b> számon rögzítettük. Fizetendő: <b>${Number(out.total||total).toLocaleString()} Ft</b>.`);
     const ex=document.getElementById('successExtra');
     if(ex){
       let h='';
