@@ -1,0 +1,3151 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ARÁDI Market — کاتالوگ محصولات</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Google Analytics GA4 - replace G-XXXXXXXXXX with your Measurement ID -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1a7a4a;--green-l:#e8f5ee;--green-d:#0f5c35;
+  --red:#c0392b;--red-l:#fdecea;--orange:#e67e22;
+  --gold:#c9933a;--gold-l:#f5e6c8;
+  --gray:#6c757d;--border:#e0e0e0;
+  --bg:#f8f9fa;--white:#ffffff;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --radius:12px;
+}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:#222;direction:rtl;min-height:100vh}
+body.en,body.hu{direction:ltr}
+
+/* HEADER */
+header{background:var(--green);color:white;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:1200px;margin:0 auto}
+.logo{font-size:20px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.logo small{font-size:11px;font-weight:400;opacity:.8;display:block;letter-spacing:0}
+.lang-btns{display:flex;gap:6px}
+.lang-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;font-size:11px;padding:5px 10px;border-radius:20px;cursor:pointer;font-weight:600;transition:all .2s}
+.lang-btn.active,.lang-btn:hover{background:white;color:var(--green)}
+.cart-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all .2s}
+.cart-btn:hover{background:white;color:var(--green)}
+.cart-count{background:var(--orange);color:white;border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* SEARCH BAR */
+.search-wrap{background:var(--green-d);padding:10px 16px 14px}
+.search-inner{max-width:1200px;margin:0 auto}
+.search-box{display:flex;gap:8px;background:white;border-radius:10px;padding:4px 4px 4px 12px;align-items:center}
+.search-box input{flex:1;border:none;outline:none;font-size:14px;background:transparent;direction:inherit}
+.search-box button{background:var(--green);color:white;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px}
+
+/* CATEGORIES */
+.cats-wrap{background:white;border-bottom:1px solid var(--border);position:sticky;top:60px;z-index:90}
+.cats-scroll{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;max-width:1200px;margin:0 auto;scrollbar-width:none}
+.cats-scroll::-webkit-scrollbar{display:none}
+.cat-btn{background:#f0f0f0;border:none;color:#555;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.cat-btn.active,.cat-btn:hover{background:var(--green);color:white}
+
+/* MAIN */
+main{max-width:1200px;margin:0 auto;padding:16px}
+.section-title{font-size:16px;font-weight:700;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* PRODUCTS GRID */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+@media(max-width:400px){.products-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:768px){.products-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
+
+/* PRODUCT CARD */
+.product-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer;position:relative}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.12)}
+.product-card.sold-out{opacity:.6;cursor:not-allowed}
+.product-card.sold-out:hover{transform:none}
+.product-img-wrap{position:relative;aspect-ratio:1;background:#f5f5f5;overflow:hidden}
+.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.product-card:hover:not(.sold-out) .product-img-wrap img{transform:scale(1.05)}
+.product-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(135deg,#f5f5f5,#e8e8e8)}
+.stock-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.75);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
+.stock-badge.low{background:var(--orange)}
+.stock-badge.out{background:var(--red)}
+.sold-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px}
+.product-info{padding:10px}
+.product-cat{font-size:10px;color:var(--gray);margin-bottom:3px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.product-name{font-size:13px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.4}
+.product-price{font-size:15px;font-weight:700;color:var(--green)}
+.product-price small{font-size:10px;color:var(--gray);font-weight:400}
+.add-btn{width:100%;background:var(--green);color:white;border:none;padding:8px;border-radius:0 0 var(--radius) var(--radius);font-size:12px;font-weight:600;cursor:pointer;transition:background .2s;margin-top:4px}
+.add-btn:hover{background:var(--green-d)}
+.add-btn:disabled{background:#ccc;cursor:not-allowed}
+
+/* CART SIDEBAR */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none}
+.cart-overlay.open{display:block}
+.cart-sidebar{position:fixed;top:0;left:0;width:360px;max-width:100vw;height:100%;background:white;z-index:201;transform:translateX(-100%);transition:transform .3s;display:flex;flex-direction:column;box-shadow:4px 0 20px rgba(0,0,0,0.15)}
+body.en .cart-sidebar,body.hu .cart-sidebar{left:auto;right:0;transform:translateX(100%)}
+.cart-sidebar.open{transform:translateX(0)}
+body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
+.cart-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--green);color:white}
+.cart-header h3{font-size:16px}
+.cart-close{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:0}
+.cart-body{flex:1;overflow-y:auto;padding:12px}
+.cart-empty{text-align:center;color:var(--gray);padding:40px 20px;font-size:14px}
+.cart-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5;align-items:center}
+.cart-item-img{width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f5f5f5;flex-shrink:0}
+.cart-item-info{flex:1}
+.cart-item-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.cart-item-price{font-size:12px;color:var(--green);font-weight:600}
+.cart-item-qty{display:flex;align-items:center;gap:6px}
+.qty-btn{width:26px;height:26px;border:1px solid var(--border);background:#f8f9fa;border-radius:6px;cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.qty-btn:hover{background:var(--green-l)}
+.cart-footer{padding:14px;border-top:2px solid var(--border);background:#fafafa}
+.cart-total{display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin-bottom:12px}
+.cart-total span:last-child{color:var(--green)}
+.checkout-btn{width:100%;background:var(--green);color:white;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+.checkout-btn:hover{background:var(--green-d)}
+
+/* ORDER MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:none;align-items:flex-end;justify-content:center;padding:0}
+@media(min-width:600px){.modal-ov{align-items:center;padding:20px}}
+.modal-ov.open{display:flex}
+.modal-box{background:white;border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:20px}
+@media(min-width:600px){.modal-box{border-radius:16px}}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:16px;color:var(--green)}
+.coming-soon-banner{background:linear-gradient(135deg,var(--gold-l),#fff);border:2px dashed var(--gold);border-radius:10px;padding:14px;text-align:center;margin-bottom:16px}
+.coming-soon-banner p{font-size:12px;color:var(--gray);margin-top:4px}
+.form-group{margin-bottom:12px}
+.form-group label{font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;font-family:inherit}
+.form-group input:focus,.form-group select:focus{border-color:var(--green)}
+.delivery-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.delivery-opt{border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:all .2s}
+.delivery-opt.selected{border-color:var(--green);background:var(--green-l)}
+.delivery-opt input{display:none}
+.delivery-opt-icon{font-size:24px;margin-bottom:4px}
+.delivery-opt-label{font-size:13px;font-weight:600}
+.delivery-opt-sub{font-size:11px;color:var(--gray)}
+.time-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.time-slot{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;text-align:center;font-size:12px;transition:all .2s}
+.time-slot.selected{border-color:var(--green);background:var(--green-l);font-weight:600;color:var(--green)}
+.order-summary{background:#f8f9fa;border-radius:10px;padding:12px;margin-bottom:14px}
+.order-summary-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+.order-summary-total{display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding-top:8px;border-top:1px solid var(--border);margin-top:6px;color:var(--green)}
+.submit-order-btn{width:100%;background:var(--green);color:white;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+.order-success{display:none;text-align:center;padding:20px}
+.order-success h3{color:var(--green);font-size:20px;margin:12px 0 8px}
+
+/* AD BANNERS */
+.ad-banner{border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .2s;min-height:80px}
+.ad-banner:hover{transform:translateY(-2px)}
+.ad-banner img{width:100%;height:100%;object-fit:cover}
+.ad-banner-inner{padding:16px;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:80px}
+@media(max-width:600px){#adBannersGrid{grid-template-columns:1fr}}
+
+/* LOADING */
+.loading-wrap{text-align:center;padding:60px 20px;color:var(--gray)}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* CONN STATUS */
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block}
+.conn-dot.online{background:#27ae60}
+
+@media(max-width:600px){
+  .cart-sidebar{width:100%}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">
+      🛒 ARÁDI Market
+      <small id="hSub">کاتالوگ محصولات</small>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="conn-dot" id="connDot" title="وضعیت اتصال"></span>
+      <div class="lang-btns">
+        <button class="lang-btn active" onclick="setLang('fa')">فارسی</button>
+        <button class="lang-btn" onclick="setLang('en')">English</button>
+        <button class="lang-btn" onclick="setLang('hu')">Magyar</button>
+      </div>
+        <button onclick="openAdminPanel()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:11px;padding:4px 8px" title="Admin">⚙️</button>
+      <button onclick="openLoyaltyModal()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s" id="loyaltyJoinBtn">⭐ <span id="loyaltyBtnText">Join Club</span></button>
+      <button class="cart-btn" onclick="toggleCart()">
+        🛒 <span id="cartLabel">سبد</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-inner">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="جستجوی محصول..." oninput="doSearch(this.value)">
+        <button onclick="doSearch(document.getElementById('searchInput').value)">🔍</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="cats-wrap">
+  <div class="cats-scroll" id="catsScroll"></div>
+</div>
+
+<main>
+  <!-- AD BANNERS -->
+<div id="adBannersWrap" style="max-width:1200px;margin:16px auto;padding:0 16px;display:none">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px" id="adBannersGrid">
+    <div id="adBanner1" class="ad-banner" style="display:none"></div>
+    <div id="adBanner2" class="ad-banner" style="display:none"></div>
+    <div id="adBanner3" class="ad-banner" style="display:none"></div>
+  </div>
+</div>
+
+<div id="loadingWrap" class="loading-wrap">
+    <div class="spinner"></div>
+    <div id="loadingText">در حال بارگذاری...</div>
+  </div>
+  <div id="mainContent" style="display:none">
+    <div id="productsSection"></div>
+  </div>
+</main>
+
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h3 id="cartTitle">🛒 سبد خرید</h3>
+    <button class="cart-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody">
+    <div class="cart-empty" id="cartEmpty">سبد خرید خالی است</div>
+    <div id="cartItems"></div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total">
+      <span id="cartTotalLabel">جمع کل:</span>
+      <span id="cartTotalAmt">0 Ft</span>
+    </div>
+    <button class="checkout-btn" onclick="openOrderModal()" id="checkoutBtn">ثبت سفارش →</button>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<!-- ADMIN PANEL -->
+<div class="modal-ov" id="adminLoginModal">
+  <div class="modal-box" style="max-width:360px;border-radius:16px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:32px">🔐</div>
+      <h3 style="font-size:17px;color:var(--green)">پنل مدیریت</h3>
+    </div>
+    <div class="form-group">
+      <label>ایمیل</label>
+      <input type="email" id="adminEmailInput" autocomplete="username" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;direction:ltr" onkeydown="if(event.key==='Enter')document.getElementById('adminPassInput').focus()">
+    </div>
+    <div class="form-group">
+      <label>رمز عبور</label>
+      <input type="password" id="adminPassInput" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;direction:ltr" onkeydown="if(event.key==='Enter')checkAdminPass()">
+    </div>
+    <div id="adminLoginErr" style="display:none;background:var(--red-l);color:var(--red);padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:6px"></div>
+    <button id="adminLoginBtn" onclick="checkAdminPass()" style="width:100%;background:var(--green);color:white;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px">ورود</button>
+    <button onclick="closeModal('adminLoginModal')" style="width:100%;background:none;border:none;color:var(--gray);padding:10px;cursor:pointer;font-size:13px;margin-top:4px">انصراف</button>
+  </div>
+</div>
+
+<div class="modal-ov" id="adminPanelModal" style="align-items:flex-start;padding-top:0">
+  <div style="background:white;width:100%;max-width:900px;height:100vh;overflow-y:auto;padding:0;border-radius:0">
+    <div style="background:var(--green);color:white;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10">
+      <h3 style="font-size:16px">⚙️ پنل مدیریت ARÁDI Market</h3>
+      <div style="display:flex;gap:6px">
+        <button onclick="adminLogout()" style="background:none;border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">خروج از حساب</button>
+        <button onclick="closeModal('adminPanelModal')" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 12px;cursor:pointer">✕ بستن</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:2px solid var(--border);background:#f8f9fa">
+      <button class="admin-tab active" onclick="showAdminTab('orders')" id="tab-orders">📋 سفارش‌ها</button>
+      <button class="admin-tab" onclick="showAdminTab('products')" id="tab-products">📦 محصولات کاتالوگ</button>
+      <button class="admin-tab" onclick="showAdminTab('discount')" id="tab-discount">🎁 تخفیف‌ها</button>
+      <button class="admin-tab" onclick="showAdminTab('delivery_settings')" id="tab-delivery_settings">🚚 دلیوری</button>
+      <button class="admin-tab" onclick="showAdminTab('wholesale')" id="tab-wholesale">🏪 B2B</button>
+      <button class="admin-tab" onclick="showAdminTab('ads')" id="tab-ads">📢 تبلیغات</button>
+      <button class="admin-tab" onclick="showAdminTab('analytics')" id="tab-analytics">📊 آنالیز</button>
+      <button class="admin-tab" onclick="showAdminTab('loyalty')" id="tab-loyalty">⭐ باشگاه</button>
+    </div>
+
+    <!-- Orders Tab -->
+    <div id="admin-orders" style="padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h4 style="font-size:14px;color:var(--green)">📋 تاریخچه سفارش‌ها</h4>
+        <select id="orderFilter" onchange="loadAdminOrders()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+          <option value="all">همه سفارش‌ها</option>
+          <option value="pickup">تحویل از فروشگاه</option>
+          <option value="delivery">ارسال به درب منزل</option>
+        </select>
+      </div>
+      <div id="adminOrdersList"><div style="text-align:center;padding:40px;color:var(--gray)">در حال بارگذاری...</div></div>
+    </div>
+
+    <!-- Products Tab -->
+    <div id="admin-products" style="padding:16px;display:none">
+      <h4 style="font-size:14px;color:var(--green);margin-bottom:12px">📦 ویرایش محصولات کاتالوگ</h4>
+      <p style="font-size:12px;color:var(--gray);margin-bottom:12px">تغییرات فقط در کاتالوگ اعمال می‌شود و سیستم فروش مغازه تغییر نمی‌کند.</p>
+      <input type="text" id="adminProdSearch" placeholder="🔍 جستجوی محصول..." oninput="filterAdminProducts(this.value)"
+        style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;outline:none">
+      <div id="adminProductsList"></div>
+    </div>
+
+    <!-- Delivery Settings Tab -->
+    <div id="admin-delivery_settings" style="padding:16px;display:none">
+      <h4 style="font-size:14px;color:var(--green);margin-bottom:14px">🚚 تقویم دلیوری</h4>
+
+      <!-- Pickup slots -->
+      <div style="background:#e8f5ee;border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">🏪 ساعت‌های تحویل از فروشگاه:</div>
+        <div id="pickup_slots_list" style="margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="new_pickup_slot" placeholder="مثال: 10:00–13:00" style="flex:1;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:12px;direction:ltr">
+          <button onclick="addPickupSlot()" style="background:var(--green);color:white;border:none;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px">+ اضافه</button>
+        </div>
+        <button onclick="savePickupSlotsAdmin()" style="width:100%;background:var(--green-d,#0f5c35);color:white;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;margin-top:8px">💾 ذخیره ساعت‌های فروشگاه</button>
+        <button onclick="addTestDeliveryDays()" style="width:100%;background:#1565c0;color:white;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;margin-top:6px">🧪 اضافه کردن ۷ روز آینده (تست)</button>
+      </div>
+
+      <!-- Calendar -->
+      <div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">📅 تقویم دلیوری — انتخاب روزها:</div>
+
+        <!-- Month navigation -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <button onclick="changeCalMonth(-1)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer">◀</button>
+          <span id="calMonthLabel" style="font-weight:600;font-size:13px"></span>
+          <button onclick="changeCalMonth(1)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer">▶</button>
+        </div>
+
+        <!-- Calendar grid -->
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px" id="calGrid"></div>
+
+        <!-- Selected day slots -->
+        <div id="selectedDayPanel" style="display:none;background:white;border-radius:8px;padding:12px;border:1px solid var(--green)">
+          <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px" id="selectedDayTitle"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <label style="font-size:12px;display:flex;align-items:center;gap:4px">
+              <input type="checkbox" id="dayEnabled" onchange="toggleDayEnabled(this.checked)">
+              این روز فعال است (دلیوری داریم)
+            </label>
+          </div>
+          <div id="daySlotsList" style="margin-bottom:8px"></div>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="newDaySlot" placeholder="مثال: 10:00–12:00" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:11px;direction:ltr">
+            <button onclick="addDaySlot()" style="background:var(--green);color:white;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:11px">+</button>
+          </div>
+          <button onclick="saveDaySettings()" style="width:100%;background:var(--green);color:white;border:none;padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px">💾 ذخیره این روز</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wholesale Tab -->
+    <div id="admin-wholesale" style="padding:16px;display:none">
+      <h4 style="font-size:14px;color:var(--green);margin-bottom:12px">🏪 مدیریت حساب‌های B2B</h4>
+
+      <!-- Add new account form -->
+      <div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">➕ حساب جدید</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">نام رستوران/شرکت</label>
+            <input type="text" id="wsNewName" placeholder="مثال: رستوران نیلوفر" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">یوزرنیم</label>
+            <input type="text" id="wsNewUser" placeholder="nilufar_rest" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:12px;direction:ltr">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">پسورد</label>
+            <input type="text" id="wsNewPass" placeholder="pass123" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:12px;direction:ltr">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">درصد تخفیف روی همه محصولات</label>
+            <select id="wsNewDisc" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+              <option value="5">۵٪</option>
+              <option value="10">۱۰٪</option>
+              <option value="15">۱۵٪</option>
+              <option value="20" selected>۲۰٪</option>
+              <option value="25">۲۵٪</option>
+              <option value="30">۳۰٪</option>
+              <option value="50">۵۰٪</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="addWholesaleAccount()" style="width:100%;background:var(--green);color:white;border:none;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✅ اضافه کردن حساب</button>
+      </div>
+
+      <!-- Accounts list -->
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">حساب‌های فعال:</div>
+      <div id="wholesaleAccountsList" style="font-size:12px"></div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="admin-analytics" style="padding:16px;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <h4 style="font-size:14px;color:var(--green)">📊 آنالیز کاتالوگ</h4>
+        <button onclick="resetAnalytics()" style="background:var(--red-l);border:1px solid var(--red);color:var(--red);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px">پاک کردن داده</button>
+      </div>
+      <div id="analyticsContent"></div>
+    </div>
+
+    <!-- Loyalty Tab -->
+    <div id="admin-loyalty" style="padding:16px;display:none">
+      <h4 style="font-size:14px;color:var(--green);margin-bottom:12px">⭐ اعضای باشگاه مشتریان</h4>
+      <div id="loyaltyMembersList"><div style="text-align:center;color:var(--gray);padding:20px">در حال بارگذاری...</div></div>
+    </div>
+
+    <!-- Ads Tab -->
+    <div id="admin-ads" style="padding:16px;display:none">
+      <h4 style="font-size:14px;color:var(--green);margin-bottom:12px">📢 مدیریت بنرهای تبلیغاتی</h4>
+      <div id="adBannerAdmin"></div>
+      <button onclick="addNewBanner()" style="width:100%;background:var(--green);color:white;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px">+ بنر جدید</button>
+    </div>
+
+    <!-- Discount Tab -->
+    <div id="admin-discount" style="padding:16px;display:none">
+      <h4 style="font-size:14px;color:var(--green);margin-bottom:12px">🎁 مدیریت تخفیف‌ها</h4>
+
+      <div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">تخفیف فعال جدید:</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">نوع تخفیف</label>
+            <select id="discType" onchange="updateDiscountUI()" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+              <option value="all">همه محصولات</option>
+              <option value="category">دسته‌بندی خاص</option>
+              <option value="product">محصول خاص</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">درصد تخفیف</label>
+            <select id="discPercent" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+              <option value="5">۵٪</option><option value="10">۱۰٪</option>
+              <option value="15">۱۵٪</option><option value="20">۲۰٪</option>
+              <option value="25">۲۵٪</option><option value="30">۳۰٪</option>
+              <option value="50">۵۰٪</option>
+            </select>
+          </div>
+        </div>
+        <div id="discTarget" style="margin-bottom:10px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">دسته‌بندی / محصول</label>
+          <select id="discCategorySelect" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;display:none">
+            <option value="">انتخاب کنید...</option>
+            <option value="dairy">لبنیات</option><option value="drink">نوشیدنی</option>
+            <option value="pickle">ترشیجات و مربا</option><option value="rice">برنج و حبوبات</option>
+            <option value="spice">ادویه و چاشنی</option><option value="canned">کنسرو</option>
+            <option value="bread">نان و شیرینی</option><option value="snack">تنقلات</option>
+            <option value="frozen">فریزری</option><option value="dry_herbs">سبزیجات خشک</option>
+          </select>
+          <input type="text" id="discProductSearch" placeholder="جستجوی محصول..." oninput="searchDiscProduct(this.value)"
+            style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;display:none">
+          <div id="discProductResults" style="border:1px solid var(--border);border-radius:6px;display:none;max-height:150px;overflow-y:auto"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <div style="flex:1">
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">پیام تخفیف</label>
+            <input type="text" id="discMessage" placeholder="مثال: تخفیف ویژه آخر هفته!" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+          </div>
+        </div>
+        <button onclick="activateDiscount()" style="width:100%;background:var(--green);color:white;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✅ فعال‌سازی تخفیف</button>
+        <button onclick="clearDiscount()" style="width:100%;background:var(--red);color:white;border:none;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;margin-top:6px">🗑️ حذف تخفیف فعال</button>
+      </div>
+
+      <div id="activeDiscountDisplay" style="background:#e8f5ee;border:1px solid var(--green);border-radius:10px;padding:12px;display:none">
+        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:6px">✅ تخفیف فعال:</div>
+        <div id="activeDiscountInfo" style="font-size:12px;color:#333"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT WIDGET -->
+<div id="chatWidget" style="position:fixed;bottom:20px;left:20px;z-index:500">
+  <div id="chatBox" style="display:none;background:white;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);width:320px;height:440px;display:none;flex-direction:column;overflow:hidden">
+    <div style="background:var(--green);color:white;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">🤖</div>
+        <div>
+          <div style="font-size:13px;font-weight:700" id="chatTitle">ARÁDI Market Assistant</div>
+          <div style="font-size:10px;opacity:.8" id="chatSubtitle">Ready to help</div>
+        </div>
+      </div>
+      <button onclick="toggleChat()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;height:320px">
+      <div class="chat-msg bot" id="chatGreetMsg">Hello! 👋 I am the ARÁDI Market assistant. How can I help you?</div>
+    </div>
+    <div style="padding:10px;border-top:1px solid var(--border);display:flex;gap:6px">
+      <input type="text" id="chatInput" placeholder="پیام خود را بنویسید..." onkeydown="if(event.key==='Enter')sendChatMsg()"
+        style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;outline:none;font-family:inherit">
+      <button onclick="sendChatMsg()" style="background:var(--green);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:14px">➤</button>
+    </div>
+  </div>
+  <button onclick="toggleChat()" id="chatToggleBtn" style="width:52px;height:52px;background:var(--green);color:white;border:none;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(26,122,74,0.4);display:flex;align-items:center;justify-content:center">💬</button>
+</div>
+
+<!-- DISCOUNT POPUP -->
+<div id="discountPopup" style="position:fixed;top:80px;right:16px;z-index:400;display:none;max-width:300px">
+  <div style="background:linear-gradient(135deg,var(--green),#0f5c35);color:white;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,0.2)">
+    <button onclick="document.getElementById('discountPopup').style.display='none'" style="position:absolute;top:8px;left:10px;background:none;border:none;color:white;font-size:18px;cursor:pointer">✕</button>
+    <div style="font-size:24px;margin-bottom:6px" id="discPopupEmoji">🎁</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px" id="discPopupTitle">تخفیف ویژه!</div>
+    <div style="font-size:13px;opacity:.9" id="discPopupMsg"></div>
+    <div style="font-size:28px;font-weight:700;margin-top:8px;color:#90EE90" id="discPopupPercent"></div>
+  </div>
+</div>
+
+<style>
+.admin-tab{padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray);border-bottom:3px solid transparent;font-family:inherit}
+.admin-tab.active{color:var(--green);border-bottom-color:var(--green)}
+.admin-prod-row{display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #f5f5f5;font-size:12px}
+.chat-msg{padding:8px 12px;border-radius:12px;font-size:12px;max-width:85%;line-height:1.5}
+.chat-msg.bot{background:#f0f0f0;color:#222;align-self:flex-start;border-radius:4px 12px 12px 12px}
+.chat-msg.user{background:var(--green);color:white;align-self:flex-end;border-radius:12px 4px 12px 12px}
+.chat-msg.typing{background:#f0f0f0;color:#888;font-style:italic}
+</style>
+
+<div class="modal-ov" id="orderModal">
+  <div class="modal-box">
+    <div id="orderForm">
+      <div class="modal-title" id="orderTitle">📦 ثبت سفارش</div>
+
+
+
+      <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px" id="deliveryLabel">نحوه دریافت:</div>
+      <div class="delivery-opts">
+        <div class="delivery-opt selected" id="opt-pickup" onclick="selectDelivery('pickup')">
+          <div class="delivery-opt-icon">🏪</div>
+          <div class="delivery-opt-label" id="pickupLabel">تحویل از فروشگاه</div>
+          <div class="delivery-opt-sub" id="pickupSub">رایگان</div>
+        </div>
+        <div class="delivery-opt" id="opt-delivery" onclick="selectDelivery('delivery')">
+          <div class="delivery-opt-icon">🚚</div>
+          <div class="delivery-opt-label" id="delivLabel">ارسال به درب منزل</div>
+          <div class="delivery-opt-sub" id="delivSub">مناطق ۷،۸،۹،۱۱: ۲۰۰۰ Ft | سایر: ۳۰۰۰ Ft</div>
+        </div>
+      </div>
+
+      <div id="deliveryFields" style="display:none">
+        <div class="form-group">
+          <label id="addrLabel">آدرس کامل *</label>
+          <input type="text" id="oAddress" placeholder="بوداپست، خیابان...">
+        </div>
+        <div class="form-group">
+          <label id="districtLabel">شماره منطقه (District) *</label>
+          <select id="oDistrict" class="form-group" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none" onchange="updateDeliveryCost()">
+            <option value="">انتخاب کنید...</option>
+            <option value="1">District I</option><option value="2">District II</option>
+            <option value="3">District III</option><option value="4">District IV</option>
+            <option value="5">District V</option><option value="6">District VI</option>
+            <option value="7">District VII ★</option><option value="8">District VIII ★</option>
+            <option value="9">District IX ★</option><option value="10">District X</option>
+            <option value="11">District XI ★</option><option value="12">District XII</option>
+            <option value="13">District XIII</option><option value="14">District XIV</option>
+            <option value="15">District XV</option><option value="16">District XVI</option>
+            <option value="17">District XVII</option><option value="18">District XVIII</option>
+            <option value="19">District XIX</option><option value="20">District XX</option>
+            <option value="21">District XXI</option><option value="22">District XXII</option>
+            <option value="23">District XXIII</option>
+          </select>
+          <div id="delivCostInfo" style="font-size:12px;color:var(--orange);margin-top:4px"></div>
+        </div>
+        <div class="form-group">
+          <label id="delivCostLabel">هزینه ارسال:</label>
+          <div style="font-size:14px;font-weight:700;color:var(--orange)" id="delivCostVal">2,000–3,000 Ft</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="timeLabel" style="font-weight:600;font-size:12px;color:#555;display:block;margin-bottom:6px">زمان تحویل / دریافت:</label>
+        <div id="datePickerWrap" style="margin-bottom:8px">
+          <div id="availableDatesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:180px;overflow-y:auto"></div>
+          <div id="noDeliveryMsg" style="display:none;color:var(--gray);font-size:12px;padding:10px;text-align:center">در حال حاضر تاریخی برای دلیوری تنظیم نشده</div>
+        </div>
+        <div class="time-slots" id="timeSlots"></div>
+      </div>
+
+      <div class="form-group">
+        <label id="nameLabel">نام *</label>
+        <input type="text" id="oName" placeholder="">
+      </div>
+      <div class="form-group">
+        <label id="phoneLabel">شماره تماس *</label>
+        <input type="tel" id="oPhone" placeholder="+36..." style="direction:ltr">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px" id="payLabel">💳 روش پرداخت *</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="delivery-opt selected" id="pay-cash" onclick="selectPayment('cash')" style="padding:10px;text-align:center;cursor:pointer">
+            <div style="font-size:20px;margin-bottom:4px">💵</div>
+            <div style="font-size:12px;font-weight:600">نقدی</div>
+            <div style="font-size:10px;color:var(--gray)">Cash</div>
+          </div>
+          <div class="delivery-opt" id="pay-revolut" onclick="selectPayment('revolut')" style="padding:10px;text-align:center;cursor:pointer">
+            <div style="font-size:20px;margin-bottom:4px">📱</div>
+            <div style="font-size:12px;font-weight:600">رولوت</div>
+            <div style="font-size:10px;color:var(--gray)">Revolut</div>
+          </div>
+          <div class="delivery-opt" id="pay-wise" onclick="selectPayment('wise')" style="padding:10px;text-align:center;cursor:pointer">
+            <div style="font-size:20px;margin-bottom:4px">🌍</div>
+            <div style="font-size:12px;font-weight:600">وایز</div>
+            <div style="font-size:10px;color:var(--gray)">Wise</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label id="noteLabel">یادداشت</label>
+        <input type="text" id="oNote" placeholder="">
+      </div>
+
+      <div class="order-summary" id="orderSummaryBox"></div>
+
+      <div class="form-group" id="referralGroup">
+  <label id="referralLabel">🎁 کد تخفیف (اختیاری)</label>
+  <div style="display:flex;gap:8px">
+    <input type="text" id="oReferral" placeholder="کد را وارد کنید..." style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;direction:ltr;text-transform:uppercase">
+    <button onclick="applyReferral()" style="background:var(--green);color:white;border:none;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px">اعمال</button>
+  </div>
+  <div id="referralResult" style="font-size:12px;margin-top:5px"></div>
+</div>
+<div class="form-group" id="pointsGroup" style="background:var(--green-l);border-radius:10px;padding:10px 12px"><div id="pointsBox"></div></div>
+<button class="submit-order-btn" onclick="submitOrder()" id="submitOrderBtn">✅ ثبت سفارش</button>
+      <button onclick="closeOrderModal()" style="width:100%;background:none;border:none;color:var(--gray);margin-top:8px;padding:10px;cursor:pointer;font-size:13px" id="cancelOrderBtn">انصراف</button>
+    </div>
+    <div class="order-success" id="orderSuccess">
+      <div style="font-size:48px">🎉</div>
+      <h3 id="successTitle">سفارش ثبت شد!</h3>
+      <p id="successMsg" style="color:var(--gray);font-size:13px;line-height:1.7"></p>
+      <div id="successExtra"></div>
+      <button onclick="closeOrderModal()" style="margin-top:16px;background:var(--green);color:white;border:none;padding:12px 28px;border-radius:10px;font-size:14px;cursor:pointer" id="successBtn">بستن</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://dddzyaezhjccfpaalhpc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_8bVTyqj08oBZxdVrwHquiA_aAkIfKyu";
+const DELIVERY_COST_NEAR = 2000;  // مناطق ۷،۸،۹،۱۱
+const DELIVERY_COST_FAR = 3000;   // سایر مناطق
+const NEAR_DISTRICTS = ['7','8','9','11','VII','VIII','IX','XI'];
+// Telegram messages are sent by the database (trigger on catalog_orders / customers); no bot key and no admin password live in this page.
+
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let products = [];
+let cart = [];
+let currentLang = 'fa';
+let currentCat = 'all';
+let searchQ = '';
+let selectedDelivery = 'pickup';
+let selectedPayment = 'cash';
+let selectedSlot = null;
+
+// ===== TRANSLATIONS =====
+const T = {
+  fa:{
+    hSub:'کاتالوگ محصولات', cartLabel:'سبد', searchPh:'جستجوی محصول...',
+    loading:'در حال بارگذاری...', allCat:'همه',
+    cats:{
+      all:'همه', sale:'🔥 تخفیفات ویژه', dairy:'🥛 لبنیات', drink:'🥤 نوشیدنی', pickle:'🫙 ترشیجات و مربا',
+      rice:'🌾 برنج و حبوبات', spice:'🌿 ادویه و چاشنی', canned:'🥫 کنسرو',
+      bread:'🍪 نان و شیرینی', snack:'🍿 تنقلات', frozen:'❄️ فریزری',
+      dry_herbs:'🌱 سبزیجات خشک', dried:'🫘 خشکبار', sausage:'🌭 سوسیس و کالباس',
+      sauce:'🍅 رب و سس', herbal:'🌸 عرقیات', craft:'🎨 صنایع دستی'
+    },
+    inStock:'موجود', lowStock:'فقط {n} عدد', outOfStock:'ناموجود', expired:'تمام شده',
+    addToCart:'افزودن به سبد', cartTitle:'🛒 سبد خرید', cartEmpty:'سبد خرید خالی است',
+    cartTotal:'جمع کل:', checkout:'ثبت سفارش →',
+    orderTitle:'📦 ثبت سفارش', csBannerTitle:'پرداخت آنلاین — به زودی!',
+    csBannerSub:'امکان پرداخت آنلاین به زودی راه‌اندازی می‌شود. فعلاً سفارش شما ثبت می‌شود و با شما تماس می‌گیریم.',
+    deliveryLabel:'نحوه دریافت:', pickupLabel:'تحویل از فروشگاه', pickupSub:'رایگان',
+    delivLabel:'ارسال به درب منزل', delivSub:'+ هزینه ارسال',
+    addrLabel:'آدرس کامل *', delivCostLabel:'هزینه ارسال:', timeLabel:'زمان تحویل / دریافت:',
+    nameLabel:'نام *', phoneLabel:'شماره تماس *', noteLabel:'یادداشت',
+    today:'امروز', tomorrow:'فردا', submitOrder:'✅ ثبت سفارش', cancel:'انصراف',
+    successTitle:'سفارش ثبت شد!', successBtn:'بستن', noResults:'محصولی یافت نشد',
+    ft:'Ft', deliveryCost:'هزینه ارسال', referralLabel:'🎁 کد تخفیف (اختیاری)'
+  },
+  en:{
+    hSub:'Product Catalog', cartLabel:'Cart', searchPh:'Search products...',
+    loading:'Loading...', allCat:'All',
+    cats:{
+      all:'All', sale:'🔥 Special Offers', dairy:'🥛 Dairy', drink:'🥤 Drinks', pickle:'🫙 Pickles & Jams',
+      rice:'🌾 Rice & Legumes', spice:'🌿 Spices', canned:'🥫 Canned Food',
+      bread:'🍪 Bread & Sweets', snack:'🍿 Snacks', frozen:'❄️ Frozen',
+      dry_herbs:'🌱 Dried Herbs', dried:'🫘 Dried Fruits & Nuts', sausage:'🌭 Sausages',
+      sauce:'🍅 Sauces', herbal:'🌸 Herbal Waters', craft:'🎨 Handicrafts'
+    },
+    inStock:'In Stock', lowStock:'Only {n} left', outOfStock:'Out of Stock', expired:'Sold Out',
+    addToCart:'Add to Cart', cartTitle:'🛒 Cart', cartEmpty:'Your cart is empty',
+    cartTotal:'Total:', checkout:'Place Order →',
+    orderTitle:'📦 Place Order', csBannerTitle:'Online Payment — Coming Soon!',
+    csBannerSub:'Online payment will be available soon. Your order will be registered and we will contact you.',
+    deliveryLabel:'Delivery method:', pickupLabel:'Store Pickup', pickupSub:'Free',
+    delivLabel:'Home Delivery', delivSub:'+ delivery fee',
+    addrLabel:'Full Address *', delivCostLabel:'Delivery fee:', timeLabel:'Pickup / Delivery time:',
+    nameLabel:'Name *', phoneLabel:'Phone *', noteLabel:'Note',
+    today:'Today', tomorrow:'Tomorrow', submitOrder:'✅ Place Order', cancel:'Cancel',
+    successTitle:'Order Placed!', successBtn:'Close', noResults:'No products found',
+    ft:'Ft', deliveryCost:'Delivery fee', referralLabel:'🎁 Discount code (optional)'
+  },
+  hu:{
+    hSub:'Termékkatalógus', cartLabel:'Kosár', searchPh:'Termékek keresése...',
+    loading:'Betöltés...', allCat:'Összes',
+    cats:{
+      all:'Összes', sale:'🔥 Akciók', dairy:'🥛 Tejtermékek', drink:'🥤 Italok', pickle:'🫙 Savanyúság & Lekvár',
+      rice:'🌾 Rizs & Hüvelyesek', spice:'🌿 Fűszerek', canned:'🥫 Konzerv',
+      bread:'🍪 Kenyér & Édességek', snack:'🍿 Rágcsálnivalók', frozen:'❄️ Fagyasztott',
+      dry_herbs:'🌱 Szárított zöldségek', dried:'🫘 Aszalt gyümölcsök', sausage:'🌭 Kolbász',
+      sauce:'🍅 Szószok', herbal:'🌸 Gyógynövény vizek', craft:'🎨 Kézművesség'
+    },
+    inStock:'Elérhető', lowStock:'Csak {n} db', outOfStock:'Nem elérhető', expired:'Elfogyott',
+    addToCart:'Kosárba', cartTitle:'🛒 Kosár', cartEmpty:'A kosár üres',
+    cartTotal:'Összesen:', checkout:'Rendelés →',
+    orderTitle:'📦 Rendelés leadása', csBannerTitle:'Online fizetés — Hamarosan!',
+    csBannerSub:'Az online fizetés hamarosan elérhető lesz. Rendelése rögzítésre kerül és felvesszük Önnel a kapcsolatot.',
+    deliveryLabel:'Átvétel módja:', pickupLabel:'Bolti átvétel', pickupSub:'Ingyenes',
+    delivLabel:'Házhozszállítás', delivSub:'+ szállítási díj',
+    addrLabel:'Teljes cím *', delivCostLabel:'Szállítási díj:', timeLabel:'Átvétel ideje:',
+    nameLabel:'Név *', phoneLabel:'Telefon *', noteLabel:'Megjegyzés',
+    today:'Ma', tomorrow:'Holnap', submitOrder:'✅ Rendelés leadása', cancel:'Mégsem',
+    successTitle:'Rendelés leadva!', successBtn:'Bezárás', noResults:'Nem található termék',
+    ft:'Ft', deliveryCost:'Szállítási díj', referralLabel:'🎁 Kedvezménykód (opcionális)'
+  }
+};
+
+// ===== CATEGORY MAPPING =====
+const CATS = [
+  {id:'all'}, {id:'sale'}, {id:'dairy'}, {id:'drink'}, {id:'pickle'}, {id:'rice'},
+  {id:'spice'}, {id:'canned'}, {id:'bread'}, {id:'snack'}, {id:'frozen'},
+  {id:'dry_herbs'}, {id:'dried'}, {id:'sausage'}, {id:'sauce'}, {id:'herbal'}, {id:'craft'}
+];
+
+function categorize(name, dbCat){
+  // اگر دسته‌بندی دستی در دیتابیس وجود داشت، از آن استفاده کن
+  if(dbCat && dbCat !== 'عمومی' && dbCat !== '') {
+    const catMap = {
+      'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle',
+      'برنج و حبوبات':'rice','ادویه و چاشنی':'spice','کنسرو':'canned',
+      'نان و شیرینی':'bread','تنقلات':'snack','فریزری':'frozen',
+      'سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage',
+      'رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'
+    };
+    if(catMap[dbCat]) return [catMap[dbCat]];
+  }
+  // وگرنه از تشخیص خودکار استفاده کن
+  const _categorize = function(name){
+  const n = name.toLowerCase();
+  const cats = [];
+  if(/ماست|پنیر|کشک|خامه|دوغ/.test(n)) cats.push('dairy');
+  if(/دوغ|شربت|عرق نعنا|عرق|گلاب|آبلیمو|آب لیمو|ایستک|شیره|آبغوره/.test(n)) cats.push('drink');
+  if(/ترشی|خیارشور|مربا|شور مخلوط|زیتون|سیرترشی|سیر ترشی|ترشک|غوره/.test(n)) cats.push('pickle');
+  if(/برنج|لپه|لوبیا|نخودچی|باقالی/.test(n)) cats.push('rice');
+  if(/زعفران|زردچوبه|سماق|گلپر|شنبلیله|ترخون|نعنا خشک|گشنیز|ادویه|پودر پیاز|پودر زنجبیل|پودر دارچین|گرد لیمو|برگ بو|هل|فلافل/.test(n)) cats.push('spice');
+  if(/کنسرو|آش|حلیم|فسنجان|سمنو|قورمه سبزی|قیمه|باقالی قاتوق|میرزا قاسمی|خورشت|بادمجان سرخ|سبزی کوکو|قلیه ماهی|سیرداغ/.test(n)) cats.push('canned');
+  if(/نان|شیرینی نخودچی|سوهان|نبات|کیک|بیسکویت|کلوچه|گز/.test(n)) cats.push('bread');
+  if(/پفک|آلوچه|لواشک|تنقلات|ترشک/.test(n)) cats.push('snack');
+  if(/منجمد|بستنی|فالوده/.test(n)) { cats.push('frozen'); cats.push('snack'); }
+  if(/سبزی|رشته آش|رشته پلو/.test(n)) cats.push('dry_herbs');
+  if(/زرشک|آلو بخارا|کشمش|خرما|آلبالو خشک|لیمو عمانی|توت/.test(n)) cats.push('dried');
+  if(/سوسیس|هات داگ/.test(n)) cats.push('sausage');
+  if(/رب|سرکه/.test(n)) cats.push('sauce');
+  if(/گل گاوزبان|گل سرخ|عرق کاسنی/.test(n)) cats.push('herbal');
+  if(/صنایع|مسی|آینه|تخته نرد|شطرنج/.test(n)) cats.push('craft');
+  return cats.length ? cats : ['snack'];
+  };
+  return _categorize(name);
+}
+
+// ===== PRODUCT NAME TRANSLATION =====
+const nameTranslations = {
+  // لبنیات / Dairy
+  'ماست چکیده':'Strained Yogurt|Sűrített joghurt',
+  'پنیر لیقوان':'Lighvan Cheese|Lighvan sajt',
+  'خامه':'Cream|Tejszín',
+  'دوغ ساده (۰.۵ لیتر)':'Doogh Plain 0.5L|Ayran 0.5L',
+  'دوغ گازدار دربند (۱.۵ لیتر)':'Doogh Sparkling 1.5L|Ayran szénsavas 1.5L',
+  'کشک بزرگ':'Kashk Large|Kashk nagy',
+  'کشک کوچک':'Kashk Small|Kashk kis',
+  'کنسرو کشک بادمجان':'Kashk & Eggplant|Padlizsán kashkkal',
+  'کشک بزرگ کامبیز 720 گرمی':'Kashk Kambiz 720g|Kashk Kambiz 720g',
+  // نوشیدنی / Drinks
+  'گلاب یک و یک':'Rose Water|Rózsavíz',
+  'عرق نعنا یک و یک':'Mint Water|Menta víz',
+  'عرق نعناع':'Mint Water|Menta víz',
+  'آبلیمو یک و یک':'Lemon Juice|Citromlé',
+  'شربت سکنجبین برتر':'Sekanjbin Syrup|Sekanjbin szirup',
+  'شربت سکنجبین شیررضا':'Sekanjbin Syrup|Sekanjbin szirup',
+  'شربت بهار نارنج':'Orange Blossom Syrup|Narancsvirág szirup',
+  'شربت زعفران درین گل':'Saffron Syrup|Sáfrány szirup',
+  'شربت آلبالو درین گل':'Sour Cherry Syrup|Meggy szirup',
+  'شربت موهیتو لیمو نعنا':'Mojito Syrup|Mojito szirup',
+  'عرق کاسنی درین گل':'Chicory Water|Cikória víz',
+  // ترشیجات / Pickles
+  'ترشی مخلوط یک و یک':'Mixed Pickle|Vegyes savanyúság',
+  'ترشی بندری':'Bandari Pickle|Bandari savanyúság',
+  'ترشی بندری سیاه':'Bandari Black Pickle|Fekete Bandari savanyúság',
+  'ترشی بندری یک و یک جدید':'Bandari Pickle New|Bandari savanyúság új',
+  'ترشی لیته':'Liteh Pickle|Liteh savanyúság',
+  'ترشی هفت بیجار':'Haft Biyar Pickle|Haft Biyar savanyúság',
+  'ترشی موسیر کدبانو':'Shallot Pickle|Mogyoróhagyma savanyúság',
+  'ترشی غوره':'Unripe Grape Pickle|Éretlen szőlő savanyúság',
+  'خیارشور بدر - 700 گرم':'Pickled Cucumber 700g|Savanyított uborka 700g',
+  'خیارشور یک و یک - 700 گرم':'Pickled Cucumber 700g|Savanyított uborka 700g',
+  'خیارشور یک و یک - 1/5 کیلویی':'Pickled Cucumber 1.5kg|Savanyított uborka 1.5kg',
+  'خیارشور یک و یک - 4 کیلویی':'Pickled Cucumber 4kg|Savanyított uborka 4kg',
+  'سیرترشی یک و یک':'Pickled Garlic|Savanyított fokhagyma',
+  'سیر ترشی سفید':'White Garlic Pickle|Fehér fokhagyma savanyúság',
+  'سیر ترشی سیاه':'Black Garlic Pickle|Fekete fokhagyma savanyúság',
+  'شور مخلوط':'Mixed Brine|Vegyes sós',
+  'زیتون شور':'Salted Olives|Sós olívabogyó',
+  'ترشک مخلوط':'Sorrel Mix|Sóska mix',
+  'مربا آلبالو یک و یک':'Sour Cherry Jam|Meggylekvár',
+  'مربا توت فرنگی یک و یک':'Strawberry Jam|Eperlekvár',
+  'مربا انجیر یک و یک':'Fig Jam|Füge lekvár',
+  'مربا هویج سحر':'Carrot Jam|Sárgarépa lekvár',
+  'مربا آلو':'Plum Jam|Szilva lekvár',
+  'مربا به یک و یک':'Quince Jam|Birs lekvár',
+  // برنج / Rice
+  'برنج ۷ ستاره (۱ کیلو)':'Persian Rice 1kg|Perzsa rizs 1kg',
+  'برنج ۷ ستاره (۵ کیلو)':'Persian Rice 5kg|Perzsa rizs 5kg',
+  'برنج ۷ ستاره (۱۰ کیلو)':'Persian Rice 10kg|Perzsa rizs 10kg',
+  'برنج کدبانو (۵ کیلو)':'Kadbanoo Rice 5kg|Kadbanoo rizs 5kg',
+  'برنج نیک (۱ کیلو)':'NIK Rice 1kg|NIK rizs 1kg',
+  'لپه':'Split Peas|Sárgaborsó',
+  'نخودچی با نمک':'Salted Chickpeas|Sós csicseriborsó',
+  'باقالی منجمد':'Frozen Fava Beans|Fagyasztott lóbab',
+  // ادویه / Spices
+  'زعفران':'Persian Saffron|Perzsa sáfrány',
+  'زردچوبه':'Turmeric|Kurkuma',
+  'سماق نمکدونی':'Sumac|Szumák',
+  'گشنیز خشک برتر':'Dried Coriander|Szárított koriander',
+  'شنبلیله خشک برتر':'Dried Fenugreek|Szárított görögszéna',
+  'ترخون خشک برتر':'Dried Tarragon|Szárított tárkony',
+  'نعنا خشک گلها':'Dried Mint|Szárított menta',
+  'برگ بو علی بابا':'Bay Leaf|Babérlevél',
+  'هل':'Cardamom|Kardamom',
+  'گرد لیمو نمکدونی':'Dried Lime Powder|Lime por',
+  'ادویه خورشتی نمکدونی':'Stew Spice|Ragu fűszer',
+  'ادویه فلافل نمکدونی':'Falafel Spice|Falafel fűszer',
+  'گرد غوره نمکدونی':'Verjuice Powder|Éretlen szőlő por',
+  'پودر دارچین نمکدونی':'Cinnamon Powder|Fahéj por',
+  'پودر پیاز نمکدونی':'Onion Powder|Hagyma por',
+  'پودر زنجبیل نمکدونی':'Ginger Powder|Gyömbér por',
+  'گلپر':'Angelica Seeds|Angyalgyökér mag',
+  // کنسرو / Canned
+  'کنسرو آش شعله قلمکار کامچین':'Ash Soup Can|Ash leves konzerv',
+  'کنسرو حلیم کامچین':'Halim Can|Halim konzerv',
+  'کنسرو فسنجان نیک':'Fesenjaan Can|Fesenjaan konzerv',
+  'کنسرو سمنو نیک':'Samanoo Can|Samanoo konzerv',
+  'کنسرو حلیم نیک':'Halim NIK Can|Halim NIK konzerv',
+  'کنسرو آش رشته نیک':'Ash Reshteh Can|Ash Reshteh konzerv',
+  'کنسرو خورشت قورمه سبزی کامچین':'Ghormeh Sabzi Can|Ghormeh Sabzi konzerv',
+  'کنسرو مایه خورشت قیمه کامچین':'Gheyma Can|Gheyma konzerv',
+  'کنسرو قیمه بادمجان کامچین':'Gheyma Eggplant Can|Gheyma padlizsán konzerv',
+  'کنسرو لوبیا با قارچ گیلانی':'Beans with Mushroom Can|Bab gombával konzerv',
+  'کنسرو لوبیا گیلانی':'Gilani Beans Can|Gilani bab konzerv',
+  'کنسرو باقالی قاتوق گیلانی':'Fava Bean Can|Lóbab konzerv',
+  'کنسرو سبزی قورمه گیلانی':'Ghormeh Herb Can|Ghormeh fűszer konzerv',
+  'کنسرو خورشت قیمه گیلانی':'Gheyma Gilani Can|Gheyma Gilani konzerv',
+  'کنسرو بادمجان سرخ کرده گیلانی':'Fried Eggplant Can|Sült padlizsán konzerv',
+  'کنسرو سبزی کوکو':'Kuku Herb Can|Kuku fűszer konzerv',
+  'کنسرو قلیه ماهی کامچین':'Fish Stew Can|Hal ragu konzerv',
+  'کنسرو سیرداغ هانی':'Garlic Sauce Can|Fokhagyma szósz konzerv',
+  // نان و شیرینی / Bread
+  'نان لواش':'Lavash Bread|Lavash kenyér',
+  'نان قندی':'Sweet Bread|Édes kenyér',
+  'شیرینی نخودچی':'Chickpea Cookies|Csicseriborsó süti',
+  'شیرینی پاپیونی بزرگ':'Butterfly Cookies|Pillangó süti',
+  'نبات سفید':'Rock Candy|Kristálycukor',
+  'نبات سوهان گزی':'Sohan Candy|Sohan cukorka',
+  // تنقلات / Snacks
+  'پفک چی توز موتوری بزرگ':'Chitoz Puffs Large|Chitoz puffasztott nagy',
+  'پفک چی توز موتوری کوچک':'Chitoz Puffs Small|Chitoz puffasztott kis',
+  'پفک لینا فنری بزرگ':'Lina Spring Puffs Large|Lina puffasztott nagy',
+  'پفک لینا فنری کوچک':'Lina Spring Puffs Small|Lina puffasztott kis',
+  'پفک لینا پنیری بزرگ':'Lina Cheese Puffs Large|Lina sajtos puffasztott nagy',
+  'پفک لینا توپی فلفلی کوچک':'Lina Pepper Balls Small|Lina borsos golyó kis',
+  'پفک لینا لوله‌ای متوسط':'Lina Tube Puffs Medium|Lina cső puffasztott',
+  'آلوچه لیوانی':'Plum Candy Cup|Szilva cukorka pohár',
+  'لواشک (پذیرایی)':'Lavashak Candy|Lavashak cukorka',
+  'خرما (جعبه سفید)':'Dates White Box|Datolya fehér doboz',
+  'خرما (جعبه قرمز)':'Dates Red Box|Datolya piros doboz',
+  'خرما زاهدی':'Zahedi Dates|Zahedi datolya',
+  // فریزری / Frozen
+  'بستنی نونی کمشاد':'Kamshad Ice Cream|Kamshad fagylalt',
+  'فالوده':'Faloodeh|Faloodeh fagylalt',
+  'سبزی کوکو منجمد':'Frozen Kuku Herb|Fagyasztott Kuku fűszer',
+  'بامیه منجمد':'Frozen Okra|Fagyasztott okra',
+  'بادمجان کبابی منجمد':'Frozen Grilled Eggplant|Fagyasztott grillezett padlizsán',
+  'قورمه سرخ شده منجمد':'Frozen Fried Ghormeh|Fagyasztott Ghormeh',
+  // سبزیجات خشک / Dried Herbs
+  'سبزی آش':'Ash Herb Mix|Ash fűszer mix',
+  'قورمه سبزی خشک گلها':'Ghormeh Sabzi Dried|Ghormeh Sabzi szárított',
+  'سبزی خشک کوکو-پلو گلها':'Kuku-Polo Herb|Kuku-Polo fűszer',
+  'رشته آش گلها':'Ash Noodles|Ash tészta',
+  'رشته پلو گلها':'Rice Noodles|Rizs tészta',
+  'سبزی تره خشک':'Dried Leek|Szárított póréhagyma',
+  'سبزی دلمه خشک':'Dolma Herb|Dolma fűszer',
+  'سبزی کوکو خشک':'Kuku Herb|Kuku fűszer',
+  'شوید خشک':'Dried Dill|Szárított kapor',
+  'سبزی شوید خشک':'Dried Dill|Szárított kapor',
+  // خشکبار / Dried Fruits
+  'زرشک':'Barberries|Borbolya',
+  'زرشک (۱ کارتن - 4 کیلو)':'Barberries 4kg|Borbolya 4kg',
+  'آلو بخارا':'Prunes|Aszalt szilva',
+  'کشمش سبز':'Green Raisins|Zöld mazsola',
+  'آلبالو خشکه':'Dried Sour Cherry|Szárított meggy',
+  'لیمو عمانی':'Dried Limes|Szárított lime',
+  'شیره توت':'Mulberry Syrup|Eper szirup',
+  'شیره خرما (مریم)':'Date Syrup|Datolya szirup',
+  // سوسیس / Sausages
+  'هات داگ':'Hot Dog|Hot Dog',
+  'سوسیس (بندری)':'Bandari Sausage|Bandari kolbász',
+  'سوسیس (پنیری)':'Cheese Sausage|Sajtos kolbász',
+  'سوسیس (دودی)':'Smoked Sausage|Füstölt kolbász',
+  // رب / Sauce
+  'رب بزرگ یک و یک':'Tomato Paste Large|Paradicsom püré nagy',
+  'رب کوچک مجاری':'Tomato Paste Small HU|Paradicsom püré kis',
+  'رب انار یک و یک':'Pomegranate Paste|Gránátalma püré',
+  'سرکه انگور یک و یک':'Wine Vinegar|Szőlő ecet',
+  'نشاسته گندم':'Wheat Starch|Búzakeményítő',
+  'ارده (تهمین)':'Sesame Paste|Szezám paszta',
+  'حلوا ارده ترکی (تهین)':'Tahini Halva|Tahini halva',
+  // عرقیات
+  'گل گاوزبان':'Borage Flower|Borágó virág',
+  'گل سرخ (سری 1)':'Rose Petals|Rózsaszirom',
+  // چاشنی
+  'آب لیمو':'Lime Juice|Lime lé',
+  'آبغوره':'Verjuice|Éretlen szőlőlé',
+  'برگ مو شور':'Pickled Grape Leaves|Savanyított szőlőlevél',
+  // صنایع دستی
+  'تخته نرد و شطرنج دست‌ساز':'Handmade Backgammon & Chess|Kézzel készített ostábla és sakk',
+  'سرویس مسی دست‌ساز':'Handmade Copper Set|Kézzel készített rézgarnitúra',
+  'سرویس سفالی آینه‌کاری':'Mirror Mosaic Ceramic Set|Mozaikos kerámia szett',
+};
+
+function getProductName(p){
+  const ov = catalogOverrides[p.id]||{};
+  // Check manual overrides first
+  if(currentLang === 'fa') return ov.name || p.name;
+  if(currentLang === 'en' && ov.name_en) return ov.name_en;
+  if(currentLang === 'hu' && ov.name_hu) return ov.name_hu;
+  // Fall back to translation table
+  const tr = nameTranslations[p.name];
+  if(!tr) return ov.name || p.name;
+  const parts = tr.split('|');
+  return currentLang === 'en' ? parts[0] : parts[1];
+}
+
+function getProductNameById(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return '';
+  return getProductName(p);
+}
+
+// ===== REFERRAL SYSTEM =====
+// این سیستم برای بعد آماده است — فقط کدها را اضافه کنید
+const REFERRAL_CODES = {
+  // فرمت: 'KOD': {type:'percent', value:10, name:'نام صاحب کد'}
+  // یا:   'KOD': {type:'fixed', value:500, name:'نام صاحب کد'}
+  // مثال:
+  // 'ALI10': {type:'percent', value:10, name:'علی'},
+  // 'VIP500': {type:'fixed', value:500, name:'مشتری VIP'},
+};
+
+
+// ===== CLUB / POINTS / ONE-TIME CODES (Oct 2026) =====
+function L3(fa,en,hu){ return currentLang==='fa'?fa:currentLang==='hu'?hu:en; }
+function escH(v){ return String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const ERR_TXT = {
+  CODE_INVALID:['کد تخفیف معتبر نیست.','This discount code is not valid.','A kedvezménykód érvénytelen.'],
+  CODE_USED:['این کد تخفیف قبلاً استفاده شده است.','This discount code has already been used.','Ezt a kedvezménykódot már felhasználták.'],
+  CODE_EXPIRED:['تاریخ این کد تخفیف گذشته است.','This discount code has expired.','Ez a kedvezménykód lejárt.'],
+  CODE_MIN:['مبلغ خرید برای این کد کافی نیست.','Your order is below the minimum amount for this code.','A rendelés nem éri el a kód minimális összegét.'],
+  POINTS_LOW:['امتیاز شما هنوز به حد استفاده نرسیده است.','You do not have enough points yet.','Még nincs elég pontja.'],
+  MEMBER_NOT_FOUND:['شماره تلفن یا کد عضویت درست نیست.','The phone number or member code is not correct.','A telefonszám vagy a tagsági kód nem megfelelő.'],
+  ORDER_NAME_PHONE:['نام و شماره تماس را درست وارد کنید.','Please enter your name and a valid phone number.','Kérjük, adja meg nevét és érvényes telefonszámát.'],
+  JOIN_NAME_PHONE:['نام و شماره تماس را درست وارد کنید.','Please enter your name and a valid phone number.','Kérjük, adja meg nevét és érvényes telefonszámát.'],
+  ORDER_ITEMS:['سبد خرید خالی است.','Your cart is empty.','A kosár üres.']
+};
+function rpcErrText(e){
+  const m=String((e&&(e.message||e.details||e.hint))||e||'');
+  const k=Object.keys(ERR_TXT).find(x=>m.includes(x));
+  return k?L3(...ERR_TXT[k]):null;
+}
+function pointsBarHtml(points,min){
+  const pct=Math.max(0,Math.min(100,Math.round(100*Math.min(points,min)/min)));
+  const ready=points>=min;
+  return `<div style="background:#e6e6e6;border-radius:20px;height:14px;overflow:hidden;margin:6px 0">
+      <div style="width:${pct}%;height:100%;background:${ready?'var(--green)':'linear-gradient(90deg,#f5c04a,#e8a33a)'};border-radius:20px;transition:width .4s"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#555"><span>⭐ ${points.toLocaleString()} ${L3('امتیاز','points','pont')}</span><span>${ready?'✅ '+L3('قابل استفاده','ready to use','felhasználható'):(min-points)+' '+L3('امتیاز تا قابل استفاده شدن','more to unlock','pont hiányzik')}</span></div>`;
+}
+
+let appliedReferral = null;
+
+async function applyReferral(){
+  const code = document.getElementById('oReferral').value.trim().toUpperCase();
+  const result = document.getElementById('referralResult');
+  appliedReferral = null;
+  if(!code){ result.textContent=''; updateOrderSummary(); return; }
+  result.textContent = '⏳';
+  const sub = cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  let r; try { r = await db.rpc('check_code',{p_code:code, p_subtotal:sub}); } catch(e){ r={error:e}; }
+  if(r.error || !r.data){
+    result.innerHTML = '<span style="color:var(--red)">❌ '+L3('بررسی کد ممکن نشد. دوباره امتحان کنید.','Could not check the code. Please try again.','Nem sikerült ellenőrizni a kódot.')+'</span>';
+  } else if(!r.data.ok){
+    result.innerHTML = '<span style="color:var(--red)">❌ '+L3(...(ERR_TXT[r.data.reason]||ERR_TXT.CODE_INVALID))+'</span>';
+  } else {
+    appliedReferral = {code:r.data.code, type:'percent', value:r.data.percent};
+    result.innerHTML = '<span style="color:var(--green);font-weight:600">✅ '+L3('کد تخفیف اعمال شد','Discount code applied','Kedvezménykód érvényesítve')+' — '+r.data.percent+'%</span>';
+  }
+  updateOrderSummary();
+}
+
+function getReferralDiscount(subtotal){
+  if(!appliedReferral) return 0;
+  if(appliedReferral.type==='percent') return Math.round(subtotal * appliedReferral.value / 100);
+  return 0;
+}
+
+// ----- club points inside the order form -----
+let memberInfo = null, usePoints = false;
+function pointsDiscount(sub, refDisc){
+  if(!usePoints || !memberInfo || !memberInfo.usable) return 0;
+  return Math.max(0, Math.min(memberInfo.points, Math.floor(sub - refDisc)));
+}
+function renderPointsBox(){
+  const el=document.getElementById('pointsBox'); if(!el) return;
+  if(!memberInfo){
+    el.innerHTML=`<div style="font-size:12px;font-weight:600;margin-bottom:6px">⭐ ${L3('عضو باشگاه هستید؟ کد عضویت را بزنید تا از امتیازتان استفاده کنید.','Club member? Enter your member code to use your points.','Klubtag? Adja meg tagsági kódját a pontjai felhasználásához.')}</div>
+      <div style="display:flex;gap:8px"><input type="text" id="oMemberCode" placeholder="ARADI-XXXXXX" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;direction:ltr;text-transform:uppercase">
+      <button type="button" onclick="checkMemberPoints()" id="memberCheckBtn" style="background:var(--green);color:white;border:none;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:13px">${L3('بررسی','Check','Ellenőrzés')}</button></div>
+      <div id="memberMsg" style="font-size:12px;margin-top:5px"></div>`;
+    return;
+  }
+  el.innerHTML=`<div style="font-size:13px;font-weight:700">⭐ ${escH(memberInfo.name)} — ${L3('امتیاز باشگاه','club points','klubpontok')}</div>
+    ${pointsBarHtml(memberInfo.points, memberInfo.min)}
+    ${memberInfo.expires?`<div style="font-size:11px;color:var(--gray)">⏳ ${L3('اعتبار تا','valid until','érvényes')}: ${memberInfo.expires}</div>`:''}
+    ${memberInfo.usable?`<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;font-weight:600;cursor:pointer">
+      <input type="checkbox" id="usePointsChk" ${usePoints?'checked':''} onchange="usePoints=this.checked;updateOrderSummary()" style="width:18px;height:18px">
+      ${L3('استفاده از امتیازها (هر امتیاز = ۱ فورینت)','Use my points (1 point = 1 Ft)','Pontjaim felhasználása (1 pont = 1 Ft)')}</label>`:''}`;
+}
+async function checkMemberPoints(){
+  const phone=document.getElementById('oPhone').value.trim();
+  const code=(document.getElementById('oMemberCode')||{}).value||'';
+  const msg=document.getElementById('memberMsg');
+  if(!phone){ msg.innerHTML='<span style="color:var(--red)">'+L3('اول شماره تلفن را در فرم وارد کنید.','Please enter your phone number in the form first.','Először adja meg telefonszámát.')+'</span>'; return; }
+  if(!code.trim()){ msg.innerHTML='<span style="color:var(--red)">'+L3('کد عضویت را وارد کنید.','Please enter your member code.','Adja meg tagsági kódját.')+'</span>'; return; }
+  msg.textContent='⏳';
+  let r; try { r = await db.rpc('member_status',{p_phone:phone, p_code:code}); } catch(e){ r={error:e}; }
+  if(r.error || !r.data){ msg.innerHTML='<span style="color:var(--red)">'+L3('بررسی ممکن نشد. دوباره امتحان کنید.','Could not check. Please try again.','Nem sikerült ellenőrizni.')+'</span>'; return; }
+  if(!r.data.found){ msg.innerHTML='<span style="color:var(--red)">❌ '+L3(...ERR_TXT.MEMBER_NOT_FOUND)+'</span>'; return; }
+  memberInfo = Object.assign({code: code.trim().toUpperCase(), phone}, r.data);
+  usePoints = !!r.data.usable;
+  renderPointsBox(); updateOrderSummary();
+}
+
+function getOrderTotals(){
+  refreshCartPrices();
+  const listSub=cart.reduce((s,i)=>s+((i.orig_price!==undefined&&i.orig_price!==null?i.orig_price:i.price)||0)*i.qty,0);
+  const sub=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  const saved=Math.max(0,listSub-sub);
+  const deliv=selectedDelivery==='delivery'?getDeliveryCost():0;
+  const refDisc=getReferralDiscount(sub);
+  const ptsDisc=pointsDiscount(sub, refDisc);
+  const total=Math.max(0,sub+deliv-refDisc-ptsDisc);
+  return {listSub,sub,saved,deliv,refDisc,ptsDisc,total};
+}
+
+function updateOrderSummary(){
+  const t=T[currentLang];
+  const {listSub,sub,saved,deliv,refDisc,ptsDisc,total}=getOrderTotals();
+  const discLabel=activeWholesale?('🏪 B2B −'+activeWholesale.discount+'%')
+    :(currentLang==='fa'?'🎁 تخفیف':currentLang==='hu'?'🎁 Kedvezmény':'🎁 Discount');
+  document.getElementById('orderSummaryBox').innerHTML=`
+    <div class="order-summary-row"><span>${t.cartTotal}</span><span>${(saved?listSub:sub).toLocaleString()} ${t.ft}</span></div>
+    ${saved?`<div class="order-summary-row" style="color:var(--red)"><span>${discLabel}</span><span>− ${saved.toLocaleString()} ${t.ft}</span></div>`:''}
+    ${deliv?`<div class="order-summary-row" style="color:var(--orange)"><span>${t.deliveryCost}</span><span>+ ${deliv.toLocaleString()} ${t.ft}</span></div>`:''}
+    ${refDisc?`<div class="order-summary-row" style="color:var(--green)"><span>🎟️ ${escH(appliedReferral?.code||'')} (${appliedReferral?.value||''}%)</span><span>− ${refDisc.toLocaleString()} ${t.ft}</span></div>`:''}
+    ${ptsDisc?`<div class="order-summary-row" style="color:var(--green)"><span>⭐ ${L3('امتیاز باشگاه','Club points','Klubpontok')}</span><span>− ${ptsDisc.toLocaleString()} ${t.ft}</span></div>`:''}
+    <div class="order-summary-total"><span>💰 Total:</span><span>${total.toLocaleString()} ${t.ft}</span></div>`;
+}
+
+// ===== INIT =====
+function getWholesalePrice(p){
+  if(!activeWholesale) return null;
+  // Check custom per-product discount first
+  if(activeWholesale.custom&&activeWholesale.custom[p.id]!==undefined){
+    return Math.round(p.price*(1-activeWholesale.custom[p.id]/100));
+  }
+  // Apply group discount
+  return Math.round(p.price*(1-activeWholesale.discount/100));
+}
+
+
+// Apply discount to price display
+const origProductCard = productCard;
+function getDiscountedPrice(p){
+  if(!activeDiscount) return null;
+  const {type,percent,category,productId}=activeDiscount;
+  if(type==='all') return Math.round(p.price*(1-percent/100));
+  if(type==='category'&&p._cats.includes(category)) return Math.round(p.price*(1-percent/100));
+  if(type==='product'&&String(p.id)===String(productId)) return Math.round(p.price*(1-percent/100));
+  return null;
+}
+
+// ===== INTERNAL ANALYTICS =====
+let analyticsData = JSON.parse(localStorage.getItem('aradi_analytics')||'{"pageViews":0,"searches":[],"productViews":{},"cartAdds":{},"orders":0,"sessions":[]}');
+
+function trackPageView(){
+  analyticsData.pageViews++;
+  const session = {
+    time: new Date().toISOString(),
+    lang: navigator.language,
+    screen: window.screen.width+'x'+window.screen.height,
+    referrer: document.referrer||'direct'
+  };
+  analyticsData.sessions.push(session);
+  if(analyticsData.sessions.length > 500) analyticsData.sessions = analyticsData.sessions.slice(-500);
+  saveAnalytics();
+  // GA4 event
+  if(typeof gtag !== 'undefined') gtag('event', 'page_view', {page_title:'ARADI Catalog'});
+}
+
+function trackSearch(q){
+  if(!q||q.length<2) return;
+  analyticsData.searches.push({q, time: new Date().toISOString()});
+  if(analyticsData.searches.length > 200) analyticsData.searches = analyticsData.searches.slice(-200);
+  saveAnalytics();
+  if(typeof gtag !== 'undefined') gtag('event', 'search', {search_term: q});
+}
+
+function trackProductView(productId, productName){
+  if(!analyticsData.productViews[productId]) analyticsData.productViews[productId]={name:productName,views:0};
+  analyticsData.productViews[productId].views++;
+  saveAnalytics();
+  if(typeof gtag !== 'undefined') gtag('event', 'view_item', {item_id:productId, item_name:productName});
+}
+
+function trackAddToCart(productId, productName, price){
+  if(!analyticsData.cartAdds[productId]) analyticsData.cartAdds[productId]={name:productName,adds:0,revenue:0};
+  analyticsData.cartAdds[productId].adds++;
+  analyticsData.cartAdds[productId].revenue += price||0;
+  saveAnalytics();
+  if(typeof gtag !== 'undefined') gtag('event', 'add_to_cart', {item_id:productId, item_name:productName, value:price});
+}
+
+function trackOrder(total){
+  analyticsData.orders++;
+  saveAnalytics();
+  if(typeof gtag !== 'undefined') gtag('event', 'purchase', {value:total, currency:'HUF'});
+}
+
+function saveAnalytics(){ localStorage.setItem('aradi_analytics', JSON.stringify(analyticsData)); }
+
+// Adds the category list (manual catalog categories first, then the shop category, then auto-detect).
+function decorateProduct(p){
+  const ov = catalogOverrides[p.id]||{};
+  if(ov.extra_cats && ov.extra_cats.length){
+    const catMap2={'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle','برنج و حبوبات':'rice','ادویه و چاشنی':'spice','کنسرو':'canned','نان و شیرینی':'bread','تنقلات':'snack','فریزری':'frozen','سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage','رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'};
+    p._cats = ov.extra_cats.map(c=>catMap2[c]||c).filter(Boolean);
+  } else {
+    p._cats = categorize(p.name, p.category);
+  }
+  if(ov.name) p._displayName=ov.name;
+}
+
+async function init(){
+  try {
+    const { data, error } = await db.from('products').select('*').order('name');
+    if(error) throw error;
+    products = data || [];
+    // Load catalog overrides from Supabase
+    const ovRes = await db.from('catalog_overrides').select('*');
+    if(ovRes.data) {
+      ovRes.data.forEach(ov => {
+        catalogOverrides[ov.product_id] = {
+          name: ov.name_fa || undefined,
+          name_en: ov.name_en || undefined,
+          name_hu: ov.name_hu || undefined,
+          price: ov.price_override || undefined,
+          extra_cats: ov.categories || undefined,
+          _fromDB: true
+        };
+        // Remove undefined keys
+        Object.keys(catalogOverrides[ov.product_id]).forEach(k => {
+          if(catalogOverrides[ov.product_id][k] === undefined) 
+            delete catalogOverrides[ov.product_id][k];
+        });
+      });
+    }
+    // Add categories to each product
+    products.forEach(decorateProduct);
+    document.getElementById('connDot').className = 'conn-dot online';
+    document.getElementById('loadingWrap').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    setLang('fa');
+    trackPageView();
+    await loadDeliveryFromDB();
+    await loadBatches();
+    buildCats();
+    updateCartBadge();
+    renderProducts();
+    initDays();
+    initWholesaleUI();
+    // Realtime
+    db.channel('catalog-batches').on('postgres_changes',{event:'*',schema:'public',table:'batches'},async()=>{
+      await loadBatches();
+      renderProducts();
+      renderCart();
+    }).subscribe();
+    db.channel('catalog').on('postgres_changes',{event:'*',schema:'public',table:'products'},async()=>{
+      const r = await db.from('products').select('*').order('name');
+      products = r.data||[];
+      products.forEach(decorateProduct);
+      renderProducts();
+      renderCart();
+    }).subscribe();
+  } catch(e){
+    document.getElementById('loadingText').textContent = 'خطا در اتصال — ' + e.message;
+  }
+}
+
+// ===== LANG =====
+function safeSet(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+function safePH(id,val){const el=document.getElementById(id);if(el)el.placeholder=val;}
+
+function setLang(lang){
+  currentLang=lang;
+  document.body.className=lang;
+  document.documentElement.lang=lang;
+  document.documentElement.dir=lang==='fa'?'rtl':'ltr';
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.classList.remove('active');
+    if((lang==='fa'&&b.textContent==='فارسی')||(lang==='en'&&b.textContent==='English')||(lang==='hu'&&b.textContent==='Magyar'))
+      b.classList.add('active');
+  });
+  const t=T[lang];
+  safeSet('hSub',t.hSub);
+  safeSet('cartLabel',t.cartLabel);
+  safePH('searchInput',t.searchPh);
+  safeSet('cartTitle',t.cartTitle);
+  safeSet('cartEmpty',t.cartEmpty);
+  safeSet('cartTotalLabel',t.cartTotal);
+  safeSet('checkoutBtn',t.checkout);
+  safeSet('orderTitle',t.orderTitle);
+  safeSet('csBannerTitle',t.csBannerTitle);
+  safeSet('csBannerSub',t.csBannerSub);
+  safeSet('deliveryLabel',t.deliveryLabel);
+  safeSet('pickupLabel',t.pickupLabel);
+  safeSet('pickupSub',t.pickupSub);
+  safeSet('delivLabel',t.delivLabel);
+  safeSet('delivSub',t.delivSub);
+  safeSet('addrLabel',t.addrLabel);
+  safeSet('delivCostLabel',t.delivCostLabel);
+  safeSet('timeLabel',t.timeLabel);
+  safeSet('nameLabel',t.nameLabel);
+  safeSet('phoneLabel',t.phoneLabel);
+  safeSet('noteLabel',t.noteLabel);
+  safeSet('submitOrderBtn',t.submitOrder);
+  safeSet('cancelOrderBtn',t.cancel);
+  safeSet('successTitle',t.successTitle);
+  safeSet('successBtn',t.successBtn);
+  const oName=document.getElementById('oName');
+  const oPhone=document.getElementById('oPhone');
+  const oAddr=document.getElementById('oAddress');
+  const oNote=document.getElementById('oNote');
+  if(oName) oName.placeholder=lang==='fa'?'نام شما...':lang==='hu'?'Az Ön neve...':'Your name...';
+  if(oPhone) oPhone.placeholder='+36...';
+  if(oAddr) oAddr.placeholder=lang==='fa'?'بوداپست، خیابان...':lang==='hu'?'Budapest, utca...':'Budapest, street...';
+  if(oNote) oNote.placeholder=lang==='fa'?'یادداشت...':lang==='hu'?'Megjegyzés...':'Note...';
+  safeSet('chatTitle', lang==='fa'?'دستیار ARÁDI Market':lang==='hu'?'ARÁDI Market Asszisztens':'ARÁDI Market Assistant');
+  safeSet('chatSubtitle', lang==='fa'?'آماده پاسخگویی':lang==='hu'?'Készen állok segíteni':'Ready to help');
+  safePH('chatInput', lang==='fa'?'پیام خود را بنویسید...':lang==='hu'?'Írja be üzenetét...':'Type your message...');
+  const chatGreet=document.getElementById('chatGreetMsg');
+  if(chatGreet){
+    if(lang==='fa') chatGreet.textContent='سلام! 👋 من دستیار ARÁDI Market هستم. چطور می‌تونم کمکتون کنم؟';
+    else if(lang==='hu') chatGreet.textContent='Szia! 👋 Az ARÁDI Market asszisztense vagyok. Miben segíthetek?';
+    else chatGreet.textContent='Hello! 👋 I am the ARÁDI Market assistant. How can I help you?';
+  }
+  buildCats();
+  renderProducts();
+  renderCart();
+  initDays();
+  const lyBtn=document.getElementById('loyaltyJoinBtn');
+  if(lyBtn&&lyBtn.innerHTML.includes('⭐')){
+    const lyTxt=document.getElementById('loyaltyBtnText');
+    if(lyTxt) lyTxt.textContent=lang==='fa'?'عضویت در باشگاه':lang==='hu'?'Klub':' Join Club';
+  }
+}
+
+
+// ===== CATEGORIES =====
+// A product is a "special offer" when a discounted lot or an active discount lowers its price (B2B prices do not count).
+function isSpecialOffer(p){
+  if(p.price===null||p.price===undefined||isOut(p)) return false;
+  if(getSaleBatch(p)) return true;
+  const d=getDiscountedPrice(p);
+  return d!==null && d<p.price;
+}
+function hasSpecialOffers(){ return products.some(isSpecialOffer); }
+
+function buildCats(){
+  const t=T[currentLang];
+  const scroll=document.getElementById('catsScroll');
+  if(!scroll) return;
+  const showSale=hasSpecialOffers();
+  // the «تخفیفات ویژه» button exists only while something is on offer
+  scroll.innerHTML=CATS.filter(cat=>cat.id!=='sale'||showSale).map(cat=>{
+    const active=currentCat===cat.id;
+    const style=cat.id==='sale'?(active?'style="background:var(--red);color:white"':'style="background:var(--red-l);color:var(--red)"'):'';
+    return `
+    <button class="cat-btn ${active?'active':''}" ${style} onclick="filterCat('${cat.id}')">
+      ${t.cats[cat.id]}
+    </button>`; }).join('');
+}
+
+function filterCat(cat){
+  currentCat=cat;
+  buildCats();
+  renderProducts();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function doSearch(q){
+  searchQ = q.trim();
+  renderProducts();
+  if(q.trim().length>1) trackSearch(q.trim());
+}
+
+// ===== PRODUCTS =====
+function isExpired(expire){
+  if(!expire) return false;
+  const d = new Date(expire.replace(/\./g,'-'));
+  return d < new Date();
+}
+function isLow(stock){ return stock!==null && stock>0 && stock<=3; }
+function isOut(p){
+  if(getSaleBatch(p)) return false;                 // a discounted lot is on offer
+  const q=availableQty(p);
+  return (q!==null && q<=0) || isExpired(p.expire);
+}
+
+function renderProducts(){
+  const t = T[currentLang];
+  if(currentCat==='sale' && !hasSpecialOffers()) currentCat='all';   // the last offer just ended
+  buildCats();
+  let list = products.filter(p=>{
+    if(p.price===null||p.price===undefined) return false;            // no price yet: not ready to be sold online
+    if(currentCat==='sale'){ if(!isSpecialOffer(p)) return false; }
+    else if(currentCat!=='all' && !p._cats.includes(currentCat)) return false;
+    if(searchQ && !p.name.includes(searchQ) && !(p.name.toLowerCase().includes(searchQ.toLowerCase()))) return false;
+    return true;
+  });
+  // Sort: special offers first, then other available products, then out of stock/expired
+  list.sort((a,b)=>{
+    const aOut=isOut(a), bOut=isOut(b);
+    if(aOut && !bOut) return 1;
+    if(!aOut && bOut) return -1;
+    const aSale=isSpecialOffer(a), bSale=isSpecialOffer(b);
+    if(aSale && !bSale) return -1;
+    if(!aSale && bSale) return 1;
+    return a.name.localeCompare(b.name,'fa');
+  });
+  const sec = document.getElementById('productsSection');
+  if(!list.length){
+    sec.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--gray)">${t.noResults}</div>`;
+    return;
+  }
+  sec.innerHTML = `<div class="products-grid">${list.map(p=>productCard(p,t)).join('')}</div>`;
+}
+
+function productCard(p, t){
+  const out = isOut(p);
+  const qty = availableQty(p);
+  const low = qty!==null && qty>0 && qty<=3;
+  const origPrice = p.price;
+  const finalPrice = getEffectivePrice(p);
+  const onSale = origPrice!==null && origPrice!==undefined && finalPrice<origPrice;
+  const discPct = onSale ? Math.round((1-finalPrice/origPrice)*100) : 0;
+  const discBadge = discPct>0 ? `<div style="position:absolute;top:8px;left:8px;background:var(--red);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;direction:ltr">−${discPct}%</div>` : '';
+  let badge='', overlay='';
+  if(out){ badge=`<div class="stock-badge out">${t.outOfStock}</div>`; overlay=`<div class="sold-overlay">${t.outOfStock}</div>`; }
+  else if(low){ badge=`<div class="stock-badge low">${t.lowStock.replace('{n}',qty)}</div>`; }
+  const imgHtml = p.image_url
+    ? `<img src="${p.image_url}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const emoji = getEmoji(p._cats);
+  let priceHtml = '';
+  if(origPrice!==null && origPrice!==undefined){
+    if(onSale){
+      priceHtml = `<div>
+        <span style="text-decoration:line-through;color:#bbb;font-size:11px">${origPrice.toLocaleString()} ${t.ft}</span>
+        <div class="product-price" style="color:var(--red)">${finalPrice.toLocaleString()} <small>${t.ft}</small></div>
+      </div>`;
+    } else {
+      priceHtml = `<div class="product-price">${origPrice.toLocaleString()} <small>${t.ft}</small></div>`;
+    }
+  }
+  return `<div class="product-card ${out?'sold-out':''}" onclick="${out?'':'addToCart('+p.id+')'}">
+    <div class="product-img-wrap">
+      ${imgHtml}
+      <div class="product-img-placeholder" ${p.image_url?'style="display:none"':''}>${emoji}</div>
+      ${badge}${overlay}${discBadge}
+    </div>
+    <div class="product-info">
+      <div class="product-name">${getProductName(p)}</div>
+      ${priceHtml}
+    </div>
+    ${!out?`<button class="add-btn" onclick="event.stopPropagation();addToCart(${p.id})">${t.addToCart}</button>`:''}
+  </div>`;
+}
+
+function getEmoji(cats){
+  const map={dairy:'🥛',drink:'🥤',pickle:'🫙',rice:'🌾',spice:'🌿',canned:'🥫',bread:'🍪',snack:'🍿',frozen:'❄️',dry_herbs:'🌱',dried:'🫘',sausage:'🌭',sauce:'🍅',herbal:'🌸',craft:'🎨'};
+  for(const c of (cats||[])) if(map[c]) return map[c];
+  return '🛒';
+}
+
+// ===== SHARED HELPERS =====
+function showFlash(msg,type){
+  let t=document.getElementById('flashToast');
+  if(!t){
+    t=document.createElement('div'); t.id='flashToast';
+    t.style.cssText='position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:900;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;color:white;box-shadow:0 4px 16px rgba(0,0,0,0.25);max-width:90vw;text-align:center;display:none';
+    document.body.appendChild(t);
+  }
+  t.style.background = type==='err'?'#c0392b':type==='warn'?'#e67e22':'#1a7a4a';
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(t._t); t._t=setTimeout(()=>{ t.style.display='none'; },2500);
+}
+
+// The price the customer actually pays: B2B price first, then the active discount, then the list price.
+// ----- batches (lots) defined in the shop program -----
+let batches = [];
+async function loadBatches(){
+  try { const r = await db.from('batches').select('*'); if(!r.error) batches = r.data||[]; } catch(e){ console.log('batches load:', e.message); }
+}
+function batchActive(b){
+  if(b.stock!==null && b.stock!==undefined && b.stock<=0) return false;
+  if(b.expiry_date && new Date(b.expiry_date+'T23:59:59') < new Date()) return false;   // past its date: never offered
+  return true;
+}
+function productBatches(p){ return batches.filter(b=>String(b.product_id)===String(p.id) && batchActive(b)); }
+// The discounted lot of this product, if there is one (earliest date first).
+function getSaleBatch(p){
+  if(p.price===null||p.price===undefined) return null;
+  const list = productBatches(p).filter(b=>b.sale_price!==null && b.sale_price!==undefined && Number(b.sale_price)<Number(p.price));
+  if(!list.length) return null;
+  list.sort((a,b)=>String(a.expiry_date||'9999').localeCompare(String(b.expiry_date||'9999')) || Number(a.sale_price)-Number(b.sale_price));
+  return list[0];
+}
+// True when the price shown for this product is the sale lot's price.
+function saleBatchApplies(p){
+  const sb=getSaleBatch(p);
+  return (sb && getEffectivePrice(p)===Number(sb.sale_price)) ? sb : null;
+}
+// How many the customer can order: the sale lot's stock while it is on offer, otherwise shelf stock plus other lots.
+function availableQty(p){
+  const sb=saleBatchApplies(p);
+  if(sb) return (sb.stock===null||sb.stock===undefined) ? null : sb.stock;
+  if(p.stock===null||p.stock===undefined) return null;
+  return p.stock + productBatches(p).reduce((s,b)=>s+(b.stock||0),0);
+}
+function batchNote(b){
+  return 'دسته تخفیفی'+(b.label?' «'+b.label+'»':'')+(b.expiry_date?' — انقضا '+b.expiry_date:'');
+}
+
+// The price the customer actually pays: the lowest of list price, B2B price, active discount and sale lot.
+function getEffectivePrice(p){
+  if(p.price===null||p.price===undefined) return p.price;
+  let best=p.price;
+  const ws=getWholesalePrice(p); if(ws!==null) best=Math.min(best,ws);
+  const d=getDiscountedPrice(p); if(d!==null) best=Math.min(best,d);
+  const sb=getSaleBatch(p); if(sb) best=Math.min(best,Number(sb.sale_price));
+  return best;
+}
+// Keep cart lines in step with the current price (discount switched on, B2B login, price change in the shop).
+function refreshCartPrices(){
+  cart.forEach(item=>{
+    const p=products.find(x=>x.id===item.id); if(!p) return;
+    item.orig_price=p.price;
+    item.price=getEffectivePrice(p);
+    const sb=saleBatchApplies(p);
+    if(sb){ item.batch_id=sb.id; item.batch_note=batchNote(sb); } else { delete item.batch_id; delete item.batch_note; }
+    const max=availableQty(p);
+    if(max!==null && max>0 && item.qty>max) item.qty=max;
+  });
+}
+
+// Insert that survives a missing column: on PGRST204 the unknown field is dropped and the insert retried.
+async function insertTolerant(table,row){
+  const r=Object.assign({},row); let res;
+  for(let i=0;i<12;i++){
+    res = await db.from(table).insert(r);
+    if(!res.error) return res;
+    const m=/'([^']+)' column/.exec(res.error.message||'');
+    if(res.error.code==='PGRST204' && m && (m[1] in r)){ delete r[m[1]]; continue; }
+    return res;
+  }
+  return res;
+}
+
+// Make a picture light before it is uploaded (longest side `maxSide`, WebP or JPEG). Falls back to the original file.
+async function shrinkImage(file, maxSide){
+  maxSide = maxSide || 800;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide/Math.max(bmp.width,bmp.height));
+    const w = Math.max(1,Math.round(bmp.width*scale)), h = Math.max(1,Math.round(bmp.height*scale));
+    const c = document.createElement('canvas'); c.width=w; c.height=h;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(bmp,0,0,w,h);
+    let out = await new Promise(r=>c.toBlob(r,'image/webp',0.82));
+    if(!out || out.type!=='image/webp'){
+      ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h); ctx.drawImage(bmp,0,0,w,h);
+      out = await new Promise(r=>c.toBlob(r,'image/jpeg',0.82));
+    }
+    if(bmp.close) bmp.close();
+    if(out && out.size < file.size) return {blob:out, ext:out.type==='image/webp'?'webp':'jpg', type:out.type};
+  } catch(e){ console.log('picture kept as it is:', e && e.message); }
+  return {blob:file, ext:String(file.name||'x.jpg').split('.').pop().toLowerCase(), type:file.type||'image/jpeg'};
+}
+// Turns a Supabase sign-in error into a short Persian message.
+function authErrorText(e){
+  const m=(e&&e.message)||'';
+  if(/Invalid login credentials/i.test(m)) return 'ایمیل یا رمز اشتباه است.';
+  if(/Failed to fetch|NetworkError|network/i.test(m)) return 'اینترنت وصل نیست. دوباره امتحان کنید.';
+  if(/Email not confirmed/i.test(m)) return 'این حساب هنوز تأیید نشده است.';
+  return 'ورود انجام نشد'+(m?': '+m:'.');
+}
+// Signs in and makes sure the account belongs to the shop (the database function is_staff says so).
+async function staffSignIn(client, email, password){
+  let res; try { res = await client.auth.signInWithPassword({email, password}); } catch(e){ res={error:e}; }
+  if(res.error || !res.data || !res.data.session) return {error: authErrorText(res.error)};
+  try {
+    const r = await client.rpc('is_staff');
+    if(!r.error && r.data===false){ await client.auth.signOut(); return {error:'این حساب اجازه ورود ندارد.'}; }
+  } catch(e){}
+  return {session: res.data.session};
+}
+
+// ===== CART =====
+function addToCart(id){
+  const p = products.find(x=>x.id===id); if(!p||isOut(p)) return;
+  const ex = cart.find(c=>c.id===id);
+  if(ex){
+    const max=availableQty(p);
+    if(max!==null&&ex.qty>=max){
+      showFlash(currentLang==='fa'?'بیشتر از این موجود نیست':currentLang==='hu'?'Nincs több készleten':'No more in stock','warn');
+      return;
+    }
+    ex.qty++;
+  }
+  else cart.push({id:p.id,name:p.name,price:getEffectivePrice(p),orig_price:p.price,qty:1,image_url:p.image_url,cats:p._cats});
+  renderCart();
+  // Show flash notification instead of opening cart
+  const totalItems = cart.reduce((s,x)=>s+x.qty,0);
+  showFlash(currentLang==='fa'?'✅ افزوده شد — سبد: '+totalItems+' محصول'
+    :currentLang==='hu'?'✅ Hozzáadva — kosár: '+totalItems+' db'
+    :'✅ Added — cart: '+totalItems+' item'+(totalItems>1?'s':''),'ok');
+  updateCartBadge();
+  trackAddToCart(p.id,p.name,getEffectivePrice(p));
+}
+
+function updateCartBadge(){
+  const total = cart.reduce((s,x)=>s+x.qty,0);
+  let badge = document.getElementById('cartBadge');
+  if(!badge){
+    const cartBtn = document.querySelector('.cart-btn');
+    if(cartBtn){
+      badge = document.createElement('span');
+      badge.id = 'cartBadge';
+      badge.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#e53935;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;line-height:1';
+      cartBtn.style.position = 'relative';
+      cartBtn.appendChild(badge);
+    }
+  }
+  if(badge){ badge.textContent = total > 0 ? total : ''; badge.style.display = total > 0 ? 'flex' : 'none'; }
+}
+
+function changeQty(id,d){
+  const item=cart.find(c=>c.id===id); if(!item) return;
+  const p=products.find(x=>x.id===id);
+  const max=p?availableQty(p):null;
+  if(d>0&&max!==null&&item.qty>=max) return;
+  item.qty+=d; if(item.qty<=0) cart=cart.filter(c=>c.id!==id);
+  renderCart(); updateOrderSummary(); updateCartBadge();
+}
+
+function renderCart(){
+  refreshCartPrices();
+  const t=T[currentLang];
+  const count=cart.reduce((s,i)=>s+i.qty,0);
+  const total=cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  document.getElementById('cartCount').textContent=count;
+  const itemsEl=document.getElementById('cartItems');
+  const emptyEl=document.getElementById('cartEmpty');
+  const footerEl=document.getElementById('cartFooter');
+  if(!cart.length){ itemsEl.innerHTML=''; emptyEl.style.display='block'; footerEl.style.display='none'; return; }
+  emptyEl.style.display='none'; footerEl.style.display='block';
+  itemsEl.innerHTML=cart.map(item=>`<div class="cart-item">
+    ${item.image_url?`<img src="${item.image_url}" class="cart-item-img" alt="${item.name}">`:`<div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:24px">${getEmoji(item.cats)}</div>`}
+    <div class="cart-item-info">
+      <div class="cart-item-name">${getProductNameById(item.id)}</div>
+      <div class="cart-item-price">${item.price!==null?((item.orig_price&&item.orig_price>item.price?`<span style="text-decoration:line-through;color:#bbb;font-weight:400;font-size:11px">${(item.orig_price*item.qty).toLocaleString()}</span> `:'')+(item.price*item.qty).toLocaleString()+' '+t.ft):'—'}</div>
+    </div>
+    <div class="cart-item-qty">
+      <span class="qty-btn" onclick="changeQty(${item.id},-1)">−</span>
+      <span style="font-weight:700;min-width:20px;text-align:center">${item.qty}</span>
+      <span class="qty-btn" onclick="changeQty(${item.id},1)">+</span>
+    </div>
+  </div>`).join('');
+  document.getElementById('cartTotalAmt').textContent=total.toLocaleString()+' '+t.ft;
+}
+
+function toggleCart(){
+  document.getElementById('cartSidebar').classList.toggle('open');
+  document.getElementById('cartOverlay').classList.toggle('open');
+}
+
+// ===== ORDER MODAL =====
+let selectedDate = null;
+
+function initDays(){
+  if(selectedDelivery==='delivery'){
+    renderDatePicker();
+    document.getElementById('timeSlots').innerHTML='<div style="color:var(--gray);font-size:12px;grid-column:1/-1;text-align:center">ابتدا تاریخ را انتخاب کنید</div>';
+  } else {
+    // Pickup - show pickup slots
+    const grid = document.getElementById('availableDatesGrid');
+    const noMsg = document.getElementById('noDeliveryMsg');
+    if(grid) grid.innerHTML='';
+    if(noMsg) noMsg.style.display='none';
+    buildTimeSlots(pickupSlots);
+  }
+}
+
+function renderDatePicker(){
+  const grid = document.getElementById('availableDatesGrid');
+  const noMsg = document.getElementById('noDeliveryMsg');
+  if(!grid) return;
+  
+  const dates = getAvailableDates();
+  
+  if(!dates.length){
+    grid.innerHTML='';
+    if(noMsg) noMsg.style.display='block';
+    return;
+  }
+  if(noMsg) noMsg.style.display='none';
+  
+  grid.innerHTML='';
+  dates.forEach(function(d){
+    const weekday = d.date.toLocaleDateString('en-GB',{weekday:'short'});
+    const dayNum = d.date.getDate();
+    const month = d.date.toLocaleDateString('en-GB',{month:'short'});
+    const isSelected = (selectedDate === d.dateStr);
+    
+    const div = document.createElement('div');
+    div.style.border = '1.5px solid ' + (isSelected ? 'var(--green)' : 'var(--border)');
+    div.style.background = isSelected ? 'var(--green-l)' : 'white';
+    div.style.borderRadius = '8px';
+    div.style.padding = '8px 4px';
+    div.style.cursor = 'pointer';
+    div.style.textAlign = 'center';
+    div.style.transition = 'all .2s';
+    div.innerHTML = '<div style="font-size:10px;color:' + (isSelected?'var(--green)':'#888') + '">' + weekday + '</div>'
+      + '<div style="font-size:16px;font-weight:700;color:' + (isSelected?'var(--green)':'#333') + '">' + dayNum + '</div>'
+      + '<div style="font-size:10px;color:' + (isSelected?'var(--green)':'#888') + '">' + month + '</div>';
+    
+    // Use closure to capture dateStr and slots
+    (function(dateStr, slots){
+      div.addEventListener('click', function(){
+        selectedDate = dateStr;
+        selectedSlot = null;
+        renderDatePicker();
+        buildTimeSlots(slots);
+      });
+    })(d.dateStr, d.slots);
+    
+    grid.appendChild(div);
+  });
+}
+
+function buildTimeSlots(slots){
+  const container = document.getElementById('timeSlots');
+  if(!container) return;
+  
+  if(!slots || slots.length === 0){
+    container.innerHTML = '<div style="color:var(--gray);font-size:12px;grid-column:1/-1;text-align:center">ساعتی موجود نیست</div>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  slots.forEach(function(s){
+    const div = document.createElement('div');
+    div.className = 'time-slot' + (selectedSlot===s ? ' selected' : '');
+    div.textContent = s;
+    div.addEventListener('click', function(){
+      selectedSlot = s;
+      // Update all time slot styles
+      container.querySelectorAll('.time-slot').forEach(function(el){
+        el.classList.toggle('selected', el.textContent===s);
+      });
+    });
+    container.appendChild(div);
+  });
+}
+
+function renderTimeSlots(slots){
+  buildTimeSlots(slots);
+}
+
+function renderPickupSlots(){
+  buildTimeSlots(pickupSlots);
+}
+
+function selectDate(dateStr, slots){
+  selectedDate = dateStr;
+  selectedSlot = null;
+  renderDatePicker();
+  buildTimeSlots(slots||[]);
+}
+
+
+function getDeliveryCost(){
+  const district = document.getElementById('oDistrict')?.value || '';
+  return NEAR_DISTRICTS.includes(district) ? DELIVERY_COST_NEAR : DELIVERY_COST_FAR;
+}
+
+function updateDeliveryCost(){
+  const district = document.getElementById('oDistrict')?.value || '';
+  const info = document.getElementById('delivCostInfo');
+  if(!district){ info.textContent=''; updateOrderSummary(); return; }
+  const cost = NEAR_DISTRICTS.includes(district) ? DELIVERY_COST_NEAR : DELIVERY_COST_FAR;
+  const isNear = NEAR_DISTRICTS.includes(district);
+  info.textContent = isNear
+    ? `✅ منطقه نزدیک — هزینه ارسال: ${cost.toLocaleString()} Ft`
+    : `📍 هزینه ارسال: ${cost.toLocaleString()} Ft`;
+  updateOrderSummary();
+}
+
+function selectPayment(method){
+  selectedPayment=method;
+  ['cash','revolut','wise'].forEach(m=>{
+    const el=document.getElementById('pay-'+m);
+    if(el) el.classList.toggle('selected',m===method);
+  });
+}
+
+function selectDelivery(type){
+  selectedDelivery=type;
+  selectedDate=null;
+  selectedSlot=null;
+  document.getElementById('opt-pickup').classList.toggle('selected',type==='pickup');
+  document.getElementById('opt-delivery').classList.toggle('selected',type==='delivery');
+  document.getElementById('deliveryFields').style.display=type==='delivery'?'block':'none';
+  updateOrderSummary();
+  initDays();
+}
+
+// Totals used by the order summary, the Telegram message and the saved order.
+function openOrderModal(){
+  if(!cart.length) return;
+  renderPointsBox();
+  updateOrderSummary();
+  document.getElementById('orderModal').classList.add('open');
+  document.getElementById('orderForm').style.display='block';
+  document.getElementById('orderSuccess').style.display='none';
+}
+
+function closeOrderModal(){
+  document.getElementById('orderModal').classList.remove('open');
+}
+
+let _orderBusy=false;
+function resetOrderExtras(){
+  appliedReferral=null; memberInfo=null; usePoints=false;
+  const a=document.getElementById('oReferral'); if(a) a.value='';
+  const b=document.getElementById('referralResult'); if(b) b.textContent='';
+  renderPointsBox();
+}
+async function submitOrder(){
+  if(_orderBusy||!cart.length) return;
+  const name=document.getElementById('oName').value.trim();
+  const phone=document.getElementById('oPhone').value.trim();
+  const address=document.getElementById('oAddress').value.trim();
+  const district=document.getElementById('oDistrict')?.value||'';
+  const note=document.getElementById('oNote').value.trim();
+  const day=selectedDate||'today';
+  if(!name||!phone){ alert(currentLang==='fa'?'نام و شماره تماس الزامی است':'Name and phone are required'); return; }
+  if(selectedDelivery==='delivery'&&!address){ alert(currentLang==='fa'?'آدرس را وارد کنید':'Please enter delivery address'); return; }
+  if(selectedDelivery==='delivery'&&!district){ alert(currentLang==='fa'?'لطفاً منطقه را انتخاب کنید':'Please select your district'); return; }
+  if(selectedDelivery==='delivery'&&!selectedDate){ alert(currentLang==='fa'?'لطفاً تاریخ دلیوری را انتخاب کنید':'Please select delivery date'); return; }
+  if(!selectedSlot){ alert(currentLang==='fa'?'لطفاً زمان تحویل را انتخاب کنید':'Please select delivery time'); return; }
+  if(memberInfo && memberInfo.phone!==phone){ memberInfo=null; usePoints=false; renderPointsBox(); }
+  _orderBusy=true;
+  const btn=document.getElementById('submitOrderBtn'); if(btn) btn.disabled=true;
+  try {
+    const t=T[currentLang];
+    const {sub,saved,deliv,total}=getOrderTotals();
+    const itemsList=cart.map(i=>`${i.name}${i.batch_note?' ['+i.batch_note+']':''} × ${i.qty} = ${((i.price||0)*i.qty).toLocaleString()} Ft`).join('\n');
+    const payName = selectedPayment==='revolut'?'Revolut':selectedPayment==='wise'?'Wise':'نقدی (Cash)';
+    const lines=['🛒 سفارش جدید — ARÁDI Market','🔖 شماره سفارش: {ORDER}','','👤 نام: '+name,'📞 تلفن: '+phone];
+    if(selectedDelivery==='delivery'){
+      lines.push('📍 آدرس: '+address);
+      lines.push('🏙️ منطقه: District '+district+' ('+(NEAR_DISTRICTS.includes(district)?'نزدیک':'دور')+')');
+    }
+    lines.push('','📦 محصولات:',itemsList,'');
+    if(saved) lines.push('🎁 تخفیف'+(activeWholesale?' B2B ('+activeWholesale.name+' — '+activeWholesale.discount+'%)':(activeDiscount&&activeDiscount.percent?' ('+activeDiscount.percent+'%)':''))+': − '+saved.toLocaleString()+' Ft');
+    lines.push('🚚 نحوه دریافت: '+(selectedDelivery==='pickup'?'تحویل از فروشگاه':'ارسال به درب منزل')+(deliv?' (+ '+deliv.toLocaleString()+' Ft)':''));
+    lines.push('💳 پرداخت: '+payName);
+    lines.push('📅 زمان: '+(selectedDate||day)+' — '+selectedSlot);
+    lines.push('{TOTALS}');
+    if(note) lines.push('📝 یادداشت: '+note);
+    const msg=lines.join('\n');
+    const payload={
+      customer_name:name, phone, note, lang:currentLang,
+      address: selectedDelivery==='delivery'?address+', District '+district:'',
+      district: selectedDelivery==='delivery'?district:null,
+      delivery_type: selectedDelivery, items: cart, delivery_cost: deliv,
+      time_slot: (selectedDate||day)+' '+selectedSlot, delivery_date: selectedDate||null,
+      payment_method: selectedPayment, telegram_text: msg,
+      discount_code: appliedReferral?appliedReferral.code:null,
+      use_points: !!(usePoints&&memberInfo&&memberInfo.usable), member_code: memberInfo?memberInfo.code:null
+    };
+    let res;
+    try { res = await db.rpc('place_order',{p:payload}); } catch(e){ res={error:e}; }
+    if(res.error && /PGRST202|Could not find the function/i.test(String(res.error.code||'')+' '+String(res.error.message||''))){
+      // database not updated yet: save the old way (no codes / points)
+      const oid='ORD-'+Date.now().toString().slice(-6);
+      const old={customer_name:name, phone, address:payload.address, district:payload.district, delivery_type:selectedDelivery, items:cart,
+        subtotal:sub, delivery_cost:deliv, total:sub+deliv, time_slot:payload.time_slot, delivery_date:payload.delivery_date, payment_method:selectedPayment,
+        note, order_id:oid, telegram_text:msg.replace('{ORDER}',oid).replace('{TOTALS}','💰 جمع کل: '+(sub+deliv).toLocaleString()+' Ft'), created_at:new Date().toISOString()};
+      try { const r2=await db.from('catalog_orders').insert(old); res = r2.error?{error:r2.error}:{data:{order_id:oid,total:sub+deliv}}; } catch(e){ res={error:e}; }
+    }
+    if(res.error){
+      console.log('Save order error:', res.error.message||res.error);
+      const known=rpcErrText(res.error);
+      if(known){
+        alert(known);
+        if(/CODE_/.test(String(res.error.message||''))){ appliedReferral=null; document.getElementById('referralResult').innerHTML='<span style="color:var(--red)">❌ '+known+'</span>'; }
+        if(/POINTS_LOW|MEMBER_NOT_FOUND/.test(String(res.error.message||''))){ memberInfo=null; usePoints=false; renderPointsBox(); }
+        updateOrderSummary();
+        return;
+      }
+      alert(currentLang==='fa'?'متأسفانه سفارش ارسال نشد. لطفاً اینترنت را بررسی کنید و دوباره امتحان کنید، یا با +36 70 594 5722 تماس بگیرید.'
+        :currentLang==='hu'?'Sajnos a rendelést nem sikerült elküldeni. Kérjük, próbálja újra, vagy hívjon minket: +36 70 594 5722'
+        :'Sorry, your order could not be sent. Please try again or call us: +36 70 594 5722');
+      return;
+    }
+    const out=res.data||{};
+    const orderId=out.order_id||'';
+    trackOrder(Number(out.total)||total);
+    document.getElementById('orderForm').style.display='none';
+    document.getElementById('orderSuccess').style.display='block';
+    document.getElementById('successTitle').textContent=t.successTitle;
+    document.getElementById('successBtn').textContent=t.successBtn;
+    document.getElementById('successMsg').innerHTML=L3(
+      `سفارش شما با شماره <b dir="ltr">${escH(orderId)}</b> ثبت شد. مبلغ قابل پرداخت: <b>${Number(out.total||total).toLocaleString()} Ft</b>. به زودی با شما تماس می‌گیریم.`,
+      `Your order <b>${escH(orderId)}</b> has been placed. Amount to pay: <b>${Number(out.total||total).toLocaleString()} Ft</b>. We will contact you shortly.`,
+      `Rendelését <b>${escH(orderId)}</b> számon rögzítettük. Fizetendő: <b>${Number(out.total||total).toLocaleString()} Ft</b>. Hamarosan felvesszük Önnel a kapcsolatot.`);
+    const ex=document.getElementById('successExtra');
+    if(ex){
+      let h='';
+      if(out.tg_linked) h+=`<div style="background:var(--green-l);border-radius:10px;padding:10px;font-size:13px;margin-top:12px">✅ ${L3('خلاصهٔ سفارش به تلگرام شما فرستاده شد.','The order summary was sent to your Telegram.','A rendelés összefoglalóját elküldtük Telegramon.')}</div>`;
+      else if(out.tg_link) h+=`<a href="${escH(out.tg_link)}" target="_blank" rel="noopener" id="tgOrderBtn" style="display:block;margin-top:14px;background:#229ED9;color:white;text-decoration:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700">📲 ${L3('دریافت تأیید سفارش در تلگرام','Get the order confirmation on Telegram','Rendelés-visszaigazolás Telegramon')}</a>
+        <div style="font-size:11px;color:var(--gray);margin-top:6px;line-height:1.6">${L3('دکمه را بزنید، بعد Start و «📱 ارسال شماره من». از آن به بعد خلاصهٔ سفارش، امتیازها و هدیهٔ تولدتان در تلگرام می‌آید.','Tap the button, then Start and «📱 Share my number». From then on you get your order summary, points and birthday gift on Telegram.','Koppintson, majd Start és «📱 Számom megosztása». Ezután a rendelés összefoglalóját, pontjait és születésnapi ajándékát Telegramon kapja.')}</div>`;
+      if(!memberInfo) h+=`<button onclick="closeOrderModal();openLoyaltyModal(${escH(JSON.stringify(phone))})" style="display:block;width:100%;margin-top:10px;background:white;color:var(--green);border:1.5px solid var(--green);padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">⭐ ${L3('عضویت در باشگاه مشتریان — ۱۰۰ امتیاز هدیه','Join our Customer Club — 100 welcome points','Csatlakozzon a klubhoz — 100 ajándékpont')}</button>`;
+      ex.innerHTML=h;
+    }
+    cart=[]; renderCart(); updateCartBadge(); resetOrderExtras();
+  } finally { _orderBusy=false; if(btn) btn.disabled=false; }
+}
+
+document.getElementById('orderModal').addEventListener('click',function(e){ if(e.target===this) closeOrderModal(); });
+
+// ===== ADMIN PANEL =====
+async function openAdminPanel(){
+  let session=null;
+  try { session=(await db.auth.getSession()).data.session; } catch(e){}
+  if(session){ enterAdminPanel(); return; }          // already signed in on this browser
+  document.getElementById('adminLoginErr').style.display='none';
+  document.getElementById('adminLoginModal').classList.add('open');
+  const em=document.getElementById('adminEmailInput');
+  if(!em.value){ try { em.value=localStorage.getItem('aradi_last_email')||''; } catch(e){} }
+  setTimeout(()=>(em.value?document.getElementById('adminPassInput'):em).focus(),200);
+}
+function enterAdminPanel(){
+  closeModal('adminLoginModal');
+  document.getElementById('adminPanelModal').classList.add('open');
+  loadAdminOrders();
+  loadAdminProducts();
+  checkActiveDiscount();
+}
+async function adminLogout(){
+  try { await db.auth.signOut(); } catch(e){}
+  closeModal('adminPanelModal');
+  showFlash('از حساب خارج شدید','ok');
+}
+function closeModal(id){
+  const el = document.getElementById(id);
+  if(el) el.classList.remove('open');
+}
+
+async function checkAdminPass(){
+  const email = document.getElementById('adminEmailInput').value.trim();
+  const pass = document.getElementById('adminPassInput').value;
+  const err = document.getElementById('adminLoginErr');
+  const fail = msg => { err.textContent=msg; err.style.display='block'; };
+  if(!email||!pass){ fail('ایمیل و رمز را وارد کنید.'); return; }
+  const btn=document.getElementById('adminLoginBtn'); btn.disabled=true; btn.textContent='در حال ورود...';
+  const res = await staffSignIn(db, email, pass);
+  btn.disabled=false; btn.textContent='ورود';
+  if(res.error){ fail(res.error); return; }
+  try { localStorage.setItem('aradi_last_email',email); } catch(e){}
+  document.getElementById('adminPassInput').value='';
+  err.style.display='none';
+  enterAdminPanel();
+}
+
+function loadWholesaleAdmin(){
+  const el=document.getElementById('wholesaleAccountsList');
+  const accounts=Object.entries(wholesaleAccounts);
+  if(!accounts.length){el.innerHTML='<div style="color:var(--gray);padding:8px">هنوز حسابی اضافه نشده</div>';return;}
+  el.innerHTML=accounts.map(([u,a])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #eee;background:white;border-radius:6px;margin-bottom:4px">
+      <div>
+        <div style="font-weight:600;font-size:12px">${a.name}</div>
+        <div style="font-size:10px;color:var(--gray);direction:ltr">👤 ${u} | 🔑 ${a.password}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="color:var(--green);font-weight:700;font-size:13px">${a.discount}%</span>
+        <button onclick="deleteWholesaleAccount('${u}')" style="background:var(--red-l);border:none;color:var(--red);border-radius:4px;padding:3px 7px;cursor:pointer;font-size:11px">حذف</button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteWholesaleAccount(user){
+  if(!confirm('حذف حساب «'+user+'»?')) return;
+  delete wholesaleAccounts[user];
+  saveWholesaleAccounts();
+  loadWholesaleAdmin();
+}
+
+function loadAdsAdmin(){
+  const el=document.getElementById('adBannerAdmin');
+  if(!adBanners.length) adBanners=[{id:1,active:false,title:'',text:'',emoji:'🎁',bgColor:'#e8f5ee',link:''},{id:2,active:false,title:'',text:'',emoji:'🛒',bgColor:'#fff3e0',link:''},{id:3,active:false,title:'',text:'',emoji:'⭐',bgColor:'#e3f2fd',link:''}];
+  el.innerHTML=adBanners.slice(0,3).map((b,i)=>`
+    <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-weight:600;font-size:13px">بنر ${i+1}</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
+          فعال <input type="checkbox" ${b.active?'checked':''} onchange="updateBanner(${i},'active',this.checked)">
+        </label>
+      </div>
+      <input type="text" value="${b.emoji||''}" placeholder="Emoji" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:13px;margin-left:6px" onchange="updateBanner(${i},'emoji',this.value)">
+      <input type="text" value="${b.title||''}" placeholder="عنوان بنر" style="flex:1;width:calc(100% - 70px);padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-bottom:6px;display:block;margin-top:6px" onchange="updateBanner(${i},'title',this.value)">
+      <input type="text" value="${b.text||''}" placeholder="متن بنر" style="width:100%;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-bottom:6px;display:block" onchange="updateBanner(${i},'text',this.value)">
+      <input type="text" value="${b.link||''}" placeholder="لینک (اختیاری)" style="width:100%;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-bottom:6px;display:block;direction:ltr" onchange="updateBanner(${i},'link',this.value)">
+      <input type="text" value="${b.imageUrl||''}" placeholder="آدرس عکس (لینک URL)" style="width:100%;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-bottom:4px;display:block;direction:ltr" onchange="updateBanner(${i},'imageUrl',this.value)">
+      <label style="display:inline-flex;align-items:center;gap:4px;background:#e8f5ee;border:1px solid var(--green);border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;margin-bottom:6px">
+        📷 آپلود عکس از کامپیوتر
+        <input type="file" accept="image/*" style="display:none" onchange="uploadBannerImage(${i},this)">
+      </label>
+      ${b.imageUrl?`<img src="${b.imageUrl}" style="width:100%;max-height:60px;object-fit:cover;border-radius:4px;margin-bottom:6px" onerror="this.style.display='none'">`:''} 
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+        رنگ پس‌زمینه:
+        <input type="color" value="${b.bgColor||'#e8f5ee'}" style="width:36px;height:28px;border:none;cursor:pointer;border-radius:4px" onchange="updateBanner(${i},'bgColor',this.value)">
+      </div>
+    </div>`).join('');
+}
+
+function updateBanner(idx,field,value){
+  if(!adBanners[idx]) adBanners[idx]={id:idx+1};
+  adBanners[idx][field]=value;
+  saveAdBanners();
+  renderAdBanners();
+}
+
+function showAdminTab(tab){
+  ['orders','products','discount','delivery_settings','wholesale','ads','analytics','loyalty'].forEach(t=>{
+    document.getElementById('admin-'+t).style.display = t===tab?'block':'none';
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='orders') loadAdminOrders();
+  if(tab==='products') loadAdminProducts();
+  if(tab==='wholesale') loadWholesaleAdmin();
+  if(tab==='ads') loadAdsAdmin();
+  if(tab==='analytics') loadAnalytics();
+  if(tab==='delivery_settings') loadDeliverySettingsAdmin();
+  if(tab==='loyalty') loadLoyaltyMembers();
+}
+
+async function loadAdminOrders(){
+  const el = document.getElementById('adminOrdersList');
+  const filter = document.getElementById('orderFilter').value;
+  try {
+    let query = db.from('catalog_orders').select('*').order('created_at',{ascending:false}).limit(100);
+    if(filter!=='all') query = query.eq('delivery_type',filter);
+    const {data,error} = await query;
+    if(error||!data?.length){ el.innerHTML='<div style="text-align:center;padding:40px;color:var(--gray)">سفارشی یافت نشد</div>'; return; }
+    const ST={new:['🆕 جدید','#fff4e0','#b26a00'],delivered:['✅ تحویل شد','#e8f5ee','#1a7a4a'],cancelled:['❌ لغو شد','#fdecea','#c0392b']};
+    el.innerHTML = data.map(o=>{
+      const items = (o.items||[]).map(i=>escH(i.name)+'×'+i.qty).join('، ');
+      const date = new Date(o.created_at).toLocaleString('fa-IR');
+      const st = ST[o.status||'new']||ST.new;
+      return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
+          <span style="font-weight:700;font-size:13px">🔖 ${escH(o.order_id||'')} — 👤 ${escH(o.customer_name)}</span>
+          <span style="font-size:11px;background:${st[1]};color:${st[2]};padding:2px 8px;border-radius:20px;white-space:nowrap">${st[0]}</span>
+        </div>
+        <div style="font-size:11px;color:var(--gray)">📞 ${escH(o.phone)} | 📅 ${date} | ${o.delivery_type==='delivery'?'🚚 ارسال':'🏪 تحویل'}</div>
+        ${o.address?`<div style="font-size:11px;color:var(--gray)">📍 ${escH(o.address)}</div>`:''}
+        <div style="font-size:12px;margin-top:6px;color:#333">${items}</div>
+        ${o.discount_code?`<div style="font-size:11px;color:var(--green)">🎟️ ${escH(o.discount_code)}: − ${(o.code_discount||0).toLocaleString()} Ft</div>`:''}
+        ${o.points_used?`<div style="font-size:11px;color:var(--green)">⭐ امتیاز: − ${o.points_used.toLocaleString()} Ft</div>`:''}
+        ${o.points_earned?`<div style="font-size:11px;color:var(--green)">➕ ${o.points_earned} امتیاز به مشتری داده شد</div>`:''}
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <span style="font-size:11px;color:var(--gray)">${escH(o.time_slot||'')}</span>
+          <span style="font-weight:700;color:var(--green)">${(o.total||0).toLocaleString()} Ft</span>
+        </div>
+        ${o.note?`<div style="font-size:11px;color:var(--gray);margin-top:4px">📝 ${escH(o.note)}</div>`:''}
+        ${(o.status||'new')==='new'?`<div style="display:flex;gap:6px;margin-top:8px">
+          <button onclick="markOrder('${escH(o.order_id)}','delivered')" style="flex:1;background:var(--green);color:white;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:12px">✅ تحویل شد</button>
+          <button onclick="markOrder('${escH(o.order_id)}','cancelled')" style="background:white;color:var(--red);border:1px solid var(--red);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px">❌ لغو</button></div>`
+        :(o.status==='delivered'?`<div style="margin-top:8px"><button onclick="markOrder('${escH(o.order_id)}','cancelled')" style="background:none;color:var(--red);border:none;cursor:pointer;font-size:11px">لغو این سفارش (امتیاز برگردانده می‌شود)</button></div>`:'')}
+      </div>`;
+    }).join('');
+  } catch(e){ el.innerHTML='<div style="color:red;padding:20px">خطا: '+escH(e.message)+'</div>'; }
+}
+async function markOrder(orderId, status){
+  if(!confirm(status==='delivered'?'سفارش '+orderId+' تحویل شد؟ امتیازش به مشتری داده می‌شود.':'سفارش '+orderId+' لغو شود؟')) return;
+  let r; try { r=await db.rpc('mark_order',{p_order:orderId,p_status:status}); } catch(e){ r={error:e}; }
+  if(r.error){ alert('❌ خطا: '+(r.error.message||r.error)); return; }
+  if(status==='delivered') alert('✅ ثبت شد'+(r.data&&r.data.points?' — '+r.data.points+' امتیاز به مشتری داده شد':''));
+  loadAdminOrders();
+}
+
+// Catalog-only product overrides (stored in localStorage for admin)
+let catalogOverrides = JSON.parse(localStorage.getItem('aradi_catalog_overrides')||'{}');
+
+// ===== DELIVERY CALENDAR SYSTEM =====
+let deliveryCalendar = [];
+let pickupSlots = ['10:00–12:00','12:00–14:00','14:00–16:00','16:00–18:00'];
+
+function getCalendarEntry(dateStr){
+  return deliveryCalendar.find(d=>d.date===dateStr)||null;
+}
+
+function saveCalEntry(entry){
+  const idx = deliveryCalendar.findIndex(d=>d.date===entry.date);
+  if(idx>=0) deliveryCalendar[idx] = entry;
+  else deliveryCalendar.push(entry);
+  saveDeliveryCalendar();
+}
+
+function saveDeliveryCalendar(){
+  const payload = JSON.stringify({calendar: deliveryCalendar, pickup: pickupSlots});
+  // Save to localStorage immediately (instant)
+  localStorage.setItem('aradi_delivery_v2', payload);
+  // Save to Supabase (async, for cross-device)
+  db.from('catalog_overrides').upsert({
+    product_id: 0,
+    name_en: payload,
+    updated_at: new Date().toISOString()
+  }, {onConflict:'product_id'}).then(()=>{
+    console.log('✅ Saved to Supabase');
+  }).catch(e=>console.log('Supabase save err:', e.message));
+}
+
+function savePickupSlots(){
+  saveDeliveryCalendar();
+}
+
+async function loadDeliveryFromDB(){
+  // First: load from localStorage (instant, works offline)
+  const local = localStorage.getItem('aradi_delivery_v2');
+  if(local){
+    try {
+      const parsed = JSON.parse(local);
+      if(Array.isArray(parsed.calendar)) deliveryCalendar = parsed.calendar;
+      if(Array.isArray(parsed.pickup) && parsed.pickup.length) pickupSlots = parsed.pickup;
+      console.log('Loaded from localStorage:', deliveryCalendar.length, 'days');
+    } catch(e){ console.log('localStorage parse err:', e); }
+  }
+  // Then: try Supabase (may have newer data from other device)
+  try {
+    const {data,error} = await db.from('catalog_overrides').select('name_en').eq('product_id',0).maybeSingle();
+    if(data && data.name_en){
+      const parsed = JSON.parse(data.name_en);
+      // Only use Supabase data if it has more entries
+      if(Array.isArray(parsed.calendar) && parsed.calendar.length >= deliveryCalendar.length){
+        deliveryCalendar = parsed.calendar;
+        if(Array.isArray(parsed.pickup) && parsed.pickup.length) pickupSlots = parsed.pickup;
+        // Update localStorage with Supabase data
+        localStorage.setItem('aradi_delivery_v2', data.name_en);
+        console.log('Updated from Supabase:', deliveryCalendar.length, 'days');
+      }
+    }
+  } catch(e){ console.log('Supabase load err:', e.message); }
+}
+
+function getAvailableDates(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  return deliveryCalendar
+    .filter(e => e.enabled && e.slots && e.slots.length > 0)
+    .map(e => ({dateStr: e.date, date: new Date(e.date+'T00:00:00'), slots: e.slots}))
+    .filter(e => e.date >= today)
+    .sort((a,b) => a.date - b.date);
+}
+
+// getCalendarEntry defined in storage section above
+// getAvailableDates defined in storage section above
+function saveCatalogOverrides(){ localStorage.setItem('aradi_catalog_overrides',JSON.stringify(catalogOverrides)); }
+
+function loadAdminProducts(){
+  filterAdminProducts('');
+}
+
+function filterAdminProducts(q){
+  const el = document.getElementById('adminProductsList');
+  const list = products.filter(p=>!q||p.name.includes(q)).slice(0,50);
+  el.innerHTML = list.map(p=>{
+    const ov = catalogOverrides[p.id]||{};
+    const displayPrice = ov.price!==undefined ? ov.price : p.price;
+    const displayCat = ov.category || p.category || 'عمومی';
+    const extraCats = ov.extra_cats || [];
+    const catOptions = ['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی','عمومی'];
+    const ovName = ov.name || p.name;
+    const ovNameEn = ov.name_en || '';
+    const ovNameHu = ov.name_hu || '';
+    return `<div class="admin-prod-row" style="flex-wrap:wrap;gap:6px;padding:10px 8px">
+      <div style="width:100%;font-weight:600;font-size:12px;color:#333">${p.name}</div>
+      <input type="text" value="${ovName}" placeholder="نام فارسی" style="flex:1;min-width:120px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px"
+        onchange="updateCatalogOverride(${p.id},'name',this.value)">
+      <input type="text" value="${ovNameEn}" placeholder="English name" style="flex:1;min-width:120px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;direction:ltr"
+        onchange="updateCatalogOverride(${p.id},'name_en',this.value)">
+      <input type="text" value="${ovNameHu}" placeholder="Magyar név" style="flex:1;min-width:120px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;direction:ltr"
+        onchange="updateCatalogOverride(${p.id},'name_hu',this.value)">
+      <input type="number" value="${displayPrice||''}" placeholder="قیمت Ft" style="width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px"
+        onchange="updateCatalogOverride(${p.id},'price',parseInt(this.value)||null)">
+      <div style="font-size:10px;color:#555;margin-top:4px">
+        <div style="margin-bottom:3px;font-weight:600">دسته‌بندی‌ها (چندگانه):</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی'].map(cat=>{
+            const checked=(ov.extra_cats||[displayCat]).includes(cat);
+            return `<label style="display:flex;align-items:center;gap:2px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" ${checked?'checked':''} onchange="toggleProductCat(${p.id},'${cat}',this.checked)" style="width:12px;height:12px">
+              <span>${cat}</span></label>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleProductCat(id, cat, checked){
+  if(!catalogOverrides[id]) catalogOverrides[id]={};
+  if(!catalogOverrides[id].extra_cats){
+    const p=products.find(x=>x.id===id);
+    catalogOverrides[id].extra_cats = p ? (p._cats.map(c=>{
+      const catMap={dairy:'لبنیات',drink:'نوشیدنی',pickle:'ترشیجات و مربا',rice:'برنج و حبوبات',spice:'ادویه و چاشنی',canned:'کنسرو',bread:'نان و شیرینی',snack:'تنقلات',frozen:'فریزری',dry_herbs:'سبزیجات خشک',dried:'خشکبار',sausage:'سوسیس و کالباس',sauce:'رب و سس',herbal:'عرقیات',craft:'صنایع دستی'};
+      return catMap[c]||c;
+    })) : [];
+  }
+  if(checked){
+    if(!catalogOverrides[id].extra_cats.includes(cat)) catalogOverrides[id].extra_cats.push(cat);
+  } else {
+    catalogOverrides[id].extra_cats = catalogOverrides[id].extra_cats.filter(c=>c!==cat);
+  }
+  saveCatalogOverrides();
+  saveCatalogOverrideToDB(id);
+  // Apply to product
+  const p=products.find(x=>x.id===id);
+  if(p){
+    const catMap2={
+      'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle','برنج و حبوبات':'rice',
+      'ادویه و چاشنی':'spice','کنسرو':'canned','نان و شیرینی':'bread','تنقلات':'snack',
+      'فریزری':'frozen','سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage',
+      'رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'
+    };
+    p._cats = catalogOverrides[id].extra_cats.map(c=>catMap2[c]||c).filter(Boolean);
+    if(!p._cats.length) p._cats=['snack'];
+  }
+  renderProducts();
+}
+
+async function updateCatalogOverride(id, field, value){
+  if(!catalogOverrides[id]) catalogOverrides[id]={};
+  catalogOverrides[id][field]=value;
+  saveCatalogOverrides();
+  // Apply to products in memory
+  const p=products.find(x=>x.id===id);
+  if(p&&field==='price') p.price=value;
+  if(p&&field==='category') p.category=value;
+  renderProducts();
+  // Save to Supabase
+  await saveCatalogOverrideToDB(id);
+}
+
+async function saveCatalogOverrideToDB(id){
+  const ov = catalogOverrides[id]||{};
+  const row = {
+    product_id: id,
+    name_fa: ov.name || null,
+    name_en: ov.name_en || null,
+    name_hu: ov.name_hu || null,
+    price_override: ov.price || null,
+    categories: ov.extra_cats || null,
+    updated_at: new Date().toISOString()
+  };
+  try {
+    await db.from('catalog_overrides').upsert(row, {onConflict:'product_id'});
+  } catch(e){ console.log('Override save error:', e.message); }
+}
+
+// ===== DISCOUNT SYSTEM =====
+let activeDiscount = JSON.parse(localStorage.getItem('aradi_discount')||'null');
+
+function checkActiveDiscount(){
+  const el=document.getElementById('activeDiscountDisplay');
+  const info=document.getElementById('activeDiscountInfo');
+  if(activeDiscount){
+    el.style.display='block';
+    info.textContent=`نوع: ${activeDiscount.type} | درصد: ${activeDiscount.percent}٪ | پیام: ${activeDiscount.message||'—'}`;
+    showDiscountPopup();
+  } else { el.style.display='none'; }
+}
+
+function updateDiscountUI(){
+  const type=document.getElementById('discType').value;
+  document.getElementById('discCategorySelect').style.display=type==='category'?'block':'none';
+  document.getElementById('discProductSearch').style.display=type==='product'?'block':'none';
+}
+
+function searchDiscProduct(q){
+  const box=document.getElementById('discProductResults');
+  if(!q){ box.style.display='none'; return; }
+  const matches=products.filter(p=>p.name.includes(q)).slice(0,6);
+  if(!matches.length){ box.style.display='none'; return; }
+  box.innerHTML=matches.map(p=>`<div onclick="selectDiscProduct(${p.id},'${p.name.replace(/'/g,"\'")}') " style="padding:6px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f5f5" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">${p.name}</div>`).join('');
+  box.style.display='block';
+}
+
+function selectDiscProduct(id,name){
+  document.getElementById('discProductSearch').value=name;
+  document.getElementById('discProductSearch').dataset.id=id;
+  document.getElementById('discProductResults').style.display='none';
+  activeDiscount=activeDiscount||{};
+  activeDiscount.targetId=id;
+}
+
+function activateDiscount(){
+  const type=document.getElementById('discType').value;
+  const percent=parseInt(document.getElementById('discPercent').value);
+  const message=document.getElementById('discMessage').value.trim();
+  const category=document.getElementById('discCategorySelect').value;
+  const productId=document.getElementById('discProductSearch').dataset?.id;
+  activeDiscount={type,percent,message,category:category||null,productId:productId||null,createdAt:Date.now()};
+  localStorage.setItem('aradi_discount',JSON.stringify(activeDiscount));
+  checkActiveDiscount();
+  renderProducts();
+  alert('✅ تخفیف با موفقیت فعال شد!');
+}
+
+function clearDiscount(){
+  activeDiscount=null;
+  localStorage.removeItem('aradi_discount');
+  document.getElementById('activeDiscountDisplay').style.display='none';
+  document.getElementById('discountPopup').style.display='none';
+  renderProducts();
+}
+
+function showDiscountPopup(){
+  if(!activeDiscount) return;
+  const popup=document.getElementById('discountPopup');
+  document.getElementById('discPopupMsg').textContent=activeDiscount.message||'تخفیف ویژه در فروشگاه!';
+  document.getElementById('discPopupPercent').textContent=activeDiscount.percent+'٪ تخفیف';
+  popup.style.display='block';
+  setTimeout(()=>popup.style.display='none',8000);
+}
+
+// ===== CHAT WIDGET =====
+let chatOpen = false;
+let chatHistory = [];
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  const box=document.getElementById('chatBox');
+  box.style.display=chatOpen?'flex':'none';
+  if(chatOpen) document.getElementById('chatInput').focus();
+}
+
+function detectLang(q){
+  if(/[آاابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی]/.test(q)) return 'fa';
+  if(/[áéíóöőúüű]|szia|köszön|nyit|szállít|hol van|mennyibe|rendelés/i.test(q)) return 'hu';
+  return 'en';
+}
+
+function findProductPrice(q){
+  const found = products.filter(p=>{
+    const name = p.name.toLowerCase();
+    const words = q.split(' ').filter(w=>w.length>2);
+    return words.some(w=>name.includes(w));
+  });
+  if(found.length===1 && found[0].price){
+    return {name:found[0].name, price:found[0].price};
+  }
+  if(found.length>1){
+    return {multiple: found.slice(0,4).map(p=>p.name+': '+(p.price?p.price.toLocaleString()+' Ft':'—')).join('\n')};
+  }
+  return null;
+}
+
+function sendChatMsg(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg) return;
+  input.value='';
+  addChatMsg(msg,'user');
+  const q=msg.toLowerCase();
+  const lang=detectLang(q);
+  let reply='';
+
+  // Human operator request
+  if(q.includes('انسان')||q.includes('اپراتور')||q.includes('پشتیبان')||q.includes('human')||q.includes('operator')||q.includes('support')||q.includes('ember')||q.includes('ügyintéző')||q.includes('ügyfélszolgálat')){
+    if(lang==='fa') addChatMsg('همین الان به تلگرام وصل می‌شوید 👇','bot');
+    else if(lang==='hu') addChatMsg('Átirányítom Önöt a Telegram ügyfélszolgálatunkra 👇','bot');
+    else addChatMsg('Connecting you to our support team on Telegram 👇','bot');
+    setTimeout(()=>{
+      const a=document.createElement('a');
+      a.href='https://t.me/aradimarket_bot';
+      a.target='_blank';
+      a.textContent='🔗 t.me/aradimarket_bot';
+      a.style.cssText='color:var(--green);font-weight:600';
+      const div=document.createElement('div');
+      div.className='chat-msg bot';
+      div.appendChild(a);
+      document.getElementById('chatMessages').appendChild(div);
+      document.getElementById('chatMessages').scrollTop=99999;
+      window.open('https://t.me/aradimarket_bot','_blank');
+    },400);
+    return;
+  }
+
+  // Address
+  if(q.includes('آدرس')||q.includes('كجا')||q.includes('کجا')||q.includes('address')||q.includes('cím')||q.includes('hol')||q.includes('location')||q.includes('találom')){
+    const addr='📍 Budapest, Balázs Béla u. 39, 1094';
+    const map='🗺️ https://maps.app.goo.gl/hiJrX1VFndNud6Au9';
+    if(lang==='fa') reply=addr+'\n'+map;
+    else if(lang==='hu') reply=addr+'\n'+map;
+    else reply=addr+'\n'+map;
+
+  // Hours
+  } else if(q.includes('ساعت')||q.includes('باز')||q.includes('تعطیل')||q.includes('open')||q.includes('close')||q.includes('nyit')||q.includes('zár')||q.includes('hour')||q.includes('working')||q.includes('mikor')){
+    if(lang==='fa') reply='🕐 ساعت کاری:\n\nدوشنبه تا جمعه:\n10:00–13:00 و 15:00–20:00\n\nشنبه:\n10:00–14:00\n\nیکشنبه تعطیل است';
+    else if(lang==='hu') reply='🕐 Nyitvatartás:\n\nHétfő – Péntek:\n10:00–13:00 és 15:00–20:00\n\nSzombat:\n10:00–14:00\n\nVasárnap zárva';
+    else reply='🕐 Opening Hours:\n\nMonday – Friday:\n10:00–13:00 and 15:00–20:00\n\nSaturday:\n10:00–14:00\n\nClosed on Sundays';
+
+  // Delivery
+  } else if(q.includes('دلیور')||q.includes('ارسال')||q.includes('حمل')||q.includes('delivery')||q.includes('szállít')||q.includes('kiszállít')||q.includes('házhozszállít')||q.includes('futar')){
+    if(lang==='fa') reply='🚚 هزینه ارسال به درب منزل:\n\nمناطق ۷، ۸، ۹ و ۱۱ بوداپست:\n2,000 Ft\n\nسایر مناطق بوداپست:\n3,000 Ft\n\nحداقل سفارش: ندارد\nزمان تحویل: همان روز یا روز بعد';
+    else if(lang==='hu') reply='🚚 Házhozszállítás:\n\nVII., VIII., IX., XI. kerület:\n2,000 Ft\n\nEgyéb Budapest kerületek:\n3,000 Ft\n\nMinimum rendelés: nincs\nSzállítási idő: aznap vagy másnap';
+    else reply='🚚 Home Delivery:\n\nDistricts VII, VIII, IX, XI:\n2,000 Ft\n\nOther Budapest districts:\n3,000 Ft\n\nMinimum order: none\nDelivery time: same day or next day';
+
+  // Payment
+  } else if(q.includes('پرداخت')||q.includes('کارت')||q.includes('نقد')||q.includes('payment')||q.includes('pay')||q.includes('fizetés')||q.includes('kártya')||q.includes('készpénz')){
+    if(lang==='fa') reply='💳 روش‌های پرداخت:\n\n✅ نقد (موقع تحویل)\n✅ کارت بانکی\n✅ انتقال بانکی\n\nپرداخت آنلاین به زودی راه‌اندازی می‌شود';
+    else if(lang==='hu') reply='💳 Fizetési módok:\n\n✅ Készpénz (átvetelkor)\n✅ Bankkártya\n✅ Banki átutalás\n\nOnline fizetés hamarosan elérhető';
+    else reply='💳 Payment methods:\n\n✅ Cash (on delivery)\n✅ Bank card\n✅ Bank transfer\n\nOnline payment coming soon';
+
+  // Phone / Contact
+  } else if(q.includes('تلفن')||q.includes('شماره')||q.includes('تماس')||q.includes('phone')||q.includes('contact')||q.includes('telefon')||q.includes('elérhet')||q.includes('call')){
+    if(lang==='fa') reply='📞 تماس با ما:\n\n+36 70 594 5722\n\n📸 Instagram:\n@aradimarket\n\n✈️ Telegram:\n@aradimarket_bot';
+    else if(lang==='hu') reply='📞 Elérhetőségeink:\n\n+36 70 594 5722\n\n📸 Instagram:\n@aradimarket\n\n✈️ Telegram:\n@aradimarket_bot';
+    else reply='📞 Contact us:\n\n+36 70 594 5722\n\n📸 Instagram:\n@aradimarket\n\n✈️ Telegram:\n@aradimarket_bot';
+
+  // Product description lookup
+  } else if((()=>{
+    const descs={'زعفران':{fa:'زعفران ایرانی اصل — خواص: آنتی‌اکسیدان قوی، بهبود خلق، ضد افسردگی، بهبود حافظه.',en:'Authentic Iranian saffron — antioxidant, mood enhancer, natural antidepressant.',hu:'Eredeti iráni sáfrány — antioxidáns, hangulatjavító, természetes antidepresszáns.'},
+    'زرشک':{fa:'زرشک ایرانی — سرشار از ویتامین C. برای پلو، مربا و دسر.',en:'Iranian barberries — rich in Vitamin C. For rice dishes and jams.',hu:'Iráni borbolya — C-vitaminban gazdag. Rizs ételekhez.'},
+    'گلاب':{fa:'گلاب ایرانی — ضد التهاب و آرامش‌بخش. برای شیرینی‌پزی و شربت.',en:'Iranian rose water — anti-inflammatory. For baking and drinks.',hu:'Iráni rózsavíz — gyulladáscsökkentő. Sütéshez és italokhoz.'},
+    'کشک':{fa:'کشک — محصول لبنی تخمیرشده. پرپروتئین. برای کشک بادمجان و آش.',en:'Kashk — fermented dairy. High protein. For eggplant dip and soups.',hu:'Kashk — fermentált tejtermék. Magas fehérjetartalmú.'},
+    'دوغ':{fa:'دوغ — نوشیدنی لبنی سنتی ایرانی. خنک و گوارا. مفید برای گوارش.',en:'Doogh — traditional Iranian dairy drink. Refreshing, good for digestion.',hu:'Doogh — hagyományos iráni tejes ital. Frissítő, jó az emésztésnek.'},
+    'حلیم':{fa:'حلیم — صبحانه سنتی با گوشت و گندم. پرانرژی و مقوی.',en:'Halim — traditional breakfast with meat and wheat. Nutritious.',hu:'Halim — hagyományos reggeli hússal és búzával. Tápláló.'},
+    'فسنجان':{fa:'خورشت فسنجان — با گردو و رب انار. یکی از لذیذترین خورشت‌های ایرانی.',en:'Fesenjaan stew — with walnut and pomegranate. Classic Persian dish.',hu:'Fesenjaan — dióval és gránátalma pürével. Klasszikus perzsa étel.'},
+    'خرما':{fa:'خرما — میوه انرژی‌زا. سرشار از آهن و فیبر. جایگزین طبیعی شکر.',en:'Dates — energy fruit. Rich in iron and fiber. Natural sugar substitute.',hu:'Datolya — energiaforrás. Vasban és rostban gazdag.'},
+    'آلو بخارا':{fa:'آلو بخارا — سرشار از آنتی‌اکسیدان و فیبر. مفید برای گوارش.',en:'Prunes — rich in antioxidants and fiber. Good for digestion.',hu:'Aszalt szilva — antioxidánsokban gazdag. Jó az emésztésnek.'},
+    'برنج':{fa:'برنج ایرانی — دانه بلند و معطر. برای انواع پلو و چلو.',en:'Iranian rice — long grain, aromatic. For all Persian rice dishes.',hu:'Iráni rizs — hosszú szemű, illatos. Perzsa rizs ételekhez.'},
+    'ترشی':{fa:'ترشی مخلوط ایرانی — با سبزیجات متنوع. خوش‌طعم و اشتهاآور.',en:'Iranian mixed pickle — with various vegetables. Delicious appetizer.',hu:'Iráni vegyes savanyúság — különböző zöldségekkel. Ízletes előétel.'},
+    'رب':{fa:'رب گوجه‌فرنگی — غلیظ و طبیعی. پایه اصلی بسیاری از غذاهای ایرانی.',en:'Tomato paste — thick and natural. Base for many Persian dishes.',hu:'Paradicsompüré — sűrű és természetes. Sok perzsa étel alapja.'}};
+    window._chatDesc=null;
+    for(const [n,d] of Object.entries(descs)){if(q.includes(n)){window._chatDesc={name:n,...d};return true;}}
+    const mp=products.find(p=>p.name.split(' ').some(w=>w.length>3&&q.includes(w)));
+    if(mp){window._chatDesc={name:mp.name,fa:'📦 '+mp.name+'\nدر فروشگاه موجود است.',en:'📦 '+mp.name+'\nAvailable at ARÁDI Market.',hu:'📦 '+mp.name+'\nElérhetó az ARÁDI Marketnél.',price:mp.price}; return true;}
+    return false;
+  })()){
+    const d=window._chatDesc;
+    const pr=d.price?(()=>{const p=products.find(x=>x.name.includes(d.name));return p&&p.price?'\n💰 '+p.price.toLocaleString()+' Ft':d.price?'\n💰 '+d.price.toLocaleString()+' Ft':''})():'';
+    reply=(lang==='fa'?d.fa:lang==='hu'?d.hu:d.en)+pr;
+
+  // Price lookup from catalog
+  } else if(q.includes('قيمت')||q.includes('قیمت')||q.includes('چقدر')||q.includes('price')||q.includes('cost')||q.includes('ár')||q.includes('mennyibe')||q.includes('mennyi')){
+    const found=findProductPrice(q);
+    if(found&&found.price){
+      if(lang==='fa') reply='💰 '+found.name+':\n'+found.price.toLocaleString()+' Ft';
+      else reply='💰 '+found.name+':\n'+found.price.toLocaleString()+' Ft';
+    } else if(found&&found.multiple){
+      if(lang==='fa') reply='💰 محصولات یافت شده:\n'+found.multiple+'\n\nنام دقیق‌تر را بنویسید';
+      else if(lang==='hu') reply='💰 Megtalált termékek:\n'+found.multiple;
+      else reply='💰 Products found:\n'+found.multiple;
+    } else {
+      if(lang==='fa') reply='💰 برای قیمت، نام دقیق محصول را بنویسید.\nمثال: قیمت زعفران';
+      else if(lang==='hu') reply='💰 Az árhoz írja be a pontos terméknevet.\nPl: zöldség ára';
+      else reply='💰 Please write the exact product name for pricing.\nExample: price of saffron';
+    }
+
+  // Saffron
+  } else if(q.includes('زعفران')||q.includes('saffron')||q.includes('sáfrány')){
+    const p=products.find(x=>x.name.includes('زعفران'));
+    const price=p&&p.price?'\n💰 '+p.price.toLocaleString()+' Ft':'';
+    if(lang==='fa') reply='🌸 زعفران ایرانی اصل:\n\nخواص:\n• آنتی‌اکسیدان قوی\n• بهبود خلق و خو\n• ضد افسردگی طبیعی\n• بهبود حافظه و تمرکز'+price;
+    else if(lang==='hu') reply='🌸 Eredeti iráni sáfrány:\n\nHatásai:\n• Erős antioxidáns\n• Hangulat javító\n• Természetes antidepresszáns\n• Memória és koncentráció javító'+price;
+    else reply='🌸 Authentic Iranian saffron:\n\nBenefits:\n• Powerful antioxidant\n• Mood booster\n• Natural antidepressant\n• Memory & focus enhancer'+price;
+
+  // Rose water / herbal
+  } else if(q.includes('گلاب')||q.includes('rosewater')||q.includes('rose water')||q.includes('rózsavíz')){
+    const p=products.find(x=>x.name.includes('گلاب'));
+    const price=p&&p.price?'\n💰 '+p.price.toLocaleString()+' Ft':'';
+    if(lang==='fa') reply='🌹 گلاب ایرانی:\n\nکاربرد: پخت و پز، شربت، دسر، آرامش\nخواص: ضد التهاب، آرامش‌بخش'+price;
+    else reply='🌹 Iranian Rose Water:\n\nUse: cooking, drinks, desserts\nBenefits: anti-inflammatory, calming'+price;
+
+  // Barberries
+  } else if(q.includes('زرشک')||q.includes('barberr')||q.includes('borbolya')){
+    const p=products.find(x=>x.name.includes('زرشک'));
+    const price=p&&p.price?'\n💰 '+p.price.toLocaleString()+' Ft':'';
+    if(lang==='fa') reply='🔴 زرشک:\n\nخواص: سرشار از ویتامین C، آنتی‌اکسیدان، تقویت سیستم ایمنی'+price;
+    else reply='🔴 Barberries:\n\nBenefits: rich in Vitamin C, antioxidant, immune booster'+price;
+
+  // Kashk
+  } else if(q.includes('كشك')||q.includes('کشک')||q.includes('kashk')){
+    const p=products.find(x=>x.name.includes('کشک'));
+    const price=p&&p.price?'\n💰 از '+p.price.toLocaleString()+' Ft':'';
+    if(lang==='fa') reply='🥛 کشک:\n\nمحصول لبنی ایرانی تخمیرشده\nخواص: سرشار از پروتئین و کلسیم\nکاربرد: کشک بادمجان، آش، دیپ'+price;
+    else reply='🥛 Kashk (Persian whey):\n\nFermented dairy product\nBenefits: high protein & calcium\nUse: eggplant dip, soups'+price;
+
+  // Order process
+  } else if(q.includes('سفارش')||q.includes('خرید')||q.includes('چطور')||q.includes('order')||q.includes('how')||q.includes('rendelés')||q.includes('hogyan')){
+    if(lang==='fa') reply='🛒 نحوه سفارش:\n\n۱. محصول را به سبد اضافه کنید\n۲. روی «سبد» کلیک کنید\n۳. «ثبت سفارش» را بزنید\n۴. نام، تلفن و آدرس را وارد کنید\n۵. زمان تحویل را انتخاب کنید\n\nبا شما تماس می‌گیریم برای تأیید';
+    else if(lang==='hu') reply='🛒 Rendelési folyamat:\n\n1. Tegye a terméket a kosárba\n2. Kattintson a kosárra\n3. Kattintson a «Rendelés» gombra\n4. Adja meg nevét, telefonját, címét\n5. Válasszon szállítási időt\n\nFelveszik Önnel a kapcsolatot a megerősítéshez';
+    else reply='🛒 How to order:\n\n1. Add product to cart\n2. Click the cart icon\n3. Click «Place Order»\n4. Enter name, phone, address\n5. Choose delivery time\n\nWe will contact you to confirm';
+
+  // Return / Refund
+  } else if(q.includes('مرجوع')||q.includes('برگشت')||q.includes('return')||q.includes('refund')||q.includes('visszaküld')||q.includes('csere')){
+    if(lang==='fa') reply='↩️ بازگشت کالا:\n\nدر صورت مشکل در کیفیت محصول، با ما تماس بگیرید:\n📞 +36 70 594 5722\n\nدر اسرع وقت رسیدگی می‌کنیم';
+    else if(lang==='hu') reply='↩️ Visszaküldés:\n\nMinőségi probléma esetén lépjen kapcsolatba velünk:\n+36 70 594 5722\n\nMihamarabb intézkedünk';
+    else reply='↩️ Returns:\n\nFor quality issues, please contact us:\n+36 70 594 5722\n\nWe will resolve it promptly';
+
+  // Loyalty / Membership
+  } else if(q.includes('عضو')||q.includes('باشگاه')||q.includes('امتیاز')||q.includes('loyalty')||q.includes('member')||q.includes('hűség')||q.includes('pont')){
+    if(lang==='fa') reply='⭐ باشگاه مشتریان ARÁDI Market:\n\n• با هر خرید امتیاز جمع کنید\n• تخفیف‌های ویژه اعضا\n• هدیه تولد\n\nبرای عضویت روی دکمهٔ ⭐ بالای صفحه بزنید.';
+    else if(lang==='hu') reply='⭐ ARÁDI Market Törzsvásárlói Program:\n\n• Pontokat gyűjt minden vásárlásnál\n• Különleges tagkedvezmények\n• Születésnapi ajándék\n\nCsatlakozáshoz kattintson a ⭐ gombra az oldal tetején.';
+    else reply='⭐ ARÁDI Market Loyalty Club:\n\n• Earn points with every purchase\n• Special member discounts\n• Birthday gift\n\nTap the ⭐ button at the top of the page to join.';
+
+  // Discount
+  } else if(q.includes('تخفيف')||q.includes('تخفیف')||q.includes('discount')||q.includes('akció')||q.includes('kedvez')||q.includes('sale')){
+    if(lang==='fa') reply='🎁 برای اطلاع از تخفیف‌های ویژه:\n\n📸 اینستاگرام را دنبال کنید:\n@aradimarket\n\n✈️ تلگرام:\n@aradimarket_bot';
+    else if(lang==='hu') reply='🎁 Az akciókért kövesse:\n\n📸 Instagram:\n@aradimarket\n\n✈️ Telegram:\n@aradimarket_bot';
+    else reply='🎁 For special offers & discounts:\n\n📸 Follow us on Instagram:\n@aradimarket\n\n✈️ Telegram:\n@aradimarket_bot';
+
+  // Thanks
+  } else if(q.includes('ممنون')||q.includes('تشكر')||q.includes('تشکر')||q.includes('thank')||q.includes('köszön')||q.includes('köszi')||q.includes('merci')){
+    if(lang==='fa') reply='😊 خواهش می‌کنم! خوشحال می‌شیم دوباره کمک کنیم.';
+    else if(lang==='hu') reply='😊 Szívesen! Örömmel segítünk legközelebb is.';
+    else reply='😊 You are welcome! Happy to help anytime.';
+
+  // Greeting
+  } else if(q.match(/^(سلام|درود|hello|hi|hey|szia|jó napot|üdv|good morning|good evening)/)){
+    if(lang==='fa') reply='سلام! 👋 به ARÁDI Market خوش آمدید.\nچطور می‌توانم کمک کنم؟\n\nمی‌توانید بپرسید:\n• آدرس\n• ساعت کاری\n• هزینه ارسال\n• قیمت محصول\n• نحوه سفارش';
+    else if(lang==='hu') reply='Szia! 👋 Üdvözöljük az ARÁDI Marketnél!\nMiben segíthetek?\n\nKérdezhet:\n• Cím\n• Nyitvatartás\n• Szállítási díj\n• Termék ára\n• Rendelési folyamat';
+    else reply='Hello! 👋 Welcome to ARÁDI Market!\nHow can I help you?\n\nYou can ask about:\n• Address\n• Opening hours\n• Delivery fees\n• Product prices\n• How to order';
+
+  // About
+  } else if(q.includes('شما')||q.includes('فروشگاه')||q.includes('about')||q.includes('rólatok')||q.includes('ki vagy')||q.includes('who are')){
+    if(lang==='fa') reply='🛒 ARÁDI Market:\n\nسوپرمارکت ایرانی و بین‌المللی در بوداپست\n\n✅ محصولات غذایی اصیل ایرانی\n✅ صنایع دستی خاورمیانه\n✅ ارسال به درب منزل\n\n📍 Budapest, Balázs Béla u. 39, 1094';
+    else if(lang==='hu') reply='🛒 ARÁDI Market:\n\nIráni és nemzetközi szupermarket Budapesten\n\n✅ Eredeti iráni élelmiszerek\n✅ Közel-keleti kézművesség\n✅ Házhozszállítás\n\n📍 Budapest, Balázs Béla u. 39, 1094';
+    else reply='🛒 ARÁDI Market:\n\nIranian & International supermarket in Budapest\n\n✅ Authentic Persian foods\n✅ Middle Eastern handicrafts\n✅ Home delivery\n\n📍 Budapest, Balázs Béla u. 39, 1094';
+
+  // Instagram / Social
+  } else if(q.includes('اینستاگرام')||q.includes('instagram')||q.includes('social')||q.includes('شبکه')){
+    reply='📸 @aradimarket\n✈️ @aradimarket_bot\n\n'+
+      (lang==='fa'?'ما را دنبال کنید تا از تخفیف‌ها و محصولات جدید باخبر شوید!':
+       lang==='hu'?'Kövessen minket az akciókért és új termékekért!':
+       'Follow us for discounts and new products!');
+
+  } else {
+    if(lang==='fa') reply='برای کمک بیشتر، یکی از موارد زیر را بپرسید:\n\n📍 آدرس\n🕐 ساعت کاری\n🚚 هزینه ارسال\n💳 روش پرداخت\n💰 قیمت محصول\n🛒 نحوه سفارش\n\nیا بنویسید «اپراتور»';
+    else if(lang==='hu') reply='Segítségért kérdezzen ezek egyikéről:\n\n📍 Cím\n🕐 Nyitvatartás\n🚚 Szállítási díj\n💳 Fizetés\n💰 Termék ára\n🛒 Rendelés\n\nVagy írjon «operator»';
+    else reply='I can help you with:\n\n📍 Address\n🕐 Opening hours\n🚚 Delivery fees\n💳 Payment methods\n💰 Product prices\n🛒 How to order\n\nOr type «operator» for live support';
+  }
+  setTimeout(()=>{
+    const div=document.createElement('div');
+    div.className='chat-msg bot';
+    div.style.whiteSpace='pre-line';
+    // Wrap phone numbers and URLs in LTR spans
+    const formatted=reply.replace(/(\+\d[\d\s]+)/g,'<span style="direction:ltr;display:inline-block">$1</span>')
+      .replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" style="color:var(--green);direction:ltr;display:inline-block">$1</a>');
+    div.innerHTML=formatted;
+    document.getElementById('chatMessages').appendChild(div);
+    document.getElementById('chatMessages').scrollTop=99999;
+  },300);
+}
+
+function addChatMsg(text,type){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className='chat-msg '+type;
+  div.textContent=text;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+// Show discount popup on page load if active
+setTimeout(()=>{ if(activeDiscount) showDiscountPopup(); }, 2000);
+const _adminPanel=document.getElementById('adminPanelModal');
+if(_adminPanel) _adminPanel.addEventListener('click',function(e){if(e.target===this)closeModal('adminPanelModal');});
+const _adminLogin=document.getElementById('adminLoginModal');
+if(_adminLogin) _adminLogin.addEventListener('click',function(e){if(e.target===this)closeModal('adminLoginModal');});
+
+
+// ===== WHOLESALE / B2B SYSTEM =====
+// حساب‌های B2B ذخیره شده در localStorage
+let wholesaleAccounts = JSON.parse(localStorage.getItem('aradi_wholesale_accounts')||'{}');
+// Merge with hardcoded accounts
+const WHOLESALE_ACCOUNTS = wholesaleAccounts;
+
+function saveWholesaleAccounts(){
+  localStorage.setItem('aradi_wholesale_accounts', JSON.stringify(wholesaleAccounts));
+}
+
+function addWholesaleAccount(){
+  const name=document.getElementById('wsNewName').value.trim();
+  const user=document.getElementById('wsNewUser').value.trim().toLowerCase();
+  const pass=document.getElementById('wsNewPass').value.trim();
+  const disc=parseInt(document.getElementById('wsNewDisc').value);
+  if(!name||!user||!pass){ alert('همه فیلدها الزامی هستند'); return; }
+  if(wholesaleAccounts[user]){ if(!confirm('این یوزرنیم قبلاً وجود دارد. بازنویسی شود؟')) return; }
+  wholesaleAccounts[user]={password:pass, name:name, discount:disc, custom:{}};
+  saveWholesaleAccounts();
+  document.getElementById('wsNewName').value='';
+  document.getElementById('wsNewUser').value='';
+  document.getElementById('wsNewPass').value='';
+  loadWholesaleAdmin();
+  alert('✅ حساب «'+name+'» اضافه شد!');
+}
+
+async function uploadBannerImage(idx, input){
+  const file=input.files[0]; if(!file) return;
+  try {
+    const img=await shrinkImage(file, 1600);
+    const path='opt/banner_'+idx+'_'+Date.now()+'.'+img.ext;
+    const {error}=await db.storage.from('product-images').upload(path,img.blob,{contentType:img.type,cacheControl:'31536000',upsert:false});
+    if(error) throw error;
+    const {data}=db.storage.from('product-images').getPublicUrl(path);
+    updateBanner(idx,'imageUrl',data.publicUrl);
+    loadAdsAdmin();
+    alert('✅ عکس آپلود شد!');
+  } catch(e){ alert('خطا: '+e.message); }
+  input.value='';
+}
+// B2B accounts managed via admin panel
+
+let activeWholesale = JSON.parse(sessionStorage.getItem('aradi_wholesale')||'null');
+
+function openWholesaleLogin(){
+  document.getElementById('wholesaleLoginModal').classList.add('open');
+  setTimeout(()=>document.getElementById('wlUser').focus(),200);
+}
+
+function checkWholesale(){
+  const user=document.getElementById('wlUser').value.trim().toLowerCase();
+  const pass=document.getElementById('wlPass').value;
+  const errEl=document.getElementById('wlError');
+  if(wholesaleAccounts[user]&&wholesaleAccounts[user].password===pass){
+    activeWholesale={username:user,...wholesaleAccounts[user]};
+    sessionStorage.setItem('aradi_wholesale',JSON.stringify(activeWholesale));
+    closeModal('wholesaleLoginModal');
+    document.getElementById('wlUser').value='';
+    document.getElementById('wlPass').value='';
+    errEl.style.display='none';
+    document.getElementById('wholesaleBtn').style.display='none';
+    const badge=document.getElementById('wholesaleBadge');
+    badge.style.display='block';
+    document.getElementById('wholesaleBadgeText').textContent='🏪 '+activeWholesale.name+' ('+activeWholesale.discount+'% off)';
+    renderProducts();
+    alert('✅ Welcome '+activeWholesale.name+'! Your '+activeWholesale.discount+'% discount is active.');
+  } else {
+    errEl.style.display='block';
+    document.getElementById('wlPass').style.border='2px solid var(--red)';
+    setTimeout(()=>document.getElementById('wlPass').style.border='',1500);
+  }
+}
+
+function logoutWholesale(){
+  activeWholesale=null;
+  sessionStorage.removeItem('aradi_wholesale');
+  document.getElementById('wholesaleBadge').style.display='none';
+  document.getElementById('wholesaleBtn').style.display='block';
+  renderProducts();
+}
+
+// ===== AD BANNERS SYSTEM =====
+// تبلیغات قابل تنظیم از پنل کاربری
+let adBanners = JSON.parse(localStorage.getItem('aradi_ad_banners')||'[]');
+
+function renderAdBanners(){
+  const wrap=document.getElementById('adBannersWrap');
+  const activeBanners=adBanners.filter(b=>b.active);
+  if(!activeBanners.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  for(let i=1;i<=3;i++){
+    const el=document.getElementById('adBanner'+i);
+    const banner=activeBanners[i-1];
+    if(banner){
+      el.style.display='block';
+      el.style.background=banner.bgColor||'#e8f5ee';
+      el.onclick=()=>{ if(banner.link) window.open(banner.link,'_blank'); };
+      if(banner.imageUrl){
+        el.innerHTML=`<img src="${banner.imageUrl}" alt="${banner.title||''}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`;
+      } else {
+        el.innerHTML=`<div class="ad-banner-inner" style="background:${banner.bgColor||'linear-gradient(135deg,#e8f5ee,#c8e6c9)'};border-radius:12px">
+          <div style="font-size:20px;margin-bottom:6px">${banner.emoji||'🎁'}</div>
+          <div style="font-size:14px;font-weight:700;color:#1a7a4a">${banner.title||''}</div>
+          <div style="font-size:12px;color:#555;margin-top:4px">${banner.text||''}</div>
+          ${banner.link?`<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">کلیک کنید ←</div>`:''}
+        </div>`;
+      }
+    } else {
+      el.style.display='none';
+    }
+  }
+}
+
+function saveAdBanners(){ localStorage.setItem('aradi_ad_banners',JSON.stringify(adBanners)); }
+
+// Init wholesale - deferred until DOM ready
+function initWholesaleUI(){
+  const btn=document.getElementById('wholesaleBtn');
+  const badge=document.getElementById('wholesaleBadge');
+  const badgeText=document.getElementById('wholesaleBadgeText');
+  if(!btn||!badge) return;
+  if(activeWholesale){
+    btn.style.display='none';
+    badge.style.display='block';
+    if(badgeText) badgeText.textContent='🏪 '+activeWholesale.name+' ('+activeWholesale.discount+'% off)';
+  } else {
+    btn.style.display='block';
+  }
+}
+
+// ===== LOYALTY CLUB =====
+const LY_OPTS = {
+  gender:[['female','زن','Female','Nő'],['male','مرد','Male','Férfi']],
+  marital:[['single','مجرد','Single','Egyedülálló'],['married','متأهل','Married','Házas']],
+  job:[['student','دانشجو','Student','Diák'],['employed','شاغل','Employed','Alkalmazott'],['self','آزاد','Self-employed','Vállalkozó'],['other','سایر','Other','Egyéb']],
+  contact:[['whatsapp','واتس‌اپ','WhatsApp','WhatsApp'],['telegram','تلگرام','Telegram','Telegram'],['email','ایمیل','Email','E-mail'],['phone','تماس تلفنی','Phone call','Telefon']],
+  heard:[['friends','دوستان','Friends','Barátok'],['telegram','تلگرام','Telegram','Telegram'],['instagram','اینستاگرام','Instagram','Instagram'],['google','گوگل','Google','Google'],['ads','تبلیغات محیطی','Street ads','Plakát / reklám'],['other','سایر','Other','Egyéb']],
+  fav:[['sweets','شیرینی‌جات','Sweets','Édességek'],['pickles','ترشی‌جات','Pickles','Savanyúságok'],['drinks','نوشیدنی','Beverages','Italok'],['dairy','لبنیات','Dairy','Tejtermékek'],['other','سایر','Other','Egyéb']]
+};
+function lyOpt(o){ return L3(o[1],o[2],o[3]); }
+function lySelect(id, key){
+  return `<select id="${id}" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="">—</option>${LY_OPTS[key].map(o=>`<option value="${o[0]}">${lyOpt(o)}</option>`).join('')}</select>`;
+}
+function lyField(label, inner, full){
+  return `<div class="form-group" style="${full?'grid-column:1/-1':''}"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">${label}</label>${inner}</div>`;
+}
+const LY_IN='width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px';
+function openLoyaltyModal(prefillPhone){
+  if(typeof prefillPhone!=='string') prefillPhone='';
+  document.getElementById('loyaltyTitle').textContent=L3('عضویت در باشگاه مشتریان','Join Our Customer Club','Csatlakozzon törzsvásárlói klubunkhoz');
+  document.getElementById('loyaltySub').textContent=L3('امتیاز جمع کنید، تخفیف بگیرید و هدیه تولد دریافت کنید!','Earn points, get discounts & a birthday gift!','Gyűjtsön pontokat, kapjon kedvezményeket és születésnapi ajándékot!');
+  document.getElementById('loyaltyBenefitsTitle').textContent=L3('🎁 مزایای عضویت:','🎁 Member benefits:','🎁 Tagság előnyei:');
+  document.getElementById('loyaltyBenefitsList').innerHTML=L3(
+    '• ۱۰۰ امتیاز هدیهٔ عضویت<br>• هر ۱۰۰۰ فورینت خرید آنلاین = ۱۰ امتیاز<br>• هر امتیاز = ۱ فورینت تخفیف (از ۳۰۰ امتیاز)<br>• کد تخفیف هدیهٔ تولد<br>• تخفیف‌های ویژهٔ اعضا',
+    '• 100 welcome points<br>• Every 1,000 Ft online order = 10 points<br>• 1 point = 1 Ft off (from 300 points)<br>• Birthday discount gift<br>• Special member offers',
+    '• 100 ajándékpont<br>• Minden 1 000 Ft online vásárlás = 10 pont<br>• 1 pont = 1 Ft kedvezmény (300 ponttól)<br>• Születésnapi kedvezmény<br>• Különleges tagajánlatok');
+  document.getElementById('lyFields').innerHTML=
+    lyField(L3('نام و نام خانوادگی *','Full name *','Teljes név *'), `<input type="text" id="lyName" style="${LY_IN}">`, true)+
+    lyField(L3('موبایل (ترجیحاً واتس‌اپ) *','Mobile (WhatsApp if possible) *','Mobil (lehetőleg WhatsApp) *'), `<input type="tel" id="lyPhone" placeholder="+36..." style="${LY_IN};direction:ltr">`)+
+    lyField(L3('ایمیل *','Email *','E-mail *'), `<input type="email" id="lyEmail" style="${LY_IN};direction:ltr">`)+
+    lyField(L3('تاریخ تولد 🎂 *','Birthday 🎂 *','Születésnap 🎂 *'), `<input type="date" id="lyBirth" style="${LY_IN};direction:ltr">`)+
+    lyField(L3('جنسیت','Gender','Nem'), lySelect('lyGender','gender'))+
+    lyField(L3('وضعیت تأهل','Marital status','Családi állapot'), lySelect('lyMarital','marital'))+
+    `<div class="form-group" id="lyAnnivWrap" style="display:none"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">${L3('تاریخ ازدواج 💍','Wedding anniversary 💍','Házassági évforduló 💍')}</label><input type="date" id="lyAnniv" style="${LY_IN};direction:ltr"></div>`+
+    lyField(L3('شهر و منطقه','City and district','Város és kerület'), `<input type="text" id="lyAddr" placeholder="Budapest, District ..." style="${LY_IN}">`, true)+
+    lyField(L3('وضعیت کاری','Occupation','Foglalkozás'), lySelect('lyJob','job'))+
+    lyField(L3('ترجیح ارتباط','Preferred contact','Kapcsolattartás'), lySelect('lyContact','contact'))+
+    lyField(L3('از کجا با ما آشنا شدید؟','How did you hear about us?','Honnan hallott rólunk?'), lySelect('lyHeard','heard'))+
+    lyField(L3('زبان ترجیحی','Preferred language','Preferált nyelv'), `<select id="lyLang" style="${LY_IN}"><option value="fa">فارسی</option><option value="en">English</option><option value="hu">Magyar</option></select>`)+
+    lyField(L3('محصولات مورد علاقه','Favourite products','Kedvenc termékek'), `<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px">${LY_OPTS.fav.map(o=>`<label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="lyFav" value="${o[0]}">${lyOpt(o)}</label>`).join('')}</div>`, true);
+  document.getElementById('lyMarital').onchange=function(){ document.getElementById('lyAnnivWrap').style.display=this.value==='married'?'block':'none'; };
+  document.getElementById('lyLang').value=currentLang;
+  if(prefillPhone) document.getElementById('lyPhone').value=prefillPhone;
+  document.getElementById('loyaltySubmitBtn').textContent=L3('⭐ عضو می‌شوم','⭐ Join now','⭐ Csatlakozom');
+  document.getElementById('loyaltyCancelBtn').textContent=L3('انصراف','Cancel','Mégsem');
+  document.getElementById('lyMyPointsLink').textContent=L3('قبلاً عضو شده‌اید؟ امتیازتان را ببینید ←','Already a member? See your points →','Már tag? Nézze meg pontjait →');
+  document.getElementById('loyaltyFormView').style.display='block';
+  document.getElementById('loyaltySuccessView').style.display='none';
+  document.getElementById('loyaltyPointsView').style.display='none';
+  document.getElementById('loyaltyModal').classList.add('open');
+}
+
+let _joinBusy=false;
+async function joinLoyaltyClub(){
+  if(_joinBusy) return;
+  const v=id=>(document.getElementById(id)?.value||'').trim();
+  const name=v('lyName'), phone=v('lyPhone'), email=v('lyEmail'), birth=v('lyBirth');
+  if(!name||!phone||!email||!birth){ alert(L3('نام، موبایل، ایمیل و تاریخ تولد الزامی است.','Name, mobile, email and birthday are required.','Név, mobil, e-mail és születésnap megadása kötelező.')); return; }
+  if(!/^\S+@\S+\.\S+$/.test(email)){ alert(L3('ایمیل درست نیست.','The email address is not valid.','Az e-mail cím érvénytelen.')); return; }
+  const favs=[...document.querySelectorAll('input[name="lyFav"]:checked')].map(x=>x.value).join(',');
+  const p={full_name:name, phone, email, birthday:birth, gender:v('lyGender'), marital_status:v('lyMarital'),
+    anniversary:v('lyMarital')==='married'?v('lyAnniv'):'', city:v('lyAddr'), job:v('lyJob'), contact_pref:v('lyContact'),
+    heard_from:v('lyHeard'), favorites:favs, lang:v('lyLang')||currentLang};
+  _joinBusy=true; const btn=document.getElementById('loyaltySubmitBtn'); btn.disabled=true;
+  let res; try { res = await db.rpc('join_club',{p}); } catch(e){ res={error:e}; } finally { _joinBusy=false; btn.disabled=false; }
+  if(res.error || !res.data){
+    console.log('Loyalty signup error:', res.error&&(res.error.message||res.error));
+    alert(rpcErrText(res.error) || L3('عضویت ثبت نشد. لطفاً دوباره امتحان کنید یا با +36 70 594 5722 تماس بگیرید.','Sign-up failed. Please try again or call us: +36 70 594 5722','A regisztráció nem sikerült. Kérjük, próbálja újra, vagy hívjon: +36 70 594 5722'));
+    return;
+  }
+  const d=res.data;
+  document.getElementById('loyaltyFormView').style.display='none';
+  document.getElementById('loyaltySuccessView').style.display='block';
+  document.getElementById('loyaltyDoneBtn').textContent=L3('بستن ✓','Done ✓','Bezárás ✓');
+  const tg=document.getElementById('loyaltyTgBox');
+  if(d.already){
+    document.getElementById('loyaltySuccessTitle').textContent=L3('✅ اطلاعات شما به‌روز شد','✅ Your details were updated','✅ Adatait frissítettük');
+    document.getElementById('loyaltySuccessMsg').textContent=L3('شما قبلاً عضو باشگاه هستید.','You are already a club member.','Ön már klubtag.')+' '+
+      (d.tg_linked?L3('کد عضویت و امتیازتان به تلگرام شما فرستاده شد.','Your member code and points were sent to your Telegram.','Tagsági kódját és pontjait elküldtük Telegramon.')
+                  :L3('اگر کد عضویتتان را ندارید، از فروشگاه بپرسید: +36 70 594 5722','If you do not have your member code, ask us: +36 70 594 5722','Ha nincs meg a tagsági kódja, kérdezzen minket: +36 70 594 5722'));
+    document.getElementById('loyaltyMemberCode').style.display='none';
+    tg.innerHTML='';
+    return;
+  }
+  document.getElementById('loyaltySuccessTitle').textContent=L3('🎉 خوش آمدید!','🎉 Welcome!','🎉 Üdvözöljük!');
+  if(d.code_hidden){
+    document.getElementById('loyaltySuccessMsg').textContent=L3('شما عضو باشگاه مشتریان شدید و ۱۰۰ امتیاز هدیه گرفتید. چون این شماره قبلاً در سفارش‌ها ثبت شده بود، برای امنیت، کد عضویت فقط در تلگرامِ خودتان فرستاده می‌شود.',
+      'You are now a club member and got 100 welcome points. Because this number was already used for an order, for your safety the member code is only sent to your own Telegram.',
+      'Klubtag lett, és 100 ajándékpontot kapott. Mivel ezt a számot már használták rendeléshez, biztonsági okból a tagsági kódot csak saját Telegramjára küldjük.');
+    document.getElementById('loyaltyMemberCode').style.display='none';
+    tg.innerHTML=pointsBarHtml(d.points||0, d.min||300)+(d.tg_linked
+      ?`<div style="background:var(--green-l);border-radius:10px;padding:10px;font-size:13px;margin-top:10px">✅ ${L3('کد عضویت به تلگرام شما فرستاده شد.','Your member code was sent to your Telegram.','Tagsági kódját elküldtük Telegramon.')}</div>`
+      :(d.tg_link?`<a href="${escH(d.tg_link)}" target="_blank" rel="noopener" style="display:block;margin-top:12px;background:#229ED9;color:white;text-decoration:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700">📲 ${L3('دریافت کد عضویت در تلگرام','Get my member code on Telegram','Tagsági kód Telegramon')}</a>`:'')
+       +`<div style="font-size:11px;color:var(--gray);margin-top:6px">${L3('تلگرام ندارید؟ کد را از فروشگاه بپرسید: +36 70 594 5722','No Telegram? Ask us for your code: +36 70 594 5722','Nincs Telegramja? Kérdezze meg tőlünk: +36 70 594 5722')}</div>`);
+    const jb0=document.getElementById('loyaltyJoinBtn'); if(jb0) jb0.innerHTML='⭐ '+escH(name.split(' ')[0]);
+    return;
+  }
+  document.getElementById('loyaltySuccessMsg').textContent=L3('شما عضو باشگاه مشتریان آرادی مارکت شدید. کد عضویت را نگه دارید؛ برای استفاده از امتیاز لازم است:','You are now a member of the ARÁDI Market Customer Club. Keep your member code — you need it to use your points:','Sikeresen csatlakozott az ARÁDI Market klubjához. Őrizze meg tagsági kódját — a pontok felhasználásához szükséges:');
+  const mc=document.getElementById('loyaltyMemberCode'); mc.style.display='block'; mc.textContent='🔖 '+d.member_code;
+  tg.innerHTML=pointsBarHtml(d.points||0, d.min||300)+
+    (d.tg_link?`<a href="${escH(d.tg_link)}" target="_blank" rel="noopener" style="display:block;margin-top:12px;background:#229ED9;color:white;text-decoration:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700">📲 ${L3('کد عضویت و امتیازم را در تلگرام داشته باشم','Get my member code & points on Telegram','Tagsági kód és pontok Telegramon')}</a>`:'');
+  const jb=document.getElementById('loyaltyJoinBtn'); if(jb) jb.innerHTML='⭐ '+escH(name.split(' ')[0]);
+}
+
+function openMyPoints(){
+  document.getElementById('loyaltyFormView').style.display='none';
+  document.getElementById('loyaltySuccessView').style.display='none';
+  const v=document.getElementById('loyaltyPointsView'); v.style.display='block';
+  v.innerHTML=`<div style="text-align:center;margin-bottom:14px"><div style="font-size:36px">⭐</div><h3 style="font-size:18px;color:var(--green)">${L3('امتیاز من','My points','Pontjaim')}</h3></div>
+    ${lyField(L3('شماره موبایل','Mobile number','Mobilszám'), `<input type="tel" id="mpPhone" placeholder="+36..." style="${LY_IN};direction:ltr">`, true)}
+    ${lyField(L3('کد عضویت','Member code','Tagsági kód'), `<input type="text" id="mpCode" placeholder="ARADI-XXXXXX" style="${LY_IN};direction:ltr;text-transform:uppercase">`, true)}
+    <button onclick="showMyPoints()" style="width:100%;background:var(--green);color:white;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">${L3('نمایش امتیاز','Show my points','Pontjaim megtekintése')}</button>
+    <div id="mpResult" style="margin-top:14px"></div>
+    <button onclick="closeModal('loyaltyModal')" style="width:100%;background:none;border:none;color:var(--gray);padding:8px;cursor:pointer;font-size:12px;margin-top:4px">${L3('بستن','Close','Bezárás')}</button>`;
+}
+async function showMyPoints(){
+  const out=document.getElementById('mpResult');
+  const phone=document.getElementById('mpPhone').value.trim(), code=document.getElementById('mpCode').value.trim();
+  if(!phone||!code){ out.innerHTML='<div style="color:var(--red);font-size:13px">'+L3('شماره و کد عضویت را وارد کنید.','Enter your mobile number and member code.','Adja meg mobilszámát és tagsági kódját.')+'</div>'; return; }
+  out.textContent='⏳';
+  let r; try { r=await db.rpc('member_status',{p_phone:phone,p_code:code}); } catch(e){ r={error:e}; }
+  if(r.error||!r.data){ out.innerHTML='<div style="color:var(--red);font-size:13px">'+L3('بررسی ممکن نشد. دوباره امتحان کنید.','Could not check. Please try again.','Nem sikerült ellenőrizni.')+'</div>'; return; }
+  if(!r.data.found){ out.innerHTML='<div style="color:var(--red);font-size:13px">❌ '+L3(...ERR_TXT.MEMBER_NOT_FOUND)+'</div>'; return; }
+  const d=r.data;
+  out.innerHTML=`<div style="background:var(--green-l);border-radius:12px;padding:14px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">👋 ${escH(d.name)}</div>
+    ${pointsBarHtml(d.points, d.min)}
+    <div style="font-size:12px;color:#555;margin-top:8px;line-height:1.7">${d.usable
+      ?L3('🎉 در سفارش بعدی، کد عضویت را در فرم سفارش بزنید تا امتیازتان کم شود (هر امتیاز = ۱ فورینت).','🎉 On your next order, enter your member code in the order form to use your points (1 point = 1 Ft).','🎉 Következő rendelésénél adja meg tagsági kódját a pontok felhasználásához (1 pont = 1 Ft).')
+      :L3('هر ۱۰۰۰ فورینت خرید آنلاین = ۱۰ امتیاز. از ۳۰۰ امتیاز قابل استفاده است.','Every 1,000 Ft online order = 10 points. Usable from 300 points.','Minden 1 000 Ft online vásárlás = 10 pont. 300 ponttól használható.')}</div>
+    ${d.expires?`<div style="font-size:11px;color:var(--gray);margin-top:6px">⏳ ${L3('اگر تا این تاریخ خرید نکنید امتیازها باطل می‌شود','Points expire if you do not order before','A pontok lejárnak, ha nem vásárol eddig')}: ${d.expires}</div>`:''}
+  </div>`;
+}
+
+// ===== ANALYTICS DISPLAY =====
+let calCurrentMonth = new Date();
+calCurrentMonth.setDate(1);
+let calSelectedDate = null;
+
+function loadDeliverySettingsAdmin(){
+  renderPickupSlotsAdmin();
+  renderCalendar();
+}
+
+function renderPickupSlotsAdmin(){
+  const el=document.getElementById('pickup_slots_list');
+  if(!el) return;
+  el.innerHTML = pickupSlots.length
+    ? pickupSlots.map((s,i)=>`<div data-slot="${s}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:white;border-radius:6px;margin-bottom:5px;border:1px solid var(--border)">
+        <span style="font-size:12px;direction:ltr;font-weight:600">${s}</span>
+        <button onclick="removePickupSlot(${i})" style="background:var(--red-l);border:none;color:var(--red);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:11px">حذف</button>
+      </div>`).join('')
+    : '<div style="color:var(--gray);font-size:12px;margin-bottom:6px">هنوز ساعتی تعریف نشده</div>';
+}
+
+function addPickupSlot(){
+  const val=document.getElementById('new_pickup_slot').value.trim();
+  if(!val) return;
+  pickupSlots.push(val);
+  document.getElementById('new_pickup_slot').value='';
+  renderPickupSlotsAdmin();
+}
+
+function removePickupSlot(idx){
+  pickupSlots.splice(idx,1);
+  renderPickupSlotsAdmin();
+}
+
+function savePickupSlotsAdmin(){
+  // Update pickupSlots from rendered list
+  const slotDivs = document.querySelectorAll('#pickup_slots_list [data-slot]');
+  if(slotDivs.length > 0){
+    pickupSlots = Array.from(slotDivs).map(d=>d.getAttribute('data-slot'));
+  }
+  savePickupSlots();
+  showFlash('✅ ساعت‌های فروشگاه ذخیره شد','ok');
+}
+
+function changeCalMonth(dir){
+  calCurrentMonth.setMonth(calCurrentMonth.getMonth()+dir);
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const year=calCurrentMonth.getFullYear();
+  const month=calCurrentMonth.getMonth();
+  const label=document.getElementById('calMonthLabel');
+  if(label) label.textContent=calCurrentMonth.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const grid=document.getElementById('calGrid');
+  if(!grid) return;
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date(); today.setHours(0,0,0,0);
+  let html='';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>{
+    html+=`<div style="text-align:center;font-size:10px;font-weight:600;color:var(--gray);padding:2px">${d}</div>`;
+  });
+  for(let i=0;i<firstDay;i++) html+='<div></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const date=new Date(year,month,d,12,0,0); // noon to avoid timezone shift
+    const ds=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+    const isPast=date<today;
+    const entry=getCalendarEntry(ds);
+    const hasSlots=entry&&entry.enabled&&entry.slots&&entry.slots.length>0;
+    const isSelected=calSelectedDate===ds;
+    const bg=isSelected?'var(--green)':hasSlots?'var(--green-l)':isPast?'#f5f5f5':'white';
+    const color=isSelected?'white':hasSlots?'var(--green)':isPast?'#ccc':'#333';
+    const border=isSelected?'var(--green)':hasSlots?'var(--green)':'var(--border)';
+    const clickFn = isPast ? '' : 'selectCalDay(\''+ds+'\')';
+    const dayDiv = '<div onclick="'+clickFn+'" style="text-align:center;padding:5px 2px;border-radius:6px;border:1px solid '+border+';background:'+bg+';color:'+color+';font-size:11px;cursor:'+(isPast?'default':'pointer')+';font-weight:'+(hasSlots?'700':'400')+'">'+d+(hasSlots?'<div style=\"font-size:8px\">✓</div>':'')+'</div>';
+    html+=dayDiv;
+  }
+  grid.innerHTML=html;
+}
+
+function selectCalDay(ds){
+  calSelectedDate=ds;
+  renderCalendar();
+  const panel=document.getElementById('selectedDayPanel');
+  const title=document.getElementById('selectedDayTitle');
+  if(!panel||!title) return;
+  panel.style.display='block';
+  // Fix timezone: add T12:00:00 to avoid UTC offset shifting the date
+  const d=new Date(ds+'T12:00:00');
+  title.textContent='📅 '+d.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const entry=getCalendarEntry(ds)||{date:ds,enabled:false,slots:[]};
+  document.getElementById('dayEnabled').checked=entry.enabled;
+  renderDaySlots(entry.slots||[]);
+}
+
+function renderDaySlots(slots){
+  const el=document.getElementById('daySlotsList');
+  if(!el) return;
+  el.innerHTML=slots.length
+    ? slots.map((s,i)=>`<div data-slot="${s}" style="display:flex;align-items:center;justify-content:space-between;padding:4px 6px;background:#f8f9fa;border-radius:4px;margin-bottom:4px">
+        <span style="font-size:11px;direction:ltr;font-weight:600">${s}</span>
+        <button onclick="removeDaySlot(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+      </div>`).join('')
+    : '<div style="color:var(--gray);font-size:11px;margin-bottom:4px">ساعتی اضافه نشده</div>';
+}
+
+function toggleDayEnabled(val){
+  const entry=getCalendarEntry(calSelectedDate)||{date:calSelectedDate,enabled:false,slots:[]};
+  entry.enabled=val;
+  saveCalEntry(entry);
+}
+
+function addDaySlot(){
+  if(!calSelectedDate) return;
+  const val=document.getElementById('newDaySlot').value.trim();
+  if(!val) return;
+  const entry=getCalendarEntry(calSelectedDate)||{date:calSelectedDate,enabled:true,slots:[]};
+  if(!entry.slots) entry.slots=[];
+  entry.slots.push(val);
+  document.getElementById('newDaySlot').value='';
+  renderDaySlots(entry.slots);
+  saveCalEntry(entry);
+}
+
+function removeDaySlot(idx){
+  if(!calSelectedDate) return;
+  const entry=getCalendarEntry(calSelectedDate);
+  if(!entry) return;
+  entry.slots.splice(idx,1);
+  renderDaySlots(entry.slots);
+  saveCalEntry(entry);
+}
+
+// saveCalEntry defined in storage section above
+
+function saveDaySettings(){
+  if(!calSelectedDate) return;
+  const enabled=document.getElementById('dayEnabled').checked;
+  let entry=getCalendarEntry(calSelectedDate);
+  if(!entry) entry={date:calSelectedDate,enabled:enabled,slots:[]};
+  entry.enabled=enabled;
+  // Make sure slots are current from the rendered list
+  const slotDivs = document.querySelectorAll('#daySlotsList [data-slot]');
+  if(slotDivs.length > 0){
+    entry.slots = Array.from(slotDivs).map(d=>d.getAttribute('data-slot'));
+  }
+  saveCalEntry(entry);
+  renderCalendar();
+  showFlash('✅ روز '+calSelectedDate+' ذخیره شد','ok');
+}
+
+// «اضافه کردن ۷ روز آینده»: enables delivery for the next 7 days (Sunday skipped) with default slots.
+function addTestDeliveryDays(){
+  const now=new Date(); let added=0;
+  for(let i=1;i<=7;i++){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i,12,0,0);
+    if(d.getDay()===0) continue;
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(getCalendarEntry(ds)) continue;
+    deliveryCalendar.push({date:ds,enabled:true,slots:['10:00–13:00','15:00–18:00']});
+    added++;
+  }
+  saveDeliveryCalendar();
+  renderCalendar();
+  showFlash(added?('✅ '+added+' روز اضافه شد'):'روز جدیدی برای اضافه کردن نبود',added?'ok':'warn');
+}
+
+// «+ بنر جدید»: the page has three banner slots, so this only opens the editor for them.
+function addNewBanner(){
+  loadAdsAdmin();
+  showFlash('کاتالوگ ۳ جای بنر دارد — یکی از سه بنر بالا را ویرایش و فعال کنید','warn');
+}
+
+function loadAnalytics(){
+  const el=document.getElementById('analyticsContent');
+  const d=analyticsData;
+  // Top products viewed
+  const topViewed=Object.entries(d.productViews).sort((a,b)=>b[1].views-a[1].views).slice(0,10);
+  const topAdded=Object.entries(d.cartAdds).sort((a,b)=>b[1].adds-a[1].adds).slice(0,10);
+  const recentSearches=[...new Set(d.searches.slice(-50).map(s=>s.q))].slice(0,20);
+  const langs=d.sessions.reduce((acc,s)=>{const l=s.lang||'unknown';acc[l]=(acc[l]||0)+1;return acc;},{});
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:var(--green-l);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:700;color:var(--green)">${d.pageViews}</div>
+        <div style="font-size:12px;color:var(--gray)">بازدید کل</div>
+      </div>
+      <div style="background:#fff3e0;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:700;color:var(--orange)">${d.orders}</div>
+        <div style="font-size:12px;color:var(--gray)">سفارش ثبت شده</div>
+      </div>
+      <div style="background:#e3f2fd;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:700;color:#1565c0">${d.searches.length}</div>
+        <div style="font-size:12px;color:var(--gray)">جستجو</div>
+      </div>
+      <div style="background:#fce4ec;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:700;color:#c62828">${Object.keys(d.cartAdds).length}</div>
+        <div style="font-size:12px;color:var(--gray)">محصول به سبد افزوده شده</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">🔍 جستجوهای اخیر:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${recentSearches.length?recentSearches.map(s=>`<span style="background:#f0f0f0;border-radius:20px;padding:3px 10px;font-size:11px">${s}</span>`).join(''):'<span style="color:var(--gray);font-size:12px">هنوز جستجویی انجام نشده</span>'}
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">👁️ پربازدیدترین محصولات:</div>
+      ${topViewed.length?topViewed.map(([id,v],i)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span>${i+1}. ${v.name}</span><span style="font-weight:600;color:var(--green)">${v.views} بازدید</span></div>`).join(''):'<span style="color:var(--gray);font-size:12px">داده‌ای ثبت نشده</span>'}
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">🛒 پراضافه‌شده به سبد:</div>
+      ${topAdded.length?topAdded.map(([id,v],i)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span>${i+1}. ${v.name}</span><span style="font-weight:600;color:var(--orange)">${v.adds}x</span></div>`).join(''):'<span style="color:var(--gray);font-size:12px">داده‌ای ثبت نشده</span>'}
+    </div>
+
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">🌍 زبان کاربران:</div>
+      <div style="font-size:12px">
+        ${Object.entries(langs).sort((a,b)=>b[1]-a[1]).map(([l,n])=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${l}</span><span style="font-weight:600">${n}</span></div>`).join('')||'<span style="color:var(--gray)">داده‌ای ثبت نشده</span>'}
+      </div>
+    </div>
+
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--gray)">
+      💡 برای آنالیز پیشرفته‌تر (موقعیت جغرافیایی، جریان کاربر) Google Analytics را فعال کنید.
+    </div>`;
+}
+
+function resetAnalytics(){
+  if(!confirm('همه داده‌های آنالیز پاک شوند؟')) return;
+  analyticsData={pageViews:0,searches:[],productViews:{},cartAdds:{},orders:0,sessions:[]};
+  saveAnalytics();
+  loadAnalytics();
+}
+
+// ===== LOYALTY MEMBERS IN ADMIN =====
+async function loadLoyaltyMembers(){
+  const el=document.getElementById('loyaltyMembersList');
+  try {
+    const {data,error}=await db.from('customers').select('*').order('joined_at',{ascending:false}).limit(200);
+    if(error||!data?.length){ el.innerHTML='<div style="text-align:center;color:var(--gray);padding:20px">هنوز عضوی ثبت نشده</div>'; return; }
+    const members=data.filter(m=>m.is_member!==false).length;
+    el.innerHTML=`<div style="font-size:11px;color:var(--gray);margin-bottom:10px">${members} عضو باشگاه — ${data.length-members} مشتری فقط سفارش (اطلاعات ناقص)</div>`+
+      data.map(m=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;gap:6px">
+          <span style="font-weight:700">${escH(m.full_name)} ${m.is_member===false?'<span style="font-size:10px;background:#fff4e0;color:#b26a00;padding:1px 6px;border-radius:10px">فقط سفارش</span>':''}${m.telegram_chat_id?' 📲':''}</span>
+          <span style="color:var(--green);font-weight:600">⭐ ${m.loyalty_points||0}</span>
+        </div>
+        <div style="color:var(--gray)">📞 ${escH(m.phone||'—')}${m.email?' | ✉️ '+escH(m.email):''}${m.member_code?' | 🔖 ARADI-'+escH(m.member_code):''}</div>
+        ${m.birthday?`<div style="color:var(--gray)">🎂 ${escH(m.birthday)}</div>`:''}
+        ${m.city?`<div style="color:var(--gray)">📍 ${escH(m.city)}</div>`:''}
+        <div style="color:var(--gray)">🌐 ${escH(m.referral_source||'—')} | ${new Date(m.joined_at).toLocaleDateString('fa-IR')}</div>
+      </div>`).join('');
+  } catch(e){ el.innerHTML='<div style="color:red;padding:10px">خطا: '+escH(e.message)+'</div>'; }
+}
+
+const _wlModal=document.getElementById('wholesaleLoginModal');
+if(_wlModal) _wlModal.addEventListener('click',function(e){if(e.target===this)closeModal('wholesaleLoginModal');});
+const _lyModal=document.getElementById('loyaltyModal');
+if(_lyModal) _lyModal.addEventListener('click',function(e){if(e.target===this)closeModal('loyaltyModal');});
+
+renderAdBanners();
+init();
+try {
+  const _qp=new URLSearchParams(location.search);
+  if(_qp.get('join')==='1'){ const ph=(_qp.get('phone')||'').replace(/[^\d+]/g,''); setTimeout(()=>openLoyaltyModal(ph&&ph[0]!=='+'?'+'+ph:ph),400); }
+} catch(e){}
+document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo){ memberInfo=null; usePoints=false; renderPointsBox(); updateOrderSummary(); } });
+</script>
+
+<!-- WHOLESALE LOGIN -->
+<div id="wholesaleBtn" style="position:fixed;bottom:80px;left:20px;z-index:400;display:none">
+  <button onclick="openWholesaleLogin()" style="background:var(--gold);color:white;border:none;border-radius:20px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2)">
+    🏪 B2B Login
+  </button>
+</div>
+
+<div class="modal-ov" id="wholesaleLoginModal">
+  <div class="modal-box" style="max-width:360px;border-radius:16px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:32px">🏪</div>
+      <h3 style="font-size:17px;color:var(--green)" id="wlTitle">B2B / Wholesale Login</h3>
+      <p style="font-size:12px;color:var(--gray);margin-top:4px" id="wlSub">For restaurants & distributors</p>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Username</label>
+      <input type="text" id="wlUser" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;direction:ltr">
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Password</label>
+      <input type="password" id="wlPass" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;direction:ltr" onkeydown="if(event.key==='Enter')checkWholesale()">
+    </div>
+    <button onclick="checkWholesale()" style="width:100%;background:var(--green);color:white;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Login</button>
+    <button onclick="closeModal('wholesaleLoginModal')" style="width:100%;background:none;border:none;color:var(--gray);padding:8px;cursor:pointer;font-size:13px;margin-top:4px">Cancel</button>
+    <div id="wlError" style="color:var(--red);font-size:12px;text-align:center;margin-top:8px;display:none">Invalid username or password</div>
+  </div>
+</div>
+
+<div id="wholesaleBadge" style="display:none;position:fixed;bottom:80px;left:20px;z-index:400">
+  <div style="background:var(--gold);color:white;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;align-items:center;gap:6px">
+    <span id="wholesaleBadgeText">🏪 B2B Active</span>
+    <span onclick="logoutWholesale()" style="cursor:pointer;opacity:.8">✕</span>
+  </div>
+</div>
+
+<!-- LOYALTY CLUB MODAL -->
+<div class="modal-ov" id="loyaltyModal">
+  <div class="modal-box" style="max-width:480px;border-radius:16px">
+    <div id="loyaltyFormView">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:36px">⭐</div>
+        <h3 style="font-size:18px;color:var(--green)" id="loyaltyTitle">Join Our Loyalty Club</h3>
+        <p style="font-size:12px;color:var(--gray);margin-top:6px" id="loyaltySub">Earn points, get discounts & birthday gifts!</p>
+      </div>
+
+      <div style="background:var(--green-l);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px">
+        <div style="font-weight:700;color:var(--green);margin-bottom:6px" id="loyaltyBenefitsTitle">🎁 Member Benefits:</div>
+        <div id="loyaltyBenefitsList">
+          • Earn points with every purchase<br>
+          • Special member discounts<br>
+          • Birthday gift<br>
+          • Early access to new products
+        </div>
+      </div>
+
+      <div style="text-align:center;margin:-6px 0 12px"><a href="javascript:void(0)" id="lyMyPointsLink" onclick="openMyPoints()" style="font-size:12px;color:var(--green);font-weight:600">Already a member? See your points →</a></div>
+      <div id="lyFields" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+
+      <button onclick="joinLoyaltyClub()" style="width:100%;background:var(--green);color:white;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px" id="loyaltySubmitBtn">⭐ Join Now</button>
+      <button onclick="closeModal('loyaltyModal')" style="width:100%;background:none;border:none;color:var(--gray);padding:8px;cursor:pointer;font-size:12px;margin-top:4px" id="loyaltyCancelBtn">Cancel</button>
+    </div>
+
+    <div id="loyaltyPointsView" style="display:none"></div>
+    <div id="loyaltySuccessView" style="display:none;text-align:center;padding:20px">
+      <div style="font-size:48px;margin-bottom:12px">🎉</div>
+      <h3 style="color:var(--green);font-size:20px;margin-bottom:8px" id="loyaltySuccessTitle">Welcome to the Club!</h3>
+      <p style="color:var(--gray);font-size:13px;line-height:1.7" id="loyaltySuccessMsg">You are now a member of ARÁDI Market Loyalty Club!</p>
+      <div style="background:var(--green-l);border-radius:10px;padding:12px;margin:12px 0;font-size:16px;font-weight:700;color:var(--green);direction:ltr" id="loyaltyMemberCode"></div>
+      <div id="loyaltyTgBox" style="margin-bottom:8px"></div>
+      <button onclick="closeModal('loyaltyModal')" style="background:var(--green);color:white;border:none;padding:12px 28px;border-radius:10px;font-size:14px;cursor:pointer;margin-top:8px" id="loyaltyDoneBtn">Done ✓</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
