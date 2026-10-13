@@ -366,7 +366,7 @@ footer{background:var(--dark);padding:40px 24px;text-align:center}
       <div class="loyalty-benefit"><div class="loyalty-benefit-icon">🎂</div><div class="loyalty-benefit-title" data-i="lb2_title">Birthday Gift</div><div class="loyalty-benefit-text" data-i="lb2_text">Special surprise on your birthday</div></div>
       <div class="loyalty-benefit"><div class="loyalty-benefit-icon">💰</div><div class="loyalty-benefit-title" data-i="lb3_title">Exclusive Discounts</div><div class="loyalty-benefit-text" data-i="lb3_text">Member-only offers every month</div></div>
     </div>
-    <a href="https://forms.gle/6V5cmsp9RJ2wpFDR6" target="_blank" class="loyalty-form-btn" data-i="loyalty_btn">⭐ Join Now — It's Free!</a>
+    <a href="https://aradimcf.com/aradi_catalog.html?join=1" target="_blank" class="loyalty-form-btn" data-i="loyalty_btn">⭐ Join Now — It's Free!</a>
   </div>
 </section>
 
@@ -604,7 +604,7 @@ async function staffSignIn(client, email, password){
 }
 
 const CATALOG_URL = 'aradi_catalog.html';
-const LOYALTY_FORM = 'https://forms.gle/6V5cmsp9RJ2wpFDR6';
+const LOYALTY_FORM = 'https://aradimcf.com/aradi_catalog.html?join=1';
 
 // ===== TRANSLATIONS =====
 const T = {
@@ -1425,9 +1425,9 @@ function sendSiteChat(){
     else if(currentLang==='hu') reply='🛒 Rendeléshez:\n1. Nyissa meg a katalógust\n2. Válassza ki a terméket\n3. Töltse ki a rendelési űrlapot';
     else reply='🛒 To order:\n1. Open the catalog\n2. Choose products\n3. Fill in the order form';
   } else if(q.includes('باشگاه')||q.includes('عضو')||q.includes('loyalty')||q.includes('member')||q.includes('törzs')){
-    if(currentLang==='fa') reply='⭐ برای عضویت در باشگاه مشتریان:\nhttps://forms.gle/6V5cmsp9RJ2wpFDR6\n\nمزایا: امتیاز، هدیه تولد، تخفیف ویژه';
-    else if(currentLang==='hu') reply='⭐ Törzsvásárlói regisztráció:\nhttps://forms.gle/6V5cmsp9RJ2wpFDR6\n\nElőnyök: pontok, születésnapi ajándék, kedvezmények';
-    else reply='⭐ Join Loyalty Club:\nhttps://forms.gle/6V5cmsp9RJ2wpFDR6\n\nBenefits: points, birthday gift, special discounts';
+    if(currentLang==='fa') reply='⭐ برای عضویت در باشگاه مشتریان:\nhttps://aradimcf.com/aradi_catalog.html?join=1\n\nمزایا: امتیاز، هدیه تولد، تخفیف ویژه';
+    else if(currentLang==='hu') reply='⭐ Törzsvásárlói regisztráció:\nhttps://aradimcf.com/aradi_catalog.html?join=1\n\nElőnyök: pontok, születésnapi ajándék, kedvezmények';
+    else reply='⭐ Join Loyalty Club:\nhttps://aradimcf.com/aradi_catalog.html?join=1\n\nBenefits: points, birthday gift, special discounts';
   } else if(q.includes('زعفران')||q.includes('saffron')||q.includes('sáfrány')){
     if(currentLang==='fa') reply='🌸 زعفران ایرانی اصل موجود است!\nخواص: آنتی‌اکسیدان، بهبود خلق، ضد افسردگی\n\nبرای قیمت: +36 70 594 5722';
     else if(currentLang==='hu') reply='🌸 Eredeti iráni sáfrány kapható!\nHatásai: antioxidáns, hangulatjavító, antidepresszáns\n\nÁrért hívjon: +36 70 594 5722';
