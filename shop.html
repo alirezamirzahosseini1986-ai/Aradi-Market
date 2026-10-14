@@ -192,6 +192,7 @@ body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
         <button class="lang-btn" onclick="setLang('en')">English</button>
         <button class="lang-btn" onclick="setLang('hu')">Magyar</button>
       </div>
+        <button id="installAppBtn" onclick="showInstallBanner()" style="display:none;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 10px;border-radius:20px;cursor:pointer;font-size:12px" title="App">📲</button>
         <button onclick="openAdminPanel()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:11px;padding:4px 8px" title="Admin">⚙️</button>
       <button onclick="openLoyaltyModal()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s" id="loyaltyJoinBtn">⭐ <span id="loyaltyBtnText">Join Club</span></button>
       <button class="cart-btn" onclick="toggleCart()">
@@ -3083,6 +3084,58 @@ if(_lyModal) _lyModal.addEventListener('click',function(e){if(e.target===this)cl
 
 renderAdBanners();
 init();
+
+// ===== INSTALL APP PROMPT =====
+(function(){
+  const isStandalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const inApp = /Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok/i.test(ua);
+  const isMobile = isIOS || /Android/i.test(ua);
+  const forced = /[?&]install=1/.test(location.search);
+  let deferred = null;
+  function snoozed(){ try { return Date.now() < Number(localStorage.getItem('aradi_install_snooze')||0); } catch(e){ return false; } }
+  function snooze(days){ try { localStorage.setItem('aradi_install_snooze', String(Date.now() + days*864e5)); } catch(e){} }
+  function T(fa,en,hu){ return (typeof currentLang!=='undefined' && currentLang==='fa')?fa:(typeof currentLang!=='undefined' && currentLang==='hu')?hu:en; }
+  function close(days){ const b=document.getElementById('installBanner'); if(b) b.remove(); if(days) snooze(days); }
+  window.closeInstallBanner = close;
+  function show(){
+    if(isStandalone || document.getElementById('installBanner')) return;
+    let body, buttons = '';
+    if(inApp){
+      body = T('برای نصب اپ آرادی، این صفحه را در مرورگر باز کنید: بالای صفحه روی ⋯ بزنید و «Open in browser» را انتخاب کنید.',
+               'To install the ARÁDI app, open this page in your browser: tap ⋯ at the top and choose “Open in browser”.',
+               'Az ARÁDI app telepítéséhez nyissa meg az oldalt böngészőben: koppintson a ⋯ ikonra, majd „Megnyitás böngészőben”.');
+    } else if(deferred){
+      body = T('اپ آرادی مارکت را روی گوشی‌تان نصب کنید — سریع‌تر سفارش بدهید.', 'Install the ARÁDI Market app on your phone — order faster.', 'Telepítse az ARÁDI Market appot — rendeljen gyorsabban.');
+      buttons = `<button id="installYes" style="background:#1a7a4a;color:white;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer">${T('📲 نصب','📲 Install','📲 Telepítés')}</button>`;
+    } else if(isIOS){
+      body = T('اپ آرادی را روی آیفون نصب کنید: پایین صفحه دکمهٔ اشتراک <b>⬆︎</b> را بزنید، بعد <b>Add to Home Screen</b>.',
+               'Install the ARÁDI app on your iPhone: tap the Share button <b>⬆︎</b>, then <b>Add to Home Screen</b>.',
+               'Telepítse az ARÁDI appot iPhone-ra: koppintson a Megosztás <b>⬆︎</b> gombra, majd <b>Hozzáadás a főképernyőhöz</b>.');
+    } else if(forced){
+      body = T('در منوی مرورگر (⋮) گزینهٔ «Install app» یا «Add to Home screen» را بزنید.', 'Open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.', 'A böngésző menüjében (⋮) válassza az „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz” lehetőséget.');
+    } else return;
+    const b = document.createElement('div');
+    b.id = 'installBanner';
+    b.setAttribute('dir', (typeof currentLang!=='undefined' && currentLang==='fa') ? 'rtl' : 'ltr');
+    b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:white;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:14px;display:flex;gap:12px;align-items:center;max-width:520px;margin:0 auto;font-size:14px;line-height:1.6';
+    b.innerHTML = `<img src="/icon-192.png" alt="" style="width:52px;height:52px;border-radius:12px;flex-shrink:0">
+      <div style="flex:1">${body}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${buttons}
+        <button onclick="closeInstallBanner(14)" style="background:none;border:none;color:#888;font-size:12px;cursor:pointer;padding:4px">${T('بعداً','Later','Később')}</button></div>`;
+    document.body.appendChild(b);
+    const y = document.getElementById('installYes');
+    if(y) y.onclick = async () => { try { deferred.prompt(); const r = await deferred.userChoice; close(r && r.outcome === 'accepted' ? 365 : 14); } catch(e){ close(14); } deferred = null; };
+  }
+  window.showInstallBanner = show;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; if(forced || (!snoozed() && isMobile)) setTimeout(show, 1500); const ib=document.getElementById('installAppBtn'); if(ib) ib.style.display='inline-block'; });
+  window.addEventListener('appinstalled', () => { close(365); });
+  if(!isStandalone && (forced || (isMobile && !snoozed() && (isIOS || inApp)))) setTimeout(show, forced ? 600 : 4000);
+  if(!isStandalone && isIOS){ const ib=document.getElementById('installAppBtn'); if(ib) ib.style.display='inline-block'; }
+  try { if('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('/sw.js'); } catch(e){}
+})();
+
 try {
   const _qp=new URLSearchParams(location.search);
   if(_qp.get('join')==='1'){ const ph=(_qp.get('phone')||'').replace(/[^\d+]/g,''); setTimeout(()=>openLoyaltyModal(ph&&ph[0]!=='+'?'+'+ph:ph),400); }
