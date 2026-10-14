@@ -1794,7 +1794,7 @@ async function submitOrder(){
   const address=document.getElementById('oAddress').value.trim();
   const district=document.getElementById('oDistrict')?.value||'';
   const note=document.getElementById('oNote').value.trim();
-  const day=selectedDate||'today';
+  const _t=new Date(); const day=selectedDate||(_t.getFullYear()+'-'+String(_t.getMonth()+1).padStart(2,'0')+'-'+String(_t.getDate()).padStart(2,'0'));
   if(!name||!phone){ alert(currentLang==='fa'?'نام و شماره تماس الزامی است':'Name and phone are required'); return; }
   if(selectedDelivery==='delivery'&&!address){ alert(currentLang==='fa'?'آدرس را وارد کنید':'Please enter delivery address'); return; }
   if(selectedDelivery==='delivery'&&!district){ alert(currentLang==='fa'?'لطفاً منطقه را انتخاب کنید':'Please select your district'); return; }
