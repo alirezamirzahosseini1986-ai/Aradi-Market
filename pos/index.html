@@ -56,6 +56,23 @@ header h1{font-size:18px;font-weight:700}
 .qbtn{width:24px;height:24px;border:1px solid var(--border);background:#f8f9fa;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;font-weight:600}
 .qbtn:hover{background:#e9ecef}
 .cart-total-col{font-weight:700;color:var(--green);font-size:13px;text-align:left;direction:ltr}
+/* v8: bigger, easier-to-read cart; collapsible low-stock list; typed stock */
+.cart-item{padding:12px 0}
+.cart-item-name{font-size:17px;font-weight:700;line-height:1.5}
+.cart-item-sub,.cart-item-sub span{font-size:14px!important}
+#cartItems input[type=number]{font-size:15px!important;width:92px!important;padding:4px 6px!important}
+.qty-row span:not(.qbtn){font-size:20px;min-width:28px!important}
+.qty-row .qbtn{width:34px;height:34px;font-size:20px}
+.cart-total-col{font-size:17px}
+#cartItems .rmv{font-size:20px;padding:0 4px}
+#totalAmt{font-size:26px!important}
+.low-details{margin-bottom:10px}
+.low-details summary{cursor:pointer;background:#fff4e0;border:1px solid #f0c36d;color:#8a5a00;border-radius:8px;padding:10px 12px;font-weight:700;font-size:14px;list-style:none}
+.low-details summary::-webkit-details-marker{display:none}
+.low-details summary::before{content:'▸ ';}
+.low-details[open] summary::before{content:'▾ ';}
+.low-details[open] summary{margin-bottom:8px}
+.stock-input{width:64px;padding:3px 4px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-weight:700;text-align:center;direction:ltr}
 .rmv{color:var(--red);cursor:pointer;font-size:15px;padding:3px}
 .cart-sum{margin-top:10px;padding-top:10px;border-top:2px solid var(--border)}
 .sum-row{display:flex;justify-content:space-between;margin-bottom:7px;font-size:13px}
@@ -1356,7 +1373,9 @@ function filterInv(){
   const alerts=document.getElementById('lowAlerts');
   if(!tbody) return;
   const lows=products.filter(p=>p.stock!==null&&p.stock>0&&p.stock<=p.low_stock);
-  alerts.innerHTML=lows.map(p=>`<div class="alert-box">⚠️ موجودی <strong>${p.name}</strong> کم است (${p.stock} عدد)</div>`).join('');
+  const _lowOpen=document.getElementById('lowDetails')?.open||false;
+  alerts.innerHTML=lows.length?`<details id="lowDetails" class="low-details"${_lowOpen?' open':''}><summary>⚠️ ${lows.length} کالا موجودی کم دارند — برای دیدن بزنید</summary>`
+    +lows.map(p=>`<div class="alert-box">⚠️ موجودی <strong>${p.name}</strong> کم است (${p.stock} عدد)</div>`).join('')+`</details>`:'';
   let list=products.filter(p=>{
     const mq=!q||p.name.includes(q)||(p.barcode&&nbc(p.barcode).includes(nbc(q)));
     if(filter==='low') return mq&&p.stock!==null&&p.stock>0&&p.stock<=p.low_stock;
@@ -1377,7 +1396,7 @@ function filterInv(){
     const expBadge=es==='expired'?'<span class="badge b-exp" style="margin-right:4px">منقضی</span>':es==='soon'?'<span class="badge b-soon" style="margin-right:4px">نزدیک</span>':'';
     const stockCell=p.stock===null
       ?`<input type="number" placeholder="وارد کن" style="width:70px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px" onchange="setStock(${p.id},this.value)">`
-      :`<div style="display:flex;align-items:center;gap:4px"><span class="qbtn" onclick="adjStock(${p.id},-1)">−</span><span style="font-weight:700;min-width:22px;text-align:center">${p.stock}</span><span class="qbtn" onclick="adjStock(${p.id},1)">+</span></div>`;
+      :`<div style="display:flex;align-items:center;gap:4px"><span class="qbtn" onclick="adjStock(${p.id},-1)">−</span><input type="number" min="0" class="stock-input" value="${p.stock}" title="عدد را بنویسید و Enter بزنید" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" onchange="setStock(${p.id},this.value)"><span class="qbtn" onclick="adjStock(${p.id},1)">+</span></div>`;
     return `<tr>
       <td>
         <div style="font-weight:600;font-size:13px">${p.name}</div>
