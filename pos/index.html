@@ -67,6 +67,9 @@ header h1{font-size:18px;font-weight:700}
 #cartItems .rmv{font-size:20px;padding:0 4px}
 #totalAmt{font-size:26px!important}
 .low-details{margin-bottom:10px}
+.row-no{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 6px;border-radius:15px;background:#0f5c36;color:#fff;font-weight:800;font-size:15px;margin-left:8px;flex-shrink:0}
+.row-no.sm{min-width:22px;height:22px;font-size:12px;border-radius:11px;margin-left:6px;vertical-align:middle}
+.ship-tag{font-size:12px;font-weight:700;color:#1565c0;background:#e3f0fd;border-radius:20px;padding:3px 10px;align-self:center}
 .low-details summary{cursor:pointer;background:#fff4e0;border:1px solid #f0c36d;color:#8a5a00;border-radius:8px;padding:10px 12px;font-weight:700;font-size:14px;list-style:none}
 .low-details summary::-webkit-details-marker{display:none}
 .low-details summary::before{content:'▸ ';}
@@ -513,6 +516,7 @@ tr:hover td{background:#fafafa}
           <option value="new">فقط جدید</option><option value="delivered">تحویل‌شده</option><option value="cancelled">لغوشده</option><option value="all">همه</option>
         </select>
         <button class="btn btn-blue btn-sm" onclick="reloadOnlineOrders()">🔄</button>
+        <button id="orderSoundBtn" class="btn btn-sm" style="background:#e8f5ee;color:#1a7a4a;border:1px solid #1a7a4a" onclick="toggleOrderSound()">🔔 زنگ روشن</button>
       </div>
     </div>
     <p style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.7">وقتی سفارش به دست مشتری رسید «✅ تحویل شد» را بزنید تا امتیازش خودکار حساب شود (هر ۱۰۰۰ فورینت = ۱۰ امتیاز). اگر مشتری تلگرامش را وصل کرده باشد، پیام تحویل و امتیاز هم برایش می‌رود.</p>
@@ -1054,7 +1058,7 @@ function renderCart(){
   const tdOn=document.getElementById('totalDiscToggle').checked;
   const tdPct=tdOn?parseInt(document.getElementById('totalDiscPct').value):0;
   let sub=0,count=0;
-  ci.innerHTML=cart.map(item=>{
+  ci.innerHTML=cart.map((item,_ix)=>{
     const orig=item.price*item.qty;
     const disc=idOn?Math.round(orig*(1-idPct/100)):orig;
     sub+=disc; count+=item.qty;
@@ -1063,6 +1067,7 @@ function renderCart(){
     const saleP = item.price;
     const k = item.key;
     return `<div class="cart-item">
+      <span class="row-no" title="شماره سطر">${cart.length-_ix}</span>
       <div style="flex:1"><div class="cart-item-name">${item.name}</div>
       <div class="cart-item-sub" style="display:flex;align-items:center;gap:4px">
         ${item.orig_price&&item.price<item.orig_price?`<span style="text-decoration:line-through;color:#bbb;font-size:10px">${item.orig_price.toLocaleString()}</span>`:''} 
@@ -1075,7 +1080,7 @@ function renderCart(){
   }).join('');
   const tdAmt=tdOn?Math.round(sub*tdPct/100):0;
   const final=sub-tdAmt;
-  document.getElementById('itemCount').textContent=count+' عدد';
+  document.getElementById('itemCount').textContent=cart.length+' قلم · '+count+' عدد';
   document.getElementById('subTotal').textContent=sub.toLocaleString()+' Ft';
   if(idOn){ document.getElementById('itemDiscRow').style.display='flex'; document.getElementById('itemDiscLabel').textContent=`تخفیف قلم (${idPct}٪):`; const saved=cart.reduce((s,i)=>s+i.price*i.qty,0)-sub; document.getElementById('itemDiscAmt').textContent='− '+saved.toLocaleString()+' Ft'; }
   else document.getElementById('itemDiscRow').style.display='none';
@@ -1085,7 +1090,7 @@ function renderCart(){
   cs.style.display='block'; cb.textContent=count; cb.style.display='inline';
 }
 
-const EUR_RATE=400; // 1 € = 400 Ft
+const EUR_RATE=350; // 1 € = 350 Ft
 function getCartFinalTotal(){
   const idOn=document.getElementById('itemDiscToggle').checked,idPct=idOn?parseInt(document.getElementById('itemDiscPct').value):0;
   const tdOn=document.getElementById('totalDiscToggle').checked,tdPct=tdOn?parseInt(document.getElementById('totalDiscPct').value):0;
@@ -1347,7 +1352,7 @@ async function confirmRefund(){
         const b=batches.find(x=>String(x.id)===String(item.batch_id));
         if(b) await adjustStock('batches',b.id,q,b);
       } else {
-        const p=products.find(x=>x.id===item.id);
+        const p=products.find(x=>item.id!=null&&String(x.id)===String(item.id));
         if(p) await adjustStock('products',p.id,q,p);
       }
     }
@@ -1749,7 +1754,7 @@ function renderOnlineOrders(){
   const ST={new:['🆕 جدید','#fff4e0','#b26a00'],delivered:['✅ تحویل شد','#e8f5ee','#1a7a4a'],cancelled:['❌ لغو شد','#fdecea','#c0392b'],archived:['🗄️ قدیمی','#f0f0f0','#777']};
   el.innerHTML=list.map(o=>{
     const st=ST[o.status||'new']||ST.new;
-    const items=(o.items||[]).map(i=>`<div style="display:flex;justify-content:space-between"><span>${escP(i.name)} × ${i.qty}</span><span>${((i.price||0)*i.qty).toLocaleString()}</span></div>`).join('');
+    const items=`<div style="font-size:11px;color:var(--gray);margin-bottom:4px">${(o.items||[]).length} قلم کالا</div>`+(o.items||[]).map((i,ix)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0"><span><span class="row-no sm">${ix+1}</span>${escP(i.name)} × ${i.qty}</span><span>${((i.price||0)*i.qty).toLocaleString()}</span></div>`).join('');
     return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
         <span style="font-weight:700">🔖 ${escP(o.order_id)} — 👤 ${escP(o.customer_name)}</span>
@@ -1757,7 +1762,7 @@ function renderOnlineOrders(){
       </div>
       <div style="font-size:12px;color:var(--gray)">📞 ${escP(o.phone)} | ${o.delivery_type==='delivery'?'🚚 ارسال':'🏪 تحویل از فروشگاه'} | 📅 ${escP(o.time_slot||'')}</div>
       ${o.address?`<div style="font-size:12px;color:var(--gray)">📍 ${escP(o.address)}</div>`:''}
-      <div style="font-size:12px;margin:8px 0;background:#fafafa;border-radius:6px;padding:6px 8px">${items}</div>
+      <div style="font-size:13px;margin:8px 0;background:#fafafa;border-radius:6px;padding:6px 8px">${items}</div>
       ${o.discount_code?`<div style="font-size:12px;color:var(--green)">🎟️ ${escP(o.discount_code)}: − ${(o.code_discount||0).toLocaleString()} Ft</div>`:''}
       ${o.points_used?`<div style="font-size:12px;color:var(--green)">⭐ امتیاز: − ${o.points_used.toLocaleString()} Ft</div>`:''}
       ${o.delivery_cost?`<div style="font-size:12px;color:var(--orange)">🚚 + ${(o.delivery_cost||0).toLocaleString()} Ft</div>`:''}
@@ -3020,8 +3025,8 @@ async function recordOnlineSale(orderId){
   const fr=await db.from('catalog_orders').select('*').eq('order_id',orderId).maybeSingle();
   const o=fr.data; if(!o||o.sale_id) return;
   const items=(o.items||[]).map(i=>({id:i.id??null,name:i.name,price:Number(i.price)||0,qty:Number(i.qty)||1,sale_price:Number(i.price)||0,batch_id:null}));
-  if(o.delivery_cost>0) items.push({id:null,name:'🚚 هزینه ارسال',price:Number(o.delivery_cost),qty:1,sale_price:Number(o.delivery_cost),batch_id:null});
-  const res=await insertTolerant('sales',{items,total:Number(o.total)||0,time:new Date().toISOString(),payment_method:o.payment_method||'cash',
+  // delivery cost is not a shop sale: it stays out of the report (v10)
+  const res=await insertTolerant('sales',{items,total:Math.max(0,(Number(o.total)||0)-(Number(o.delivery_cost)||0)),time:new Date().toISOString(),payment_method:o.payment_method||'cash',
      note:'🛒 سفارش آنلاین '+o.order_id,source:'online',order_id:o.order_id},true);
   if(res.error){ alert('⚠️ تحویل ثبت شد ولی فروش در گزارش ثبت نشد:\n'+res.error.message); return; }
   const sale=res.data?.[0];
@@ -3505,6 +3510,101 @@ async function toggleOptOut(id){
   try{ selectCustomer(id); }catch(e){}
   try{ renderCustomers(); }catch(e){}
 }
+</script>
+
+<script>
+// =====================================================================
+// ===== v10: «shipped» button, per-item returns, new-order bell =======
+// =====================================================================
+async function shipOnlineOrder(orderId){
+  const o=onlineOrders.find(x=>x.order_id===orderId)||{};
+  const pick=o.delivery_type!=='delivery';
+  if(!confirm(pick?'سفارش '+orderId+' آماده تحویل است؟\nبه مشتری (اگر به تلگرام وصل باشد) پیام «سفارش شما آماده است» می‌رود.'
+                  :'سفارش '+orderId+' به پیک تحویل داده شد؟\nبه مشتری (اگر به تلگرام وصل باشد) پیام «سفارش شما ارسال شد» می‌رود.')) return;
+  let r; try { r=await db.rpc('ship_order',{p_order:orderId}); } catch(e){ r={error:e}; }
+  if(r.error){ const m=r.error.message||String(r.error);
+    alert('❌ ثبت نشد: '+(/PGRST202|ship_order/.test(m)?'اول فایل aradi_orders_2.sql را در Supabase اجرا کنید.':/ORDER_NOT_NEW/.test(m)?'این سفارش دیگر «جدید» نیست.':m)); return; }
+  const d=r.data||{};
+  showToast(d.unchanged?'قبلاً ثبت شده بود':(pick?'📦 آماده تحویل ثبت شد':'🚚 ارسال ثبت شد')+(d.sent?' — به مشتری در تلگرام پیام رفت ✅':' — مشتری به تلگرام وصل نیست، پیامی نرفت'),d.sent||d.unchanged?'ok':'warn');
+  await reloadOnlineOrders();
+}
+async function refundOnlineItems(saleId){
+  await reloadSales();
+  const sale=sales.find(s=>String(s.id)===String(saleId));
+  if(!sale){ showToast('فروش این سفارش در گزارش پیدا نشد','err'); return; }
+  refundSale(sale.id);
+}
+const _renderOnlineOrdersV7=renderOnlineOrders;
+renderOnlineOrders=function(){
+  _renderOnlineOrdersV7();
+  const el=document.getElementById('onlineList'); if(!el) return;
+  const f=document.getElementById('onlineFilter')?.value||'new';
+  const list=onlineOrders.filter(o=>f==='all'||(o.status||'new')===f);
+  [...el.children].forEach((card,i)=>{
+    const o=list[i]; if(!o||!card.querySelector) return;
+    const bar=card.lastElementChild; if(!bar) return;
+    const id=escP(o.order_id), st=o.status||'new', pick=o.delivery_type!=='delivery';
+    let h='';
+    if(o.shipped_at) h+=`<span class="ship-tag">${pick?'📦 آماده تحویل':'🚚 ارسال شد'} · ${new Date(o.shipped_at).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})}</span>`;
+    else if(st==='new') h+=`<button class="btn btn-sm" style="background:#1565c0;color:#fff" onclick="shipOnlineOrder('${id}')">${pick?'📦 آماده تحویل':'🚚 ارسال شد'}</button>`;
+    if(st==='delivered'&&o.sale_id) h+=`<button class="btn btn-sm" style="background:#ffebee;color:#e53935;border:1px solid #e53935" onclick="refundOnlineItems('${escP(String(o.sale_id))}')">↩ مرجوع کالا</button>`;
+    bar.insertAdjacentHTML('afterbegin',h);
+  });
+};
+
+// ----- bell for new online orders: rings once when an order arrives, then every 15 minutes
+//       until the «online orders» tab is opened. Can be switched off with the 🔔 button. -----
+const ORDER_RING_EVERY=15*60*1000;
+let _orderAudio=null, _orderKnown=null, _orderLastRing=0, _orderRings=0;
+function orderSoundOn(){ try{ return localStorage.getItem('aradi_order_sound')!=='off'; }catch(e){ return true; } }
+function orderSeen(){ try{ return new Set(JSON.parse(localStorage.getItem('aradi_seen_orders')||'[]')); }catch(e){ return new Set(); } }
+function saveOrderSeen(set){ try{ localStorage.setItem('aradi_seen_orders',JSON.stringify([...set].slice(-400))); }catch(e){} }
+function updateOrderSoundBtn(){
+  const b=document.getElementById('orderSoundBtn'); if(!b) return; const on=orderSoundOn();
+  b.textContent=on?'🔔 زنگ روشن':'🔕 زنگ خاموش';
+  b.style.background=on?'#e8f5ee':'#f3f3f3'; b.style.color=on?'#1a7a4a':'#888'; b.style.borderColor=on?'#1a7a4a':'#bbb';
+}
+function toggleOrderSound(){
+  const on=!orderSoundOn(); try{ localStorage.setItem('aradi_order_sound',on?'on':'off'); }catch(e){}
+  updateOrderSoundBtn(); showToast(on?'🔔 زنگ سفارش آنلاین روشن شد':'🔕 زنگ سفارش آنلاین خاموش شد — فقط عدد قرمز نشان داده می‌شود','ok');
+  if(on) ringOrderBell(true);
+}
+function orderAudio(){
+  if(!_orderAudio){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; _orderAudio=new C(); }
+  if(_orderAudio.state==='suspended') _orderAudio.resume().catch(()=>{});
+  return _orderAudio;
+}
+['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{ if(_orderAudio&&_orderAudio.state==='suspended') _orderAudio.resume().catch(()=>{}); },{passive:true}));
+// about 4 seconds: three «ding-dong»s
+function ringOrderBell(short){
+  if(!orderSoundOn()) return;
+  _orderRings++; _orderLastRing=Date.now();
+  const ac=orderAudio(); if(!ac) return;
+  const t0=ac.currentTime+0.05, reps=short?1:3;
+  const note=(f,at,len)=>{ [1,2.01,3.02].forEach((h,k)=>{ const o=ac.createOscillator(), g=ac.createGain(); o.type='sine'; o.frequency.value=f*h;
+      g.gain.setValueAtTime(0.0001,at); g.gain.exponentialRampToValueAtTime([0.45,0.18,0.08][k],at+0.01); g.gain.exponentialRampToValueAtTime(0.0001,at+len);
+      o.connect(g); g.connect(ac.destination); o.start(at); o.stop(at+len+0.05); }); };
+  for(let r=0;r<reps;r++){ const a=t0+r*1.35; note(1318.5,a,1.1); note(1046.5,a+0.45,1.3); }
+}
+function onlineTabOpen(){ const p=document.getElementById('page-online'); return !!(p&&p.classList.contains('active')); }
+function markOrdersSeen(){
+  const seen=orderSeen(); onlineOrders.filter(o=>(o.status||'new')==='new').forEach(o=>seen.add(o.order_id)); saveOrderSeen(seen);
+}
+function ordersWaiting(){ const seen=orderSeen(); return onlineOrders.some(o=>(o.status||'new')==='new'&&!seen.has(o.order_id)); }
+const _reloadOnlineOrdersV10=reloadOnlineOrders;
+reloadOnlineOrders=async function(){
+  await _reloadOnlineOrdersV10();
+  const ids=onlineOrders.filter(o=>(o.status||'new')==='new').map(o=>o.order_id);
+  const fresh=_orderKnown?ids.filter(id=>!_orderKnown.has(id)):[];
+  _orderKnown=new Set([...(_orderKnown||[]),...ids]);
+  if(fresh.length) ringOrderBell(false);
+  if(onlineTabOpen()) markOrdersSeen();
+};
+const _showPageV10=showPage;
+showPage=function(name,el){ const r=_showPageV10.apply(this,arguments); if(name==='online') markOrdersSeen(); return r; };
+function orderRemindTick(){ if(orderSoundOn()&&!onlineTabOpen()&&ordersWaiting()&&Date.now()-_orderLastRing>=ORDER_RING_EVERY) ringOrderBell(false); }
+setInterval(orderRemindTick,30000);
+updateOrderSoundBtn();
 </script>
 </body>
 </html>
