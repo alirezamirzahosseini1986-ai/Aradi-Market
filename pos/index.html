@@ -191,6 +191,7 @@ tr:hover td{background:#fafafa}
   <div class="tab" onclick="showPage('expenses',this)">💰 هزینه‌ها</div>
   <div class="tab" onclick="showPage('online',this)">🛒 سفارش آنلاین <span id="onlineBadge" style="display:none;font-size:10px;background:var(--red);color:white;border-radius:20px;padding:1px 6px"></span></div>
   <div class="tab" onclick="showPage('codes',this)">🎟️ کد تخفیف</div>
+  <div class="tab" onclick="showPage('aiknow',this)">🧠 دستیار</div>
 </div>
 
 <!-- POS PAGE -->
@@ -395,7 +396,7 @@ tr:hover td{background:#fafafa}
         <select id="nCat" class="fi">
           <option>لبنیات</option><option>نان و شیرینی</option><option>ترشیجات و مربا</option>
           <option>برنج و حبوبات</option><option>نوشیدنی</option><option>تنقلات</option>
-          <option>ادویه و چاشنی</option><option>کنسرو</option><option>صنایع دستی</option><option selected>عمومی</option>
+          <option>ادویه و چاشنی</option><option>کنسرو</option><option>صنایع دستی</option><option>زیورآلات دست‌ساز</option><option selected>عمومی</option>
         </select>
       </div>
     </div>
@@ -508,6 +509,39 @@ tr:hover td{background:#fafafa}
 </div>
 
 <!-- ONLINE ORDERS PAGE -->
+<div class="page" id="page-aiknow">
+  <div class="card">
+    <div class="card-title">🧠 دفترچهٔ دانش دستیار خرید
+      <button class="btn btn-blue btn-sm" onclick="reloadKnowledge()">🔄</button>
+    </div>
+    <div style="font-size:13px;color:#555;line-height:1.9;margin-bottom:10px">
+      هر چیزی که اینجا بنویسید، دستیار صوتی کاتالوگ یاد می‌گیرد و به مشتری‌ها می‌گوید: طرز تهیهٔ غذا، طرز استفادهٔ محصول، توضیح کالا، شرایط فروشگاه، پیشنهاد این هفته…
+      به فارسی بنویسید؛ دستیار برای مشتری انگلیسی یا مجارستانی خودش ترجمه می‌کند.
+      <br>«⭐ همیشه بداند» را فقط برای چیزهای کوتاه و مهم بزنید (مثل تخفیف این هفته). بقیه را دستیار هر وقت لازم شد پیدا می‌کند.
+    </div>
+    <div id="aiUsage" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div style="background:#f6f8f7;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-weight:700;margin-bottom:8px" id="kfTitle">➕ نوشتهٔ جدید</div>
+      <input id="kfName" class="fi" placeholder="عنوان — مثلاً: طرز تهیهٔ زرشک پلو" maxlength="120" style="margin-bottom:8px">
+      <input id="kfKeys" class="fi" placeholder="کلمه‌های کلیدی (اختیاری) — مثلاً: زرشک barberry borbolya" maxlength="300" style="margin-bottom:8px">
+      <textarea id="kfText" class="fi" rows="5" maxlength="4000" placeholder="متن کامل را اینجا بنویسید…" style="resize:vertical;line-height:1.8" oninput="document.getElementById('kfCount').textContent=this.value.length+' / 4000'"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <div style="display:flex;gap:14px;font-size:13px">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="kfAlways"> ⭐ همیشه بداند</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="kfActive" checked> فعال</label>
+          <span id="kfCount" style="color:#999;font-size:12px">0 / 4000</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-gray btn-sm" id="kfCancel" style="display:none" onclick="resetKnowledgeForm()">انصراف</button>
+          <button class="btn btn-green" id="kfSave" onclick="saveKnowledge()">💾 ذخیره</button>
+        </div>
+      </div>
+    </div>
+    <input id="kfSearch" class="fi" placeholder="🔍 جستجو در نوشته‌ها…" oninput="renderKnowledge()" style="margin-bottom:8px">
+    <div id="kfList"></div>
+  </div>
+</div>
+
 <div class="page" id="page-online">
   <div class="card">
     <div class="card-title">🛒 سفارش‌های آنلاین (کاتالوگ)
@@ -1422,7 +1456,7 @@ function filterInv(){
       <td>${stBadge}</td>
       <td>
         <select style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;max-width:110px" onchange="setCategory(${p.id},this.value)">
-          ${['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی','عمومی'].map(cat=>`<option value="${cat}" ${p.category===cat?'selected':''}>${cat}</option>`).join('')}
+          ${['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی','زیورآلات دست‌ساز','عمومی'].map(cat=>`<option value="${cat}" ${p.category===cat?'selected':''}>${cat}</option>`).join('')}
         </select>
       </td>
       <td><button class="btn btn-red btn-sm" onclick="delProduct(${p.id})">حذف</button></td>
@@ -3605,6 +3639,101 @@ showPage=function(name,el){ const r=_showPageV10.apply(this,arguments); if(name=
 function orderRemindTick(){ if(orderSoundOn()&&!onlineTabOpen()&&ordersWaiting()&&Date.now()-_orderLastRing>=ORDER_RING_EVERY) ringOrderBell(false); }
 setInterval(orderRemindTick,30000);
 updateOrderSoundBtn();
+</script>
+
+<script>
+// =====================================================================
+// ===== v11: the shop assistant's knowledge notebook ==================
+// =====================================================================
+let aiKnowledge=[], _kfEdit=null, _kfBusy=false;
+function kfErr(e){
+  const m=String((e&&(e.message||e.code))||e||'');
+  if(/assistant_knowledge|PGRST205|relation/.test(m)) return 'اول فایل aradi_assistant_3.sql را در Supabase اجرا کنید.';
+  if(/check constraint|violates/.test(m)) return 'عنوان باید حداقل ۲ حرف و متن حداکثر ۴۰۰۰ حرف باشد.';
+  return m||'خطا';
+}
+async function reloadKnowledge(){
+  const el=document.getElementById('kfList'); if(!el) return;
+  let r; try { r=await db.from('assistant_knowledge').select('*').order('updated_at',{ascending:false}); } catch(e){ r={error:e}; }
+  if(r.error){ el.innerHTML='<div class="no-data">'+escP(kfErr(r.error))+'</div>'; return; }
+  aiKnowledge=(r.data||[]).sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0));
+  renderKnowledge(); loadAiUsage();
+}
+function renderKnowledge(){
+  const el=document.getElementById('kfList'); if(!el) return;
+  const q=(document.getElementById('kfSearch')?.value||'').trim().toLowerCase();
+  const list=aiKnowledge.filter(k=>!q||(k.title+' '+k.keywords+' '+k.content).toLowerCase().includes(q));
+  const alwaysLen=aiKnowledge.filter(k=>k.always&&k.active).reduce((a,k)=>a+k.title.length+k.content.length,0);
+  let warn=alwaysLen>2000?`<div class="alert-box" style="margin-bottom:8px">⚠️ نوشته‌های «⭐ همیشه بداند» روی هم ${alwaysLen.toLocaleString()} حرف است؛ دستیار فقط حدود ۲٬۰۰۰ حرف اول را همیشه می‌داند. بعضی را کوتاه کنید یا تیک ⭐ را بردارید.</div>`:'';
+  if(!list.length){ el.innerHTML=warn+'<div class="no-data">'+(aiKnowledge.length?'چیزی پیدا نشد':'هنوز نوشته‌ای نیست')+'</div>'; return; }
+  el.innerHTML=warn+list.map((k,i)=>`<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;${k.active?'':'opacity:.55;background:#fafafa'}">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+      <div style="font-weight:700"><span class="row-no sm">${i+1}</span>${k.always?'⭐ ':''}${escP(k.title)}${k.active?'':' <span style="font-size:11px;color:#c0392b">(غیرفعال)</span>'}</div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-sm" style="background:#eef6f1;color:#0f5c36" onclick="editKnowledge(${k.id})">✏️</button>
+        <button class="btn btn-sm" style="background:#fff4e0;color:#8a5a00" title="${k.always?'برداشتن ⭐':'⭐ همیشه بداند'}" onclick="toggleKnowledge(${k.id},'always')">${k.always?'☆':'⭐'}</button>
+        <button class="btn btn-sm" style="background:#f3f3f3;color:#555" title="${k.active?'غیرفعال کن':'فعال کن'}" onclick="toggleKnowledge(${k.id},'active')">${k.active?'⏸':'▶️'}</button>
+        <button class="btn btn-sm" style="background:#ffebee;color:#e53935" onclick="deleteKnowledge(${k.id})">🗑️</button>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#444;line-height:1.8;margin-top:4px;white-space:pre-wrap">${escP(k.content.length>300?k.content.slice(0,300)+'…':k.content)}</div>
+    ${k.keywords?`<div style="font-size:11px;color:#888;margin-top:4px">🔑 ${escP(k.keywords)}</div>`:''}
+  </div>`).join('');
+}
+function resetKnowledgeForm(){
+  _kfEdit=null;
+  ['kfName','kfKeys','kfText'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('kfAlways').checked=false; document.getElementById('kfActive').checked=true;
+  document.getElementById('kfTitle').textContent='➕ نوشتهٔ جدید'; document.getElementById('kfCancel').style.display='none';
+  document.getElementById('kfCount').textContent='0 / 4000';
+}
+function editKnowledge(id){
+  const k=aiKnowledge.find(x=>x.id===id); if(!k) return;
+  _kfEdit=id;
+  document.getElementById('kfName').value=k.title; document.getElementById('kfKeys').value=k.keywords||''; document.getElementById('kfText').value=k.content;
+  document.getElementById('kfAlways').checked=!!k.always; document.getElementById('kfActive').checked=!!k.active;
+  document.getElementById('kfTitle').textContent='✏️ ویرایش: '+k.title; document.getElementById('kfCancel').style.display='';
+  document.getElementById('kfCount').textContent=k.content.length+' / 4000';
+  document.getElementById('kfName').scrollIntoView({behavior:'smooth',block:'center'}); document.getElementById('kfName').focus();
+}
+async function saveKnowledge(){
+  if(_kfBusy) return;
+  const row={title:document.getElementById('kfName').value.trim(), keywords:document.getElementById('kfKeys').value.trim(), content:document.getElementById('kfText').value.trim(),
+    always:document.getElementById('kfAlways').checked, active:document.getElementById('kfActive').checked};
+  if(row.title.length<2){ showToast('عنوان را بنویسید','err'); return; }
+  if(row.content.length<2){ showToast('متن را بنویسید','err'); return; }
+  _kfBusy=true;
+  try {
+    const r=_kfEdit?await db.from('assistant_knowledge').update(row).eq('id',_kfEdit):await db.from('assistant_knowledge').insert(row);
+    if(r.error){ alert('❌ ذخیره نشد: '+kfErr(r.error)); return; }
+    showToast(_kfEdit?'✅ نوشته به‌روز شد — دستیار حداکثر تا ۵ دقیقه دیگر از آن استفاده می‌کند':'✅ نوشته اضافه شد — دستیار حداکثر تا ۵ دقیقه دیگر از آن استفاده می‌کند','ok');
+    resetKnowledgeForm(); await reloadKnowledge();
+  } finally { _kfBusy=false; }
+}
+async function toggleKnowledge(id,field){
+  const k=aiKnowledge.find(x=>x.id===id); if(!k) return;
+  const r=await db.from('assistant_knowledge').update({[field]:!k[field]}).eq('id',id);
+  if(r.error){ alert('❌ '+kfErr(r.error)); return; }
+  await reloadKnowledge();
+}
+async function deleteKnowledge(id){
+  const k=aiKnowledge.find(x=>x.id===id); if(!k) return;
+  if(!confirm('نوشتهٔ «'+k.title+'» پاک شود؟')) return;
+  const r=await db.from('assistant_knowledge').delete().eq('id',id);
+  if(r.error){ alert('❌ '+kfErr(r.error)); return; }
+  if(_kfEdit===id) resetKnowledgeForm();
+  showToast('🗑️ پاک شد','ok'); await reloadKnowledge();
+}
+async function loadAiUsage(){
+  const el=document.getElementById('aiUsage'); if(!el) return;
+  let r; try { r=await db.rpc('assistant_report'); } catch(e){ r={error:e}; }
+  if(r.error||!r.data){ el.innerHTML=''; return; }
+  const d=r.data, box=(t,v,c)=>`<div style="flex:1;min-width:130px;background:${c};border-radius:10px;padding:8px 12px"><div style="font-size:11px;color:#666">${t}</div><div style="font-weight:800;font-size:17px;direction:ltr;text-align:right">${v}</div></div>`;
+  el.innerHTML=box('💬 پیام امروز',Number(d.messages_today||0).toLocaleString(),'#eef6f1')+box('📅 پیام این ماه',Number(d.messages_month||0).toLocaleString(),'#eef6f1')
+    +box('🔊 صدای طبیعی این ماه',Number(d.voice_chars_month||0).toLocaleString()+' / 500,000','#e3f0fd')+box('💶 هزینهٔ پولی این ماه','€ '+Number(d.paid_eur_month||0).toFixed(2)+' / 10','#fff4e0');
+}
+const _showPageV11=showPage;
+showPage=function(name,el){ const r=_showPageV11.apply(this,arguments); if(name==='aiknow') reloadKnowledge(); return r; };
 </script>
 </body>
 </html>
