@@ -683,7 +683,7 @@ const T = {
       rice:'🌾 برنج و حبوبات', spice:'🌿 ادویه و چاشنی', canned:'🥫 کنسرو',
       bread:'🍪 نان و شیرینی', snack:'🍿 تنقلات', frozen:'❄️ فریزری',
       dry_herbs:'🌱 سبزیجات خشک', dried:'🫘 خشکبار', sausage:'🌭 سوسیس و کالباس',
-      sauce:'🍅 رب و سس', herbal:'🌸 عرقیات', craft:'🎨 صنایع دستی'
+      sauce:'🍅 رب و سس', herbal:'🌸 عرقیات', craft:'🎨 صنایع دستی', jewelry:'💍 زیورآلات دست‌ساز'
     },
     inStock:'موجود', lowStock:'فقط {n} عدد', outOfStock:'ناموجود', expired:'تمام شده',
     addToCart:'افزودن به سبد', cartTitle:'🛒 سبد خرید', cartEmpty:'سبد خرید خالی است',
@@ -706,7 +706,7 @@ const T = {
       rice:'🌾 Rice & Legumes', spice:'🌿 Spices', canned:'🥫 Canned Food',
       bread:'🍪 Bread & Sweets', snack:'🍿 Snacks', frozen:'❄️ Frozen',
       dry_herbs:'🌱 Dried Herbs', dried:'🫘 Dried Fruits & Nuts', sausage:'🌭 Sausages',
-      sauce:'🍅 Sauces', herbal:'🌸 Herbal Waters', craft:'🎨 Handicrafts'
+      sauce:'🍅 Sauces', herbal:'🌸 Herbal Waters', craft:'🎨 Handicrafts', jewelry:'💍 Handmade Jewelry'
     },
     inStock:'In Stock', lowStock:'Only {n} left', outOfStock:'Out of Stock', expired:'Sold Out',
     addToCart:'Add to Cart', cartTitle:'🛒 Cart', cartEmpty:'Your cart is empty',
@@ -729,7 +729,7 @@ const T = {
       rice:'🌾 Rizs & Hüvelyesek', spice:'🌿 Fűszerek', canned:'🥫 Konzerv',
       bread:'🍪 Kenyér & Édességek', snack:'🍿 Rágcsálnivalók', frozen:'❄️ Fagyasztott',
       dry_herbs:'🌱 Szárított zöldségek', dried:'🫘 Aszalt gyümölcsök', sausage:'🌭 Kolbász',
-      sauce:'🍅 Szószok', herbal:'🌸 Gyógynövény vizek', craft:'🎨 Kézművesség'
+      sauce:'🍅 Szószok', herbal:'🌸 Gyógynövény vizek', craft:'🎨 Kézművesség', jewelry:'💍 Kézműves ékszerek'
     },
     inStock:'Elérhető', lowStock:'Csak {n} db', outOfStock:'Nem elérhető', expired:'Elfogyott',
     addToCart:'Kosárba', cartTitle:'🛒 Kosár', cartEmpty:'A kosár üres',
@@ -750,7 +750,7 @@ const T = {
 const CATS = [
   {id:'all'}, {id:'sale'}, {id:'dairy'}, {id:'drink'}, {id:'pickle'}, {id:'rice'},
   {id:'spice'}, {id:'canned'}, {id:'bread'}, {id:'snack'}, {id:'frozen'},
-  {id:'dry_herbs'}, {id:'dried'}, {id:'sausage'}, {id:'sauce'}, {id:'herbal'}, {id:'craft'}
+  {id:'dry_herbs'}, {id:'dried'}, {id:'sausage'}, {id:'sauce'}, {id:'herbal'}, {id:'craft'}, {id:'jewelry'}
 ];
 
 function categorize(name, dbCat){
@@ -761,7 +761,7 @@ function categorize(name, dbCat){
       'برنج و حبوبات':'rice','ادویه و چاشنی':'spice','کنسرو':'canned',
       'نان و شیرینی':'bread','تنقلات':'snack','فریزری':'frozen',
       'سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage',
-      'رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'
+      'رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft','زیورآلات دست‌ساز':'jewelry'
     };
     if(catMap[dbCat]) return [catMap[dbCat]];
   }
@@ -783,7 +783,8 @@ function categorize(name, dbCat){
   if(/سوسیس|هات داگ/.test(n)) cats.push('sausage');
   if(/رب|سرکه/.test(n)) cats.push('sauce');
   if(/گل گاوزبان|گل سرخ|عرق کاسنی/.test(n)) cats.push('herbal');
-  if(/صنایع|مسی|آینه|تخته نرد|شطرنج/.test(n)) cats.push('craft');
+  if(/زیورآلات|زیور آلات|گردنبند|دستبند|انگشتر|گوشواره|سینه ریز|سینه‌ریز|النگو|پابند|jewel|ékszer/.test(n)) cats.push('jewelry');
+  else if(/صنایع|مسی|آینه|تخته نرد|شطرنج/.test(n)) cats.push('craft');
   return cats.length ? cats : ['snack'];
   };
   return _categorize(name);
@@ -1180,7 +1181,7 @@ function saveAnalytics(){ localStorage.setItem('aradi_analytics', JSON.stringify
 function decorateProduct(p){
   const ov = catalogOverrides[p.id]||{};
   if(ov.extra_cats && ov.extra_cats.length){
-    const catMap2={'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle','برنج و حبوبات':'rice','ادویه و چاشنی':'spice','کنسرو':'canned','نان و شیرینی':'bread','تنقلات':'snack','فریزری':'frozen','سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage','رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'};
+    const catMap2={'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle','برنج و حبوبات':'rice','ادویه و چاشنی':'spice','کنسرو':'canned','نان و شیرینی':'bread','تنقلات':'snack','فریزری':'frozen','سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage','رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft','زیورآلات دست‌ساز':'jewelry'};
     p._cats = ov.extra_cats.map(c=>catMap2[c]||c).filter(Boolean);
   } else {
     p._cats = categorize(p.name, p.category);
@@ -1435,7 +1436,7 @@ function productCard(p, t){
 }
 
 function getEmoji(cats){
-  const map={dairy:'🥛',drink:'🥤',pickle:'🫙',rice:'🌾',spice:'🌿',canned:'🥫',bread:'🍪',snack:'🍿',frozen:'❄️',dry_herbs:'🌱',dried:'🫘',sausage:'🌭',sauce:'🍅',herbal:'🌸',craft:'🎨'};
+  const map={dairy:'🥛',drink:'🥤',pickle:'🫙',rice:'🌾',spice:'🌿',canned:'🥫',bread:'🍪',snack:'🍿',frozen:'❄️',dry_herbs:'🌱',dried:'🫘',sausage:'🌭',sauce:'🍅',herbal:'🌸',craft:'🎨',jewelry:'💍'};
   for(const c of (cats||[])) if(map[c]) return map[c];
   return '🛒';
 }
@@ -2150,7 +2151,7 @@ function filterAdminProducts(q){
     const displayPrice = ov.price!==undefined ? ov.price : p.price;
     const displayCat = ov.category || p.category || 'عمومی';
     const extraCats = ov.extra_cats || [];
-    const catOptions = ['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی','عمومی'];
+    const catOptions = ['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی','زیورآلات دست‌ساز','عمومی'];
     const ovName = ov.name || p.name;
     const ovNameEn = ov.name_en || '';
     const ovNameHu = ov.name_hu || '';
@@ -2167,7 +2168,7 @@ function filterAdminProducts(q){
       <div style="font-size:10px;color:#555;margin-top:4px">
         <div style="margin-bottom:3px;font-weight:600">دسته‌بندی‌ها (چندگانه):</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی'].map(cat=>{
+          ${['لبنیات','نوشیدنی','ترشیجات و مربا','برنج و حبوبات','ادویه و چاشنی','کنسرو','نان و شیرینی','تنقلات','فریزری','سبزیجات خشک','خشکبار','سوسیس و کالباس','رب و سس','عرقیات','صنایع دستی','زیورآلات دست‌ساز'].map(cat=>{
             const checked=(ov.extra_cats||[displayCat]).includes(cat);
             return `<label style="display:flex;align-items:center;gap:2px;cursor:pointer;white-space:nowrap">
               <input type="checkbox" ${checked?'checked':''} onchange="toggleProductCat(${p.id},'${cat}',this.checked)" style="width:12px;height:12px">
@@ -2184,7 +2185,7 @@ function toggleProductCat(id, cat, checked){
   if(!catalogOverrides[id].extra_cats){
     const p=products.find(x=>x.id===id);
     catalogOverrides[id].extra_cats = p ? (p._cats.map(c=>{
-      const catMap={dairy:'لبنیات',drink:'نوشیدنی',pickle:'ترشیجات و مربا',rice:'برنج و حبوبات',spice:'ادویه و چاشنی',canned:'کنسرو',bread:'نان و شیرینی',snack:'تنقلات',frozen:'فریزری',dry_herbs:'سبزیجات خشک',dried:'خشکبار',sausage:'سوسیس و کالباس',sauce:'رب و سس',herbal:'عرقیات',craft:'صنایع دستی'};
+      const catMap={dairy:'لبنیات',drink:'نوشیدنی',pickle:'ترشیجات و مربا',rice:'برنج و حبوبات',spice:'ادویه و چاشنی',canned:'کنسرو',bread:'نان و شیرینی',snack:'تنقلات',frozen:'فریزری',dry_herbs:'سبزیجات خشک',dried:'خشکبار',sausage:'سوسیس و کالباس',sauce:'رب و سس',herbal:'عرقیات',craft:'صنایع دستی',jewelry:'زیورآلات دست‌ساز'};
       return catMap[c]||c;
     })) : [];
   }
@@ -2202,7 +2203,7 @@ function toggleProductCat(id, cat, checked){
       'لبنیات':'dairy','نوشیدنی':'drink','ترشیجات و مربا':'pickle','برنج و حبوبات':'rice',
       'ادویه و چاشنی':'spice','کنسرو':'canned','نان و شیرینی':'bread','تنقلات':'snack',
       'فریزری':'frozen','سبزیجات خشک':'dry_herbs','خشکبار':'dried','سوسیس و کالباس':'sausage',
-      'رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft'
+      'رب و سس':'sauce','عرقیات':'herbal','صنایع دستی':'craft','زیورآلات دست‌ساز':'jewelry'
     };
     p._cats = catalogOverrides[id].extra_cats.map(c=>catMap2[c]||c).filter(Boolean);
     if(!p._cats.length) p._cats=['snack'];
@@ -3257,6 +3258,27 @@ document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo)
 #asstSend{background:#e8f5ee;color:#0f5c36;border:none;border-radius:12px;width:46px;height:46px;font-size:18px;cursor:pointer}
 #asstMic{background:#1a7a4a;color:#fff;border:none;border-radius:50%;width:58px;height:58px;font-size:26px;cursor:pointer;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:0 4px 12px rgba(15,92,54,.35)}
 #asstMic.rec{background:#e53935;animation:asPulse 1s infinite}
+#asstMic.spk{background:#1565c0}
+#asstMic.think{background:#7a8a80}
+.as-sum{align-self:stretch;background:#fff;border:2px solid #1a7a4a;border-radius:16px;padding:12px 14px;font-size:14px;line-height:1.8;color:#1d2b22}
+.as-sum h4{margin:0 0 6px;font-size:15px;color:#0f5c36}
+.as-sum .row{display:flex;justify-content:space-between;gap:10px}
+.as-sum .tot{font-weight:800;font-size:16px;color:#0f5c36;border-top:1px solid #e3ebe6;margin-top:6px;padding-top:6px}
+#asstWelcome{position:fixed;inset:0;z-index:1300;background:linear-gradient(160deg,#0f5c36,#1a7a4a 55%,#2e9d63);display:none;align-items:center;justify-content:center;padding:18px;font-family:inherit}
+#asstWelcome.open{display:flex}
+#asstWelcome .wb{background:#fff;border-radius:24px;max-width:460px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#asstWelcome .wl{font-size:44px;line-height:1}
+#asstWelcome .wt{font-size:15px;font-weight:700;color:#7a8a80;margin:10px 0 4px;letter-spacing:.2px}
+#asstWelcome .wq{font-size:20px;font-weight:800;color:#1d2b22;margin:6px 0 16px;line-height:1.5}
+#asstWelcome .langs{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+#asstWelcome .langs button{border:2px solid #d5e2da;background:#fff;border-radius:22px;padding:8px 16px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;color:#1d2b22}
+#asstWelcome .langs button.on{border-color:#1a7a4a;background:#e8f5ee;color:#0f5c36}
+#asstWelcome .opt{display:flex;align-items:center;gap:14px;width:100%;border:none;border-radius:18px;padding:16px 18px;margin-top:10px;font-family:inherit;cursor:pointer;text-align:start}
+#asstWelcome .opt .i{font-size:34px;flex-shrink:0}
+#asstWelcome .opt b{display:block;font-size:17px;line-height:1.4}
+#asstWelcome .opt small{display:block;font-size:13px;opacity:.85;line-height:1.5;margin-top:2px}
+#asstWelcome .opt.v{background:linear-gradient(135deg,#1a7a4a,#0f5c36);color:#fff;box-shadow:0 6px 18px rgba(15,92,54,.35)}
+#asstWelcome .opt.c{background:#f2f6f4;color:#1d2b22;border:1.5px solid #d5e2da}
 @keyframes asPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,57,53,.5)}50%{box-shadow:0 0 0 12px rgba(229,57,53,0)}}
 #asstHint{font-size:11px;color:#7a8a80;margin-top:5px;text-align:center;line-height:1.5}
 #asstPanel.mini{top:8px;bottom:auto;height:auto;max-height:34vh;left:50%;transform:translateX(-50%);width:560px}
@@ -3266,11 +3288,22 @@ document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo)
 #asstPanel.mini #asstHint{display:none}
 html.asst-mini .modal-ov{align-items:flex-end;padding-top:calc(var(--asst-h,0px) + 12px)}
 html.asst-mini .modal-box{max-height:calc(100vh - var(--asst-h,0px) - 16px)}
+html.asst-open #installBanner{display:none!important}
 .asst-hl{outline:4px solid #f5a623!important;outline-offset:3px;border-radius:8px;animation:asHl 1s ease-in-out infinite}
 @keyframes asHl{0%,100%{outline-color:#f5a623}50%{outline-color:#ffd77a}}
 @media(max-width:600px){#asstPanel:not(.mini){left:0;bottom:0;width:100vw;max-width:100vw;height:100%;border-radius:0}#asstPanel.mini{width:calc(100vw - 16px)}#asstBtn{bottom:16px;left:16px}}
 </style>
 
+<div id="asstWelcome" role="dialog" aria-label="welcome">
+  <div class="wb">
+    <div class="wl">🛍️</div>
+    <div class="wt">ARÁDI Market · خوش آمدید · Welcome · Üdvözöljük</div>
+    <div class="langs"><button id="awFa" onclick="asWelcomeLang('fa')">فارسی</button><button id="awEn" onclick="asWelcomeLang('en')">English</button><button id="awHu" onclick="asWelcomeLang('hu')">Magyar</button></div>
+    <div class="wq" id="awQ"></div>
+    <button class="opt v" id="awVoice" onclick="asWelcomeChoose('voice')"><span class="i">🎤</span><span><b id="awVoiceT"></b><small id="awVoiceS"></small></span></button>
+    <button class="opt c" id="awBrowse" onclick="asWelcomeChoose('browse')"><span class="i">🛒</span><span><b id="awBrowseT"></b><small id="awBrowseS"></small></span></button>
+  </div>
+</div>
 <button id="asstBtn" onclick="asstOpen()" aria-label="assistant"><span class="ic">🎤</span><span id="asstBtnTxt">دستیار خرید</span></button>
 <div id="asstPanel" role="dialog" aria-label="assistant">
   <div class="ah">
@@ -3298,7 +3331,7 @@ html.asst-mini .modal-box{max-height:calc(100vh - var(--asst-h,0px) - 16px)}
 // =====================================================================
 const ASSIST_MODE = 'beta';      // 'off' | 'beta' (only after ?assistant=1) | 'on'
 const ASSIST_URL = SUPABASE_URL + '/functions/v1/aradi-assistant';
-const AS = { msgs:[], ui:[], busy:false, speak:null, lastVoice:false, tts:null, audio:null, rec:null, recId:0, sid:'', noVoiceNoted:false, open:false };
+const AS = { turn:0, voices:new Set(), msgs:[], ui:[], busy:false, speak:null, lastVoice:false, tts:null, audio:null, rec:null, recId:0, sid:'', noVoiceNoted:false, open:false };
 const AS_MAX_STEPS = 8;
 function asT(fa,en,hu){ return L3(fa,en,hu); }
 function asStore(){ try { return window.sessionStorage; } catch(e){ return null; } }
@@ -3377,10 +3410,45 @@ function asCartInfo(){
   const lines=cart.map(i=>({id:i.id, name:getProductNameById(i.id)||i.name, quantity:i.qty, price:i.price, line_total:(i.price||0)*i.qty}));
   return {lines, items_count:cart.reduce((s,i)=>s+i.qty,0), items_total:lines.reduce((s,l)=>s+l.line_total,0)};
 }
-function asRedact(t){
-  return String(t).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g,'[email]').replace(/(\+?\d[\d\s\-()\/.]{6,}\d)/g,m=>(/^\d{4}[-.\/]\d{1,2}[-.\/]\d{1,2}$/.test(m.trim())||m.replace(/\D/g,'').length<9)?m:'[phone]')
-    .replace(/[\p{L}.'\- ]{2,40}?\s(utca|u\.|út|útja|tér|tere|körút|krt\.?|köz|sor|fasor|sétány|street|st\.|road|avenue|ave\.)\s*\d+[\w\/.\-]*/giu,' [address]')
-    .replace(/(خیابان|کوچه|پلاک|بلوار)\s*[^\s،,]+(\s+[^\s،,]+)?/g,'[address]');
+// Phone number said or typed → "+36…" (Hungary) or "+<country>…"; '' when it is not clearly a full number.
+function asPhone(v){
+  let d=String(v||'').replace(/[۰-۹]/g,x=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(x)).replace(/[٠-٩]/g,x=>'٠١٢٣٤٥٦٧٨٩'.indexOf(x));
+  const intl=/^\s*(\+|00)/.test(d); d=d.replace(/\D/g,''); if(/^\s*00/.test(String(v||''))&&d.startsWith('00')) d=d.slice(2);
+  const hu=n=>{ // n = digits after 36
+    if(/^(20|30|31|50|70)\d{7}$/.test(n)) return '+36'+n;      // mobile
+    if(/^1\d{7}$/.test(n)) return '+36'+n;                       // Budapest
+    if(/^(?!20|30|31|50|70)[2-9]\d\d{6}$/.test(n)) return '+36'+n;   // other areas (not a mobile prefix)
+    return '';
+  };
+  if(intl){ if(d.startsWith('36')) return hu(d.slice(2)); return (/^[1-9]\d{7,14}$/.test(d))?'+'+d:''; }
+  if(d.startsWith('06')) return hu(d.slice(2));
+  if(d.startsWith('36')&&d.length>=10&&d.length<=11) return hu(d.slice(2));
+  if(/^(20|30|31|50|70)\d{7}$/.test(d)) return '+36'+d;
+  return '';   // foreign number without country code, missing or extra digits
+}
+const AS_YES=new Set(['بله','بلی','اره','اری','باشه','حتما','ثبت','تایید','بفرست','بفرستید','درسته','اوکی','قبوله','yes','yeah','yep','ok','okay','sure','confirm','confirmed','igen','jo','rendben','mehet','persze','oke','okes']);
+const AS_NO=new Set(['نه','نخیر','نکن','نکنید','نفرست','نفرستید','نزن','نذار','نگذار','صبر','بعدا','هنوز','no','not','dont','don','nope','wait','stop','later','cancel','nem','ne','megse','varj','varjon','kesobb']);
+function asSaidYes(){
+  const last=[...AS.msgs].reverse().find(m=>m.role==='user'); if(!last) return false;
+  const raw=String(last.content||''); if(/\[id:\d+\]/.test(raw)) return false;
+  const w=asNorm(raw.replace(/CMD:.*$/s,'')).split(' ').filter(Boolean);
+  if(!w.length||w.length>10) return false;
+  if(w.some(x=>AS_NO.has(x)||/^نمی/.test(x)||/^ن(کن|فرست|زن|ذار|گذار|خواه|میخوام)/.test(x))) return false;
+  return w.some(x=>AS_YES.has(x))||/(place it|go ahead|درست است)/.test(raw.toLowerCase());
+}
+function asOrderFp(){ const st=AS_TOOLS.checkout_status(); return JSON.stringify([st.items,st.totals,st.delivery,st.date,st.slot,st.name,st.phone,st.address,st.district,st.payment]); }
+function asClubFp(){ return ['lyName','lyPhone','lyEmail','lyBirth'].map(id=>(document.getElementById(id)||{}).value||'').join('|'); }
+async function asCatchAlerts(fn){
+  const alerts=[]; const a=window.alert, c=window.confirm;
+  window.alert=m=>{ alerts.push(String(m)); }; window.confirm=()=>true;
+  try { await fn(); } catch(e){ alerts.push(String(e&&e.message||e)); } finally { window.alert=a; window.confirm=c; }
+  return {alerts};
+}
+function asPickupLeft(){
+  const bp=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Budapest',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
+  const wd=(bp.find(x=>x.type==='weekday')||{}).value, mins=(+((bp.find(x=>x.type==='hour')||{}).value||0))*60+(+((bp.find(x=>x.type==='minute')||{}).value||0));
+  const endMin=sl=>{ const h=[]; String(sl).replace(/(\d{1,2})(?::(\d{2}))?/g,(m,a,b)=>{ h.push((+a)*60+(+(b||0))); return m; }); return h.length>1?h[1]:(h[0]||0)+60; };
+  return wd==='Sun'?[]:pickupSlots.filter(sl=>endMin(sl)-30>mins);
 }
 function asModalOpen(id){ const m=document.getElementById(id); return !!(m&&m.classList.contains('open')); }
 function asCheckoutOpen(){ const f=document.getElementById('orderForm'); return asModalOpen('orderModal')&&!!f&&f.style.display!=='none'; }
@@ -3408,7 +3476,25 @@ function asSetCartLine(p, qty){
   renderCart(); updateCartBadge();
   if(asModalOpen('orderModal')){ if(!cart.length) closeOrderModal(); else updateOrderSummary(); }
 }
+// the shop owner's notes (written in the shop program), read at most every 5 minutes
+async function asNotes(){
+  if(AS._notes&&Date.now()-AS._notes.at<300000) return AS._notes.list;
+  let list=[];
+  try { const r=await db.from('assistant_knowledge').select('id,title,content,keywords').eq('active',true); if(!r.error&&Array.isArray(r.data)) list=r.data; } catch(e){}
+  AS._notes={at:Date.now(), list}; return list;
+}
 const AS_TOOLS = {
+  async search_knowledge(a){
+    const qt=asNorm(a.query).split(' ').filter(w=>w.length>=2);
+    const list=await asNotes();
+    if(!qt.length||!list.length) return {count:0, notes:[]};
+    const scored=list.map(n=>{
+      const head=asNorm(n.title+' '+(n.keywords||'')).split(' '), body=asNorm(n.content).split(' ');
+      let sc=0; for(const w of qt){ if(head.some(h=>h===w||(w.length>=3&&h.startsWith(w)))) sc+=2; else if(w.length>=4&&head.some(h=>h.length>=4&&asLev1(h,w))) sc+=1.5; else if(body.some(h=>h===w||(w.length>=3&&h.startsWith(w)))) sc+=1; }
+      return {n,sc};
+    }).filter(x=>x.sc>0).sort((x,y)=>y.sc-x.sc).slice(0,3);
+    return {count:scored.length, notes:scored.map(x=>({title:x.n.title, text:String(x.n.content).slice(0,900)})), hint:scored.length?undefined:'no note found; do not invent — offer the shop phone number'};
+  },
   search_products(a){
     const list=asSearch(String(a.query||''), a.limit);
     return {query:a.query, count:list.length, results:list.map(asProductInfo), hint:list.length?undefined:'nothing found — try other or shorter words, or the Persian name'};
@@ -3464,10 +3550,7 @@ const AS_TOOLS = {
       const ds=getAvailableDates().slice(0,8).map(d=>({date:d.dateStr, weekday:d.date.toLocaleDateString('en-GB',{weekday:'long'}), slots:d.slots}));
       return ds.length?{delivery:'delivery', days:ds}:{error:'NO_DELIVERY_DAYS', hint:'no delivery days are open now; offer pick-up or the phone number'};
     }
-    const now=new Date(), bp=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Budapest',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(now);
-    const wd=(bp.find(x=>x.type==='weekday')||{}).value, mins=(+((bp.find(x=>x.type==='hour')||{}).value||0))*60+(+((bp.find(x=>x.type==='minute')||{}).value||0));
-    const endMin=sl=>{ const h=[]; String(sl).replace(/(\d{1,2})(?::(\d{2}))?/g,(m,a,b)=>{ h.push((+a)*60+(+(b||0))); return m; }); return h.length>1?h[1]:(h[0]||0)+60; };
-    const left=wd==='Sun'?[]:pickupSlots.filter(sl=>endMin(sl)-30>mins);
+    const left=asPickupLeft();
     return left.length?{delivery:'pickup', day:'today', slots:left}:{delivery:'pickup', error:'NO_PICKUP_TIME_LEFT_TODAY', hint:'pick-up in this form is only for today and no time is left (or the shop is closed today); offer home delivery or calling the shop'};
   },
   select_time(a){
@@ -3478,12 +3561,12 @@ const AS_TOOLS = {
       const d=getAvailableDates().find(x=>x.dateStr===String(a.date||''));
       if(!d) return {error:'DAY_NOT_AVAILABLE', available:getAvailableDates().slice(0,8).map(x=>x.dateStr)};
       selectedDate=d.dateStr; selectedSlot=null; renderDatePicker(); slots=d.slots;
-    } else slots=pickupSlots;
+    } else slots=asPickupLeft();
     const hrs=v=>{ const out=[]; String(v||'').replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/(\d{1,2})(?:[:.]\d{2})?/g,(m,h)=>{ out.push(+h); return m; }); return out; };
     const want=hrs(a.slot);
     const s=slots.find(x=>x===a.slot)||slots.find(x=>dig(x)===dig(a.slot))
       ||(want.length?slots.find(x=>{ const h=hrs(x); return h[0]===want[0]&&(want.length<2||h[1]===want[1]); }):null);
-    if(!s){ buildTimeSlots(slots); return {error:'SLOT_NOT_AVAILABLE', slots}; }
+    if(!s){ buildTimeSlots(slots); return {error:'SLOT_NOT_AVAILABLE', slots, hint:slots.length?undefined:'no pick-up time is left today; offer home delivery'}; }
     selectedSlot=s; buildTimeSlots(slots);
     return {ok:true, date:selectedDelivery==='delivery'?selectedDate:'today', slot:s};
   },
@@ -3519,6 +3602,42 @@ const AS_TOOLS = {
     await applyReferral();
     return appliedReferral?{ok:true, code:appliedReferral.code, percent:appliedReferral.value}:{ok:false, message:(document.getElementById('referralResult')||{}).textContent||''};
   },
+  set_phone(a){
+    if(!asCheckoutOpen()) return {error:'CHECKOUT_NOT_OPEN'};
+    const ph=asPhone(a.phone); if(!ph) return {error:'PHONE_NOT_CLEAR', hint:'the number is incomplete or has a digit too many; for a non-Hungarian number ask for the country code (+43, +98 …); ask again slowly, or ask_customer_to_fill "phone" so they type it'};
+    const el=document.getElementById('oPhone'); el.value=ph;
+    if(memberInfo&&memberInfo.phone!==ph){ memberInfo=null; usePoints=false; renderPointsBox(); updateOrderSummary(); }
+    return {ok:true, phone:ph, read_back:ph.replace(/^\+36/,'+36 ').replace(/(\d{2})(\d{3})(\d{3,4})$/,'$1 $2 $3')};
+  },
+  set_address(a){
+    if(!asCheckoutOpen()) return {error:'CHECKOUT_NOT_OPEN'};
+    if(selectedDelivery!=='delivery') return {error:'PICKUP_HAS_NO_ADDRESS'};
+    const ad=String(a.address||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,160);
+    if(ad.length<5) return {error:'ADDRESS_TOO_SHORT'};
+    document.getElementById('oAddress').value=ad; return {ok:true, address:ad};
+  },
+  show_order_summary(){
+    if(!asCheckoutOpen()) return {error:'CHECKOUT_NOT_OPEN'};
+    const st=AS_TOOLS.checkout_status();
+    asUiAdd({t:'summary'});
+    AS.summary={fp:asOrderFp(), at:AS.userSeq||0};
+    return Object.assign({}, st, {next:'read this summary and ask whether to place the order; wait for the answer'});
+  },
+  async place_order(){
+    if(!asCheckoutOpen()) return {error:'CHECKOUT_NOT_OPEN'};
+    if(!asSaidYes()) return {error:'CUSTOMER_DID_NOT_SAY_YES', hint:'read the summary and ask "shall I place the order?"; call place_order only after the customer clearly says yes'};
+    const st=AS_TOOLS.checkout_status(); if(!st.ready) return {error:'NOT_READY', missing:st.missing};
+    if(!AS.summary||(AS.userSeq||0)<=AS.summary.at) return {error:'SHOW_SUMMARY_FIRST', hint:'call show_order_summary, read it, ask, and wait for the customer\'s answer'};
+    if(AS.summary.fp!==asOrderFp()) return {error:'ORDER_CHANGED_SHOW_SUMMARY_AGAIN', hint:'something changed after the summary; call show_order_summary again and ask again'};
+    AS.summary=null;
+    const r=await asCatchAlerts(()=>submitOrder());
+    const okEl=document.getElementById('orderSuccess');
+    if(okEl&&okEl.style.display==='block'){
+      const b=document.querySelector('#successMsg b');
+      return {ok:true, order_id:b?b.textContent:'', to_pay:st.totals.to_pay, telegram_link_offered:!!document.getElementById('tgOrderBtn'), note:'tell the customer the order number; they can close the window or keep shopping'};
+    }
+    return {error:'ORDER_NOT_SAVED', message:r.alerts.join(' ').slice(0,300)||'unknown'};
+  },
   ask_customer_to_fill(a){
     const map={phone:['orderModal','oPhone'], address:['orderModal','oAddress'], name:['orderModal','oName'], member_code:['orderModal','oMemberCode'],
       review_and_submit:['orderModal','submitOrderBtn'], club_phone:['loyaltyModal','lyPhone'], club_submit:['loyaltyModal','loyaltySubmitBtn']};
@@ -3528,31 +3647,53 @@ const AS_TOOLS = {
     if(a.field==='member_code'&&memberInfo) return {ok:true, already_checked:true, points:memberInfo.points};
     const el=document.getElementById(m[1]); if(!el) return {error:'NO_FIELD'};
     asHighlight(el); asMini();
-    return {ok:true, highlighted:a.field, tell_customer:a.field==='review_and_submit'?'check the order and press the green button yourself':'type it in the highlighted box'};
+    return {ok:true, highlighted:a.field, tell_customer:a.field==='review_and_submit'?'they can also press the green order button themselves':'type it in the highlighted box (they can always correct anything by hand)'};
   },
   checkout_status(){
     if(!asCheckoutOpen()) return {open:false, cart:asCartInfo()};
     const v=id=>((document.getElementById(id)||{}).value||'').trim();
     const t=getOrderTotals(), dl=selectedDelivery==='delivery';
     const st={open:true, delivery:selectedDelivery, district:dl?(v('oDistrict')||null):undefined, date:dl?selectedDate:'today', slot:selectedSlot, payment:selectedPayment,
-      name:v('oName')||null, phone_filled:v('oPhone').replace(/\D/g,'').length>=8, address_filled:dl?v('oAddress').length>=5:undefined,
+      name:v('oName')||null, phone:v('oPhone')||null, phone_filled:v('oPhone').replace(/\D/g,'').length>=8, address:dl?(v('oAddress')||null):undefined, address_filled:dl?v('oAddress').length>=5:undefined,
+      items:asCartInfo().lines.map(l=>l.name+' × '+l.quantity),
       discount_code:appliedReferral?appliedReferral.code:null, club_points_used:t.ptsDisc||0,
       totals:{items:t.sub, delivery:t.deliv, code_discount:t.refDisc, points_discount:t.ptsDisc, to_pay:t.total}};
-    const miss=[]; if(dl&&!st.district) miss.push('district'); if(dl&&!selectedDate) miss.push('day'); if(!selectedSlot) miss.push('time');
-    if(!st.name) miss.push('name'); if(!st.phone_filled) miss.push('phone (customer types it)'); if(dl&&!st.address_filled) miss.push('address (customer types it)');
+    const miss=[]; if(dl&&!st.district) miss.push('district'); if(dl&&!selectedDate) miss.push('day'); if(!selectedSlot) miss.push('time'); else if(!dl&&!asPickupLeft().includes(selectedSlot)) miss.push('time (the chosen pick-up time has passed)');
+    if(!st.name) miss.push('name'); if(!st.phone_filled) miss.push('phone'); if(dl&&!st.address_filled) miss.push('address');
     st.missing=miss; st.ready=!miss.length; return st;
   },
   continue_shopping(){ if(asModalOpen('orderModal')) closeOrderModal(); asFull(); return {ok:true, cart:asCartInfo()}; },
   open_club_signup(a){
     if(asModalOpen('orderModal')) closeOrderModal();
-    openLoyaltyModal('');
+    const fv=document.getElementById('loyaltyFormView');
+    if(!asModalOpen('loyaltyModal')||!fv||fv.style.display==='none') openLoyaltyModal('');   // keep what is already filled
     const filled=[];
     const name=String(a.name||'').replace(/[\d<>]/g,'').trim().slice(0,60); if(name.length>=2){ document.getElementById('lyName').value=name; filled.push('name'); }
     const em=String(a.email||'').trim().replace(/\s+/g,'').toLowerCase(); if(/^\S+@\S+\.\S+$/.test(em)){ document.getElementById('lyEmail').value=em; filled.push('email'); }
     const b=String(a.birthday||'').trim(); if(/^(19|20)\d\d-\d\d-\d\d$/.test(b)&&!isNaN(new Date(b))){ document.getElementById('lyBirth').value=b; filled.push('birthday'); }
+    const ph=a.phone?asPhone(a.phone):''; if(ph){ document.getElementById('lyPhone').value=ph; filled.push('phone'); }
     const lyl=document.getElementById('lyLang'); if(lyl) lyl.value=currentLang;
-    asHighlight(document.getElementById('lyPhone')); asMini();
-    return {ok:true, filled, still_needed:['phone (customer types it)'].concat(filled.includes('email')?[]:['email']).concat(filled.includes('birthday')?[]:['birthday']), then:'customer presses the join button'};
+    asMini();
+    const need=['name','phone','email','birthday'].filter(k=>!filled.includes(k)&&!(document.getElementById({name:'lyName',phone:'lyPhone',email:'lyEmail',birthday:'lyBirth'}[k]).value||'').trim());
+    AS.clubCheck=need.length?null:{fp:asClubFp(), at:AS.userSeq||0};
+    return {ok:true, filled, still_needed:need, details:need.length?undefined:{name:document.getElementById('lyName').value, phone:document.getElementById('lyPhone').value, email:document.getElementById('lyEmail').value, birthday:document.getElementById('lyBirth').value},
+      then:need.length?'ask for the missing details (call open_club_signup again with them)':'read these details back, ask "Shall I sign you up?" and wait for the answer; then submit_club_signup'};
+  },
+  async submit_club_signup(){
+    if(!asModalOpen('loyaltyModal')||document.getElementById('loyaltyFormView').style.display==='none') return {error:'CLUB_FORM_NOT_OPEN'};
+    if(!asSaidYes()) return {error:'CUSTOMER_DID_NOT_SAY_YES'};
+    const v=id=>(document.getElementById(id).value||'').trim();
+    const miss=[['name','lyName'],['phone','lyPhone'],['email','lyEmail'],['birthday','lyBirth']].filter(x=>!v(x[1])).map(x=>x[0]);
+    if(miss.length) return {error:'MISSING', missing:miss};
+    if(!AS.clubCheck||(AS.userSeq||0)<=AS.clubCheck.at) return {error:'READ_DETAILS_FIRST', hint:'call open_club_signup (it returns the details), read them back, ask, and wait for the answer'};
+    if(AS.clubCheck.fp!==asClubFp()) return {error:'DETAILS_CHANGED_READ_AGAIN'};
+    AS.clubCheck=null;
+    const r=await asCatchAlerts(()=>joinLoyaltyClub());
+    if(document.getElementById('loyaltySuccessView').style.display==='block'){
+      const mc=document.getElementById('loyaltyMemberCode');
+      return {ok:true, title:document.getElementById('loyaltySuccessTitle').textContent, member_code_on_screen:!!(mc&&mc.style.display!=='none'), note:'congratulate; the member code is shown on screen (and in Telegram if linked)'};
+    }
+    return {error:'NOT_JOINED', message:r.alerts.join(' ').slice(0,300)};
   },
   show_category(a){
     const ok=CATS.some(c=>c.id===a.category); if(!ok) return {error:'BAD_CATEGORY'};
@@ -3563,7 +3704,7 @@ const AS_TOOLS = {
 };
 async function asRunTool(name,args){
   const f=AS_TOOLS[name]; if(!f) return {error:'UNKNOWN_ACTION'};
-  try { const r=await f(args||{}); return r===undefined?{ok:true}:r; } catch(e){ console.error('assistant tool',name,e); return {error:'ACTION_FAILED', detail:String(e&&e.message||e).slice(0,200)}; }
+  try { const r=await Promise.race([f(args||{}), new Promise(res=>setTimeout(()=>res({error:'ACTION_TIMEOUT', hint:'the internet is slow; ask the customer to try again or call the shop'}),20000))]); return r===undefined?{ok:true}:r; } catch(e){ console.error('assistant tool',name,e); return {error:'ACTION_FAILED', detail:String(e&&e.message||e).slice(0,200)}; }
 }
 
 // ---------- chat area ----------
@@ -3571,6 +3712,22 @@ function asEl(tag,cls,txt){ const e=document.createElement(tag); if(cls) e.class
 function asRenderItem(it){
   if(it.t==='user'||it.t==='bot'){ const b=asEl('div','as-b '+it.t,it.text); b.dir='auto'; return b; }
   if(it.t==='note'){ const b=asEl('div','as-b note',it.text); if(it.retry){ const r=asEl('button','',asT('دوباره امتحان کن','Try again','Újra')); r.onclick=()=>{ b.remove(); asRun(); }; b.appendChild(document.createElement('br')); b.appendChild(r); } return b; }
+  if(it.t==='summary'){
+    const w=asEl('div','as-sum'); const st=AS_TOOLS.checkout_status(); if(!st.open) return w;
+    const h=asEl('h4','',asT('🧾 خلاصهٔ سفارش','🧾 Order summary','🧾 Rendelés összesítése')); w.appendChild(h);
+    const row=(k,v)=>{ if(v===null||v===undefined||v==='') return; const r=asEl('div','row'); r.appendChild(asEl('span','',k)); const b=asEl('span','',String(v)); b.dir='auto'; r.appendChild(b); w.appendChild(r); };
+    asCartInfo().lines.forEach(l=>row(l.name+' × '+l.quantity, l.line_total.toLocaleString()+' Ft'));
+    row(asT('دریافت','Receiving','Átvétel'), st.delivery==='delivery'?asT('ارسال به منزل','Home delivery','Házhozszállítás'):asT('تحویل از فروشگاه','Pick-up at the shop','Átvétel az üzletben'));
+    row(asT('زمان','Time','Időpont'), (st.date||'')+' '+(st.slot||''));
+    row(asT('نام','Name','Név'), st.name); row(asT('تلفن','Phone','Telefon'), st.phone);
+    if(st.delivery==='delivery') row(asT('آدرس','Address','Cím'), (st.address||'')+(st.district?' · District '+st.district:''));
+    row(asT('پرداخت','Payment','Fizetés'), {cash:asT('نقدی','Cash','Készpénz'),revolut:'Revolut',wise:'Wise'}[st.payment]);
+    if(st.totals.delivery) row(asT('هزینهٔ ارسال','Delivery','Szállítás'), st.totals.delivery.toLocaleString()+' Ft');
+    if(st.totals.code_discount) row(asT('کد تخفیف','Discount code','Kedvezménykód'), '− '+st.totals.code_discount.toLocaleString()+' Ft');
+    if(st.totals.points_discount) row(asT('امتیاز','Points','Pontok'), '− '+st.totals.points_discount.toLocaleString()+' Ft');
+    const t=asEl('div','row tot'); t.appendChild(asEl('span','',asT('مبلغ قابل پرداخت','To pay','Fizetendő'))); t.appendChild(asEl('span','',st.totals.to_pay.toLocaleString()+' Ft')); w.appendChild(t);
+    return w;
+  }
   if(it.t==='sugg'){ const w=asEl('div','as-sugg'); it.items.forEach(s=>{ const x=asEl('button','',s); x.onclick=()=>asSend(s); w.appendChild(x); }); return w; }
   if(it.t==='cards'){
     const w=asEl('div','as-cards'); if(it.q){ const q=asEl('div','q',it.q); q.dir='auto'; w.appendChild(q); }
@@ -3595,7 +3752,7 @@ function asRenderAll(){
   asMarkLast(); asScroll();
 }
 function asUiAdd(it){
-  AS.ui.push(it); if(AS.ui.length>120) AS.ui=AS.ui.slice(-100);
+  AS.ui.push(it); AS.uiN=(AS.uiN||0)+1; if(AS.ui.length>120) AS.ui=AS.ui.slice(-100);
   const box=document.getElementById('asstMsgs'); if(!box) return;
   box.insertBefore(asRenderItem(it),document.getElementById('asstTyping'));
   asMarkLast(); asScroll(); asSave();
@@ -3604,51 +3761,74 @@ function asMarkLast(){
   const box=document.getElementById('asstMsgs'); if(!box) return;
   const kids=[...box.children].filter(c=>c.id!=='asstTyping');
   kids.forEach(c=>c.classList.remove('as-last'));
-  const last=[...kids].reverse().find(c=>c.classList.contains('bot')||c.classList.contains('as-cards')||c.classList.contains('note')) || kids[kids.length-1];
+  const last=[...kids].reverse().find(c=>c.classList.contains('bot')||c.classList.contains('as-cards')||c.classList.contains('as-sum')||c.classList.contains('note')) || kids[kids.length-1];
   if(last) last.classList.add('as-last');
 }
 function asScroll(){ const box=document.getElementById('asstMsgs'); if(box) box.scrollTop=box.scrollHeight; }
 function asTyping(on){ const sb=document.getElementById('asstSend'); if(sb) sb.style.opacity=on?'.4':''; const t=document.getElementById('asstTyping'); if(t){ t.style.display=on?'inline-block':'none'; if(on){ t.parentNode.appendChild(t); asScroll(); } } }
+function asGreetText(){
+  return asT('سلام، به آرادی مارکت خوش آمدید! من دستیار خرید شما هستم. بگویید چه چیزی لازم دارید تا برایتان پیدا کنم و در سبد بگذارم.',
+    'Hello and welcome to ARÁDI Market! I am your shopping assistant. Tell me what you need and I will find it and put it in your cart.',
+    'Üdvözöljük az ARÁDI Marketben! Én vagyok a vásárlási asszisztense. Mondja meg, mire van szüksége, megkeresem és a kosárba teszem.');
+}
 function asGreeting(){
-  asUiAdd({t:'bot', text:asT('سلام! من دستیار خرید آرادی هستم. بگویید چه می‌خواهید تا برایتان پیدا کنم و در سبد بگذارم. می‌توانید دکمهٔ میکروفون را نگه دارید و صحبت کنید.',
-    'Hi! I am the ARÁDI shopping assistant. Tell me what you need and I will find it and put it in your cart. You can hold the microphone button and speak.',
-    'Szia! Az ARÁDI vásárlási asszisztense vagyok. Mondja meg, mire van szüksége, megkeresem és a kosárba teszem. Tartsa nyomva a mikrofon gombot, és beszéljen.')});
+  asUiAdd({t:'bot', text:asGreetText()});
   asUiAdd({t:'sugg', items:[asT('زعفران می‌خواهم','I need saffron','Sáfrányt szeretnék'), asT('ساعت کاری فروشگاه؟','When are you open?','Mikor vannak nyitva?'), asT('عضو باشگاه مشتریان شوم','I want to join the club','Csatlakoznék a klubhoz')]});
 }
 
 // ---------- panel ----------
+function asPhaseText(){
+  return {listening:asT('🎙️ گوش می‌دهم… صحبت کنید','🎙️ Listening… please speak','🎙️ Hallgatom… beszéljen'),
+    thinking:asT('💭 یک لحظه…','💭 One moment…','💭 Egy pillanat…'),
+    speaking:asT('🔊 در حال صحبت… (برای قطع، میکروفون را بزنید)','🔊 Speaking… (tap the mic to interrupt)','🔊 Beszélek… (a mikrofonnal megszakíthatja)'),
+    idle:AS_SR?asT('برای صحبت روی میکروفون بزنید','Tap the microphone to talk','Koppintson a mikrofonra a beszédhez'):asT('بنویسید؛ این مرورگر صدا را نمی‌شنود','Please type; this browser cannot listen','Kérjük, írjon; ez a böngésző nem hall')}[AS.phase||'idle'];
+}
+function asSetPhase(ph){
+  AS.phase=ph;
+  const mic=document.getElementById('asstMic');
+  if(mic){ mic.classList.toggle('rec',ph==='listening'); mic.classList.toggle('spk',ph==='speaking'); mic.classList.toggle('think',ph==='thinking'); mic.textContent=ph==='listening'?'⏸':ph==='speaking'?'🔊':'🎤'; }
+  const sub=document.getElementById('asstSub'); if(sub) sub.textContent=asPhaseText();
+}
 function asTexts(){
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
   set('asstBtnTxt',asT('دستیار خرید','Assistant','Asszisztens'));
   set('asstTitle',asT('دستیار خرید','Shop assistant','Asszisztens'));
-  set('asstSub',asT('با صدا یا نوشتن کمکتان می‌کنم','I help by voice or text','Hanggal vagy írásban segítek'));
-  const inp=document.getElementById('asstInput'); if(inp) inp.placeholder=asT('بنویسید یا میکروفون را نگه دارید…','Type, or hold the microphone…','Írjon, vagy tartsa nyomva a mikrofont…');
-  set('asstHint',(AS_SR?asT('🎤 برای صحبت، دکمهٔ میکروفون را نگه دارید و بعد رها کنید. ','🎤 Hold the microphone button while you speak, then let go. ','🎤 Beszéd közben tartsa nyomva a mikrofont, majd engedje el. '):'')
-    +asT('شماره تلفن و آدرس را اینجا ننویسید؛ در فرم سفارش وارد می‌شوند.','Do not type your phone number or address here — they go into the order form.','Telefonszámát és címét ne ide írja — azok a rendelési űrlapba kerülnek.'));
+  const inp=document.getElementById('asstInput'); if(inp) inp.placeholder=asT('اینجا هم می‌توانید بنویسید…','You can also type here…','Ide is írhat…');
+  set('asstHint',(AS_SR?asT('🎙️ دستیار خودش گوش می‌دهد؛ برای مکث یا قطع صحبتش روی میکروفون بزنید. ','🎙️ The assistant listens by itself; tap the microphone to pause or interrupt. ','🎙️ Az asszisztens magától hallgat; a mikrofonnal szüneteltethet vagy megszakíthat. '):'')
+    +asT('هر چیزی را که درست نشنید، می‌توانید خودتان بنویسید یا در فرم درست کنید.','Anything it did not hear right, you can type yourself or correct in the form.','Amit nem hallott jól, beírhatja vagy javíthatja az űrlapon.'));
   ['Fa','En','Hu'].forEach(l=>{ const b=document.getElementById('asstLang'+l); if(b) b.classList.toggle('on',currentLang===l.toLowerCase()); });
   const sp=document.getElementById('asstSpk'); if(sp){ sp.textContent=asSpeakOn()?'🔊':'🔇'; sp.classList.toggle('on',asSpeakOn()); }
   const mic=document.getElementById('asstMic'); if(mic) mic.style.display=AS_SR?'':'none';
+  asSetPhase(AS.phase||'idle');
 }
-function asstOpen(){
+function asstOpen(opts){
+  opts=opts||{};
   AS.open=true; const p=document.getElementById('asstPanel'); p.classList.add('open'); document.getElementById('asstBtn').style.display='none';
-  if(!AS.ui.length) asGreeting(); else asRenderAll();
+  document.documentElement.classList.add('asst-open');
+  const greet=!AS.ui.length;
+  if(greet) asGreeting(); else asRenderAll();
   asTexts(); asSyncMini();
-  if(!AS_SR||!('ontouchstart' in window)) setTimeout(()=>{ try{ document.getElementById('asstInput').focus(); }catch(e){} },100);
+  if(opts.live&&AS_SR){ AS.live=true; AS.lastVoice=true; asTexts(); }
+  if(greet&&opts.live){ const tk=AS.turn; asSpeakAndWait(asGreetText()).then(()=>{ if(tk===AS.turn) asAfterTurn(); }); }
+  else if(opts.live) asAfterTurn();
+  else if(!('ontouchstart' in window)) setTimeout(()=>{ try{ document.getElementById('asstInput').focus(); }catch(e){} },100);
 }
 function asstClose(){
-  AS.open=false; asStopSpeaking(); asStopRec(true);
+  AS.open=false; AS.live=false; asCancelTurn(); asStopSpeaking(); asStopRec(true); asSetPhase('idle');
+  document.documentElement.classList.remove('asst-open');
   document.getElementById('asstPanel').classList.remove('open','mini'); asMiniSize();
   document.getElementById('asstBtn').style.display='flex';
 }
 function asstReset(){
-  if(AS.busy) return;
-  asStopSpeaking(); asStopRec(true);
+  asCancelTurn(); asStopSpeaking(); asStopRec(true);
+  AS.summary=null; AS.clubCheck=null;
   AS.msgs=[]; AS.ui=[]; AS.noVoiceNoted=false; AS._checkoutStarted=false;
   AS.sid='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   asRenderAll(); asGreeting(); asSave();
+  if(AS.live){ const tk=AS.turn; asSpeakAndWait(asGreetText()).then(()=>{ if(tk===AS.turn) asAfterTurn(); }); } else asSetPhase('idle');
 }
 function asstLang(l){ if(l!==currentLang) setLang(l); asTexts(); }
-function asSpeakOn(){ return AS.speak===null?AS.lastVoice:AS.speak; }
+function asSpeakOn(){ return AS.speak===null?(AS.lastVoice||AS.live):AS.speak; }
 function asstToggleSpeak(){ AS.speak=!asSpeakOn(); if(!AS.speak) asStopSpeaking(); asTexts(); asSave(); }
 function asMiniSize(){ const p=document.getElementById('asstPanel'); const on=!!(p&&AS.open&&p.classList.contains('mini'));
   document.documentElement.classList.toggle('asst-mini',on); if(on) document.documentElement.style.setProperty('--asst-h',p.getBoundingClientRect().height+'px'); }
@@ -3681,38 +3861,57 @@ function asErrorText(e){
   return asT('دستیار الان شلوغ است. چند لحظه بعد دوباره امتحان کنید یا از کاتالوگ خرید کنید.','The assistant is busy right now. Please try again in a moment or use the catalog.','Az asszisztens most foglalt. Próbálja újra egy kicsit később, vagy használja a katalógust.');
 }
 async function asRun(){
-  if(AS.busy) return; AS.busy=true; asTyping(true);
+  if(AS.busy) return; const tk=++AS.turn; AS.busy=true; asTyping(true); asSetPhase('thinking'); AS.speakWait=Promise.resolve();
+  const gone=()=>tk!==AS.turn||!AS.open;
   try {
     for(let step=0; step<AS_MAX_STEPS; step++){
-      const r=await asCall();
-      if(r.error){ asUiAdd({t:'note', text:asErrorText(r), retry:r.error!=='LIMIT'}); return; }
+      let r=await asCall(); if(gone()) return;
+      for(let k=0; r.error==='BUSY'&&k<2; k++){ await new Promise(res=>setTimeout(res,4000*(k+1))); if(gone()) return; r=await asCall(); if(gone()) return; }
+      if(r.error){ asUiAdd({t:'note', text:asErrorText(r), retry:r.error!=='LIMIT'}); if(AS.live) AS.speakWait=asSpeakAndWait(asErrorText(r)); return; }
       const m=r.message; const calls=Array.isArray(m.tool_calls)?m.tool_calls:[];
       AS.msgs.push(calls.length?{role:'assistant', content:m.content||null, tool_calls:calls}:{role:'assistant', content:String(m.content||'')});
-      if(m.content&&String(m.content).trim()){ asUiAdd({t:'bot', text:String(m.content).trim()}); asSpeak(String(m.content)); }
+      if(m.content&&String(m.content).trim()){ asUiAdd({t:'bot', text:String(m.content).trim()}); const prev=AS.speakWait, txt=String(m.content); AS.speakWait=prev.then(()=>asSpeakAndWait(txt)); }
       if(!calls.length) return;
       for(const c of calls){
         let args={}; try { args=JSON.parse(c.function&&c.function.arguments||'{}')||{}; } catch(e){ args=null; }
         const res=args===null?{error:'BAD_ARGUMENTS'}:await asRunTool(c.function&&c.function.name, args);
         AS.msgs.push({role:'tool', tool_call_id:c.id, content:JSON.stringify(res).slice(0,3500)});
+        if(tk!==AS.turn) return;
       }
       asSave();
     }
     asUiAdd({t:'note', text:asT('ببخشید، کمی گیج شدم. لطفاً دوباره و ساده‌تر بگویید.','Sorry, I got a bit lost. Please say it again, more simply.','Elnézést, kicsit belezavarodtam. Kérem, mondja újra egyszerűbben.')});
-  } finally { AS.busy=false; asTyping(false); asSave(); }
+  } finally { if(tk===AS.turn){ AS.busy=false; asTyping(false); asSave(); asAfterTurnSoon(); } }
 }
+// after an answer: wait until it has been spoken, then listen again (hands-free)
+function asAfterTurnSoon(){ const tk=AS.turn, w=AS.speakWait||Promise.resolve(); w.then(()=>{ if(tk===AS.turn) asAfterTurn(); }); }
+function asAfterTurn(){
+  if(AS.busy) return;
+  if(asIsSpeaking()){ const tk=AS.turn; setTimeout(()=>{ if(tk===AS.turn) asAfterTurn(); },300); return; }
+  if(AS.live&&AS.open&&!document.hidden) asListen(); else asSetPhase('idle');
+}
+function asCancelTurn(){ AS.turn++; AS.busy=false; asTyping(false); }
 async function asSend(text,opts){
   opts=opts||{}; text=String(text||'').trim(); if(!text) return;
+  if(!opts.voice) asStopRec(true);
   if(AS.busy){ const i=document.getElementById('asstInput'); if(i&&!opts.display&&!i.value) i.value=text; showFlash(asT('یک لحظه صبر کنید…','One moment please…','Egy pillanat…'),'warn'); return; }
   asStopSpeaking();
-  AS.lastVoice=!!opts.voice; asTexts();
+  AS.lastVoice=!!opts.voice||AS.live; asTexts();
   asUiAdd({t:'user', text:opts.display||text});
-  AS.msgs.push({role:'user', content:asRedact(text).slice(0,1500)});
+  AS.msgs.push({role:'user', content:text.slice(0,1500)}); AS.userSeq=(AS.userSeq||0)+1;
   if(AS.msgs.length>80) AS.msgs=AS.msgs.slice(-70);
   await asRun();
 }
 function asstSubmit(){ const i=document.getElementById('asstInput'); const v=i.value; if(!v.trim()) return; if(AS.busy){ showFlash(asT('یک لحظه صبر کنید…','One moment please…','Egy pillanat…'),'warn'); return; } i.value=''; asSend(v); }
 
 // ---------- speaking (natural voice from the server, else the phone's own voice) ----------
+// true while an answer is being (or about to be) spoken — the microphone must stay off then
+function asIsSpeaking(){
+  if(AS.voices.size) return true;
+  try { if(AS.audio&&!AS.audio.paused&&!AS.audio.ended) return true; } catch(e){}
+  try { if(window.speechSynthesis&&speechSynthesis.speaking) return true; } catch(e){}
+  return false;
+}
 function asStopSpeaking(){
   try { if(AS.audio){ AS.audio.pause(); AS.audio.removeAttribute('src'); AS.audio=null; } } catch(e){}
   try { if(window.speechSynthesis) speechSynthesis.cancel(); } catch(e){}
@@ -3734,18 +3933,28 @@ function asUnlockAudio(){
   try { if(!AS.player) AS.player=new Audio(); AS.player.src=asSilentUrl(); const pr=AS.player.play(); if(pr&&pr.catch) pr.catch(()=>{}); } catch(e){}
   try { if(window.speechSynthesis&&typeof SpeechSynthesisUtterance!=='undefined'){ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); } } catch(e){}
 }
-async function asSpeak(text){
+async function asSpeak(text){ return asSpeakAndWait(text); }
+async function asSpeakAndWait(text){
+  if(!AS.open) return;
+  const tok={}; AS.voices.add(tok);
+  try { await asSpeakInner(text); } finally { AS.voices.delete(tok); }
+}
+async function asSpeakInner(text){
   if(!asSpeakOn()) return;
   const clean=asCleanForVoice(text); if(!clean) return;
+  asStopRec(true);
   const seq=AS.speakSeq=(AS.speakSeq||0)+1, lang=currentLang;
+  const done=()=>{ if(seq===AS.speakSeq&&AS.phase==='speaking') asSetPhase(AS.busy?'thinking':'idle'); };
   if(AS.tts!==false){
     try {
       const r=await fetch(ASSIST_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY},body:JSON.stringify({action:'tts',lang,sid:AS.sid,text:clean.slice(0,600)})});
       if(seq!==AS.speakSeq) return;
       if(r.ok&&/audio/.test(r.headers.get('content-type')||'')){
         const url=URL.createObjectURL(await r.blob()); if(seq!==AS.speakSeq) return;
-        const a=AS.player||(AS.player=new Audio()); a.onended=()=>URL.revokeObjectURL(url); a.src=url; AS.audio=a;
-        try { await a.play(); AS.tts=true; return; } catch(e){ AS.audio=null; /* sound blocked → phone voice */ }
+        const a=AS.player||(AS.player=new Audio()); a.src=url; AS.audio=a;
+        const ended=new Promise(res=>{ const fin=()=>{ a.onended=a.onpause=a.onerror=null; URL.revokeObjectURL(url); res(); }; a.onended=fin; a.onpause=fin; a.onerror=fin; });
+        if(!AS.open) return;
+        try { asStopRec(true); asSetPhase('speaking'); await a.play(); AS.tts=true; await Promise.race([ended,new Promise(r=>setTimeout(r,60000))]); done(); return; } catch(e){ AS.audio=null; done(); /* sound blocked → phone voice */ }
       } else if(r.status===404) AS.tts=false;
     } catch(e){}
   }
@@ -3758,43 +3967,105 @@ async function asSpeak(text){
     return;
   }
   const u=new SpeechSynthesisUtterance(clean); u.lang={fa:'fa-IR',en:'en-US',hu:'hu-HU'}[lang]; if(v) u.voice=v; u.rate=0.95;
-  try { speechSynthesis.cancel(); speechSynthesis.speak(u); } catch(e){}
+  const ended=new Promise(res=>{ u.onend=res; u.onerror=res; });
+  if(!AS.open) return;
+  try { asStopRec(true); speechSynthesis.cancel(); asSetPhase('speaking'); speechSynthesis.speak(u); } catch(e){ done(); return; }
+  // some browsers never fire "end": after a time that fits the text, keep waiting while the voice is still speaking
+  await Promise.race([ended,new Promise(r=>setTimeout(r,Math.min(45000,1500+clean.length*90)))]);
+  for(let i=0;i<60&&seq===AS.speakSeq;i++){ let sp=false; try{ sp=speechSynthesis.speaking; }catch(e){} if(!sp) break; await new Promise(r=>setTimeout(r,500)); }
+  done();
 }
 
-// ---------- listening (hold the microphone button) ----------
+// ---------- listening: hands-free conversation ----------
 const AS_SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
-function asStopRec(silent){ const r=AS.rec; if(!r) return; AS.rec=null; AS.recSilent=!!silent; try { r.stop(); } catch(e){} const m=document.getElementById('asstMic'); if(m) m.classList.remove('rec'); }
-function asMicDown(e){
-  if(e){ e.preventDefault(); }
-  if(!AS_SR||AS.busy) return;
-  asStopSpeaking(); if(AS.rec) asStopRec(true);
-  const id=++AS.recId, inp=document.getElementById('asstInput'), mic=document.getElementById('asstMic');
-  let finalT='', interimT='', started=Date.now(), sent=false;
-  const rec=new AS_SR(); AS.rec=rec; AS.recSilent=false;
+function asStopRec(silent){ const r=AS.rec; AS.recId++; if(!r) return; AS.rec=null; try { r.abort?r.abort():r.stop(); } catch(e){ try{ r.stop(); }catch(x){} } if(AS.phase==='listening') asSetPhase('idle'); }
+// Starts listening; the turn ends by itself after a short silence and is sent to the assistant.
+function asListen(){
+  if(!AS_SR||AS.busy||!AS.open||asIsSpeaking()) return;
+  if(AS.rec) asStopRec(true);
+  const id=++AS.recId, inp=document.getElementById('asstInput');
+  let finalT='', interimT='', heard=false, sent=false, timer=null;
+  const rec=new AS_SR(); AS.rec=rec;
   rec.lang={fa:'fa-IR',en:'en-US',hu:'hu-HU'}[currentLang]; rec.interimResults=true; rec.continuous=true; rec.maxAlternatives=1;
-  rec.onresult=ev=>{ if(id!==AS.recId) return; interimT=''; for(let i=ev.resultIndex;i<ev.results.length;i++){ const t=ev.results[i][0].transcript; if(ev.results[i].isFinal) finalT+=(finalT?' ':'')+t.trim(); else interimT+=t; } inp.value=(finalT+' '+interimT).trim(); };
+  const finish=()=>{ if(sent||id!==AS.recId) return; sent=true; clearTimeout(timer); const txt=(finalT+' '+interimT).trim(); inp.value=''; AS.rec=null; AS.recId++; try{ rec.abort?rec.abort():rec.stop(); }catch(e){} AS.noSpeech=0; if(txt) asSend(txt,{voice:true}); else asAfterTurn(); };
+  const android=/Android/i.test(navigator.userAgent||'');
+  rec.onresult=ev=>{ if(id!==AS.recId) return; interimT=''; const fin=[];
+    for(let i=0;i<ev.results.length;i++){ const t=String(ev.results[i][0].transcript||'').trim(); if(ev.results[i].isFinal) fin.push(t); else interimT+=(interimT?' ':'')+t; }
+    if(fin.length) finalT=android?fin[fin.length-1]:fin.join(' ');
+    heard=heard||!!(finalT+interimT).trim(); inp.value=(finalT+' '+interimT).trim();
+    clearTimeout(timer); timer=setTimeout(finish, interimT.trim()?1800:1100); };
   rec.onerror=ev=>{ if(id!==AS.recId) return;
-    if(ev.error==='not-allowed'||ev.error==='service-not-allowed') asUiAdd({t:'note', text:asT('اجازهٔ میکروفون داده نشده. در تنظیمات مرورگر اجازه دهید یا بنویسید.','Microphone permission was not given. Allow it in the browser settings, or type.','A mikrofon nincs engedélyezve. Engedélyezze a böngészőben, vagy írjon.')});
-    else if(ev.error==='network') asUiAdd({t:'note', text:asT('تشخیص صدا به اینترنت نیاز دارد. لطفاً بنویسید.','Speech recognition needs the internet. Please type.','A beszédfelismeréshez internet kell. Kérjük, írjon.')});
-    else if(ev.error==='audio-capture') asUiAdd({t:'note', text:asT('میکروفون پیدا نشد.','No microphone was found.','Nem található mikrofon.')});
+    if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){ AS.live=false; AS.recId++; AS.rec=null; asSetPhase('idle'); asUiAdd({t:'note', text:asT('اجازهٔ میکروفون داده نشده. روی 🎤 بزنید و اجازه دهید، یا بنویسید.','Microphone permission was not given. Tap 🎤 and allow it, or type.','A mikrofon nincs engedélyezve. Koppintson a 🎤-ra és engedélyezze, vagy írjon.')}); }
+    else if(ev.error==='network'){ AS.live=false; AS.recId++; AS.rec=null; asSetPhase('idle'); asUiAdd({t:'note', text:asT('تشخیص صدا به اینترنت نیاز دارد. لطفاً بنویسید.','Speech recognition needs the internet. Please type.','A beszédfelismeréshez internet kell. Kérjük, írjon.')}); }
+    else if(ev.error==='audio-capture'){ AS.live=false; AS.recId++; AS.rec=null; asSetPhase('idle'); asUiAdd({t:'note', text:asT('میکروفون پیدا نشد. لطفاً بنویسید.','No microphone was found. Please type.','Nem található mikrofon. Kérjük, írjon.')}); }
   };
-  rec.onend=()=>{ if(id!==AS.recId||sent) return; sent=true; mic.classList.remove('rec'); if(AS.rec===rec) AS.rec=null;
-    const txt=(finalT||interimT).trim(); inp.value='';
-    if(AS.recSilent) return;
-    if(txt) asSend(txt,{voice:true});
-    else if(Date.now()-started<900) asUiAdd({t:'note', text:asT('دکمهٔ میکروفون را نگه دارید، صحبت کنید و بعد رها کنید.','Hold the microphone button, speak, then let go.','Tartsa nyomva a mikrofon gombot, beszéljen, majd engedje el.')});
+  rec.onend=()=>{ if(id!==AS.recId||sent) return;
+    if(heard){ finish(); return; }
+    AS.rec=null;
+    // silence: listen again a few times, then wait for a tap
+    AS.noSpeech=(AS.noSpeech||0)+1;
+    if(AS.live&&AS.noSpeech<3) setTimeout(()=>{ if(id===AS.recId&&AS.live&&!AS.busy) asListen(); },250);
+    else { AS.noSpeech=0; asSetPhase('idle'); }
   };
-  try { rec.start(); mic.classList.add('rec'); inp.value=''; } catch(err){ AS.rec=null; }
+  try { rec.start(); asSetPhase('listening'); inp.value=''; } catch(err){ AS.rec=null; asSetPhase('idle'); }
 }
-function asMicUp(e){ if(e) e.preventDefault(); const r=AS.rec; if(!r) return; AS.rec=null; setTimeout(()=>{ try{ r.stop(); }catch(x){} },250); }
+// The microphone button: listen / pause / interrupt the assistant
+function asMicTap(e){
+  if(e) e.preventDefault();
+  if(!AS_SR) return;
+  asUnlockAudio();
+  if(AS.phase==='speaking'||asIsSpeaking()){ asStopSpeaking(); asCancelTurn(); AS.voices.clear(); AS.live=true; asSetPhase('idle'); asListen(); return; }
+  if(AS.phase==='listening'){ AS.live=false; asStopRec(true); asSetPhase('idle'); return; }
+  if(AS.busy) return;
+  AS.turn++; AS.live=true; AS.noSpeech=0; asTexts(); asListen();
+}
 (function(){
   const mic=document.getElementById('asstMic'); if(!mic) return;
-  mic.addEventListener('pointerdown',e=>{ try{ mic.setPointerCapture(e.pointerId); }catch(x){} asMicDown(e); });
-  mic.addEventListener('pointerup',asMicUp); mic.addEventListener('pointercancel',asMicUp);
+  mic.addEventListener('click',asMicTap);
   mic.addEventListener('contextmenu',e=>e.preventDefault());
-  mic.addEventListener('keydown',e=>{ if((e.key===' '||e.key==='Enter')&&!e.repeat&&!AS.rec) asMicDown(e); });
-  mic.addEventListener('keyup',e=>{ if(e.key===' '||e.key==='Enter') asMicUp(e); });
 })();
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&AS.rec){ asStopRec(true); } else if(!document.hidden&&AS.live&&AS.open&&!AS.busy&&AS.phase==='idle') asListen(); });
+
+// ---------- welcome screen: talk to the assistant, or browse ----------
+function asWelcomeTexts(){
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+  const l=AS.wLang||'fa';
+  const t=(fa,en,hu)=>l==='fa'?fa:l==='hu'?hu:en;
+  const w=document.getElementById('asstWelcome'); if(w) w.dir=l==='fa'?'rtl':'ltr';
+  set('awQ',t('چطور خرید کنید؟','How would you like to shop?','Hogyan szeretne vásárolni?'));
+  if(AS_SR){
+    set('awVoiceT',t('با دستیار صوتی صحبت می‌کنم','Talk to our voice assistant','Beszélek a hangasszisztenssel'));
+    set('awVoiceS',t('بگویید چه می‌خواهید؛ دستیار پیدا می‌کند، در سبد می‌گذارد و سفارش را برایتان ثبت می‌کند.','Just say what you need — it finds it, fills your cart and places the order for you.','Mondja el, mire van szüksége — megkeresi, kosárba teszi és leadja a rendelést.'));
+  } else {
+    set('awVoiceT',t('با دستیار خرید گفتگو می‌کنم','Chat with our shopping assistant','Csevegek a vásárlási asszisztenssel'));
+    set('awVoiceS',t('بنویسید چه می‌خواهید؛ دستیار پیدا می‌کند و سفارش را ثبت می‌کند. (صحبت کردن در کروم و سافاری کار می‌کند.)','Type what you need — it finds it and places the order. (Speaking works in Chrome and Safari.)','Írja be, mire van szüksége — megkeresi és leadja a rendelést. (A beszéd Chrome-ban és Safariban működik.)'));
+  }
+  set('awBrowseT',t('خودم کاتالوگ را می‌بینم','Browse the catalog myself','Magam nézem a katalógust'));
+  set('awBrowseS',t('محصولات را ببینید و خودتان انتخاب کنید. دستیار همیشه گوشهٔ صفحه هست.','See the products and choose yourself. The assistant is always in the corner.','Nézze meg a termékeket és válasszon. Az asszisztens mindig a sarokban van.'));
+  ['Fa','En','Hu'].forEach(x=>{ const b=document.getElementById('aw'+x); if(b) b.classList.toggle('on',l===x.toLowerCase()); });
+}
+function asWelcomeLang(l){ AS.wLang=l; asWelcomeTexts(); }
+function asWhenReady(fn){
+  const t0=Date.now();
+  (function wait(){ const mc=document.getElementById('mainContent'); if((mc&&mc.style.display==='block')||Date.now()-t0>15000) fn(); else setTimeout(wait,100); })();
+}
+function asWelcomeChoose(kind){
+  const l=AS.wLang||'fa';
+  try { asStore()&&asStore().setItem('aradi_welcome_done',kind); } catch(e){}
+  document.getElementById('asstWelcome').classList.remove('open'); document.documentElement.classList.remove('asst-open');
+  if(kind==='voice'){
+    asUnlockAudio();
+    // ask for the microphone now, while the customer's tap counts
+    try { if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia) navigator.mediaDevices.getUserMedia({audio:true}).then(st=>st.getTracks().forEach(t=>t.stop())).catch(()=>{}); } catch(e){}
+  }
+  asWhenReady(()=>{ if(l!==currentLang) setLang(l); if(kind==='voice') asstOpen({live:true}); });
+}
+function asShowWelcome(){
+  const nav=String((navigator.languages&&navigator.languages[0])||navigator.language||'').toLowerCase();
+  AS.wLang=nav.startsWith('hu')?'hu':nav.startsWith('en')?'en':'fa';
+  asWelcomeTexts();
+  document.getElementById('asstWelcome').classList.add('open'); document.documentElement.classList.add('asst-open');
+}
 
 // ---------- start ----------
 (function(){
@@ -3805,6 +4076,8 @@ function asMicUp(e){ if(e) e.preventDefault(); const r=AS.rec; if(!r) return; AS
   document.getElementById('asstBtn').addEventListener('click',asUnlockAudio);
   document.getElementById('asstBtn').style.display='flex';
   asTexts();
+  let seen=null; try { seen=asStore()&&asStore().getItem('aradi_welcome_done'); } catch(e){}
+  if(!seen) asShowWelcome();
   const obs=new MutationObserver(asSyncMini);
   ['orderModal','loyaltyModal'].forEach(id=>{ const m=document.getElementById(id); if(m) obs.observe(m,{attributes:true,attributeFilter:['class']}); });
   const _setLang=setLang; setLang=function(l){ const r=_setLang.apply(this,arguments);
