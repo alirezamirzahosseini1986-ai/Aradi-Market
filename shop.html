@@ -3257,7 +3257,7 @@ document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo)
 #asstInput:focus{border-color:#1a7a4a}
 #asstSend{background:#e8f5ee;color:#0f5c36;border:none;border-radius:12px;width:46px;height:46px;font-size:18px;cursor:pointer}
 #asstMic{background:#1a7a4a;color:#fff;border:none;border-radius:50%;width:58px;height:58px;font-size:26px;cursor:pointer;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:0 4px 12px rgba(15,92,54,.35)}
-#asstMic.rec{background:#e53935;animation:asPulse 1s infinite}
+#asstMic.rec{background:#2e7d32;box-shadow:0 0 0 calc(var(--lvl,0) * 14px) rgba(46,125,50,.28),0 4px 12px rgba(15,92,54,.35);transition:box-shadow .08s linear}
 #asstMic.spk{background:#1565c0}
 #asstMic.think{background:#7a8a80}
 .as-sum{align-self:stretch;background:#fff;border:2px solid #1a7a4a;border-radius:16px;padding:12px 14px;font-size:14px;line-height:1.8;color:#1d2b22}
@@ -3814,7 +3814,7 @@ function asstOpen(opts){
   else if(!('ontouchstart' in window)) setTimeout(()=>{ try{ document.getElementById('asstInput').focus(); }catch(e){} },100);
 }
 function asstClose(){
-  AS.open=false; AS.live=false; asCancelTurn(); asStopSpeaking(); asStopRec(true); asSetPhase('idle');
+  AS.open=false; AS.live=false; asCancelTurn(); asStopSpeaking(); asStopRec(true); asMicRelease(); asSetPhase('idle');
   document.documentElement.classList.remove('asst-open');
   document.getElementById('asstPanel').classList.remove('open','mini'); asMiniSize();
   document.getElementById('asstBtn').style.display='flex';
@@ -3847,7 +3847,7 @@ async function asCall(){
   const ctl=new AbortController(); const timer=setTimeout(()=>ctl.abort(),40000);
   try {
     const r=await fetch(ASSIST_URL,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY},
-      body:JSON.stringify({action:'chat', lang:currentLang, sid:AS.sid, messages:asToSend()})});
+      body:JSON.stringify({action:'chat', lang:AS.msgLang||currentLang, sid:AS.sid, messages:asToSend()})});
     let j=null; try { j=await r.json(); } catch(e){}
     if(r.ok&&j&&j.message) return {message:j.message};
     return {error:(j&&j.error)||('HTTP_'+r.status), status:r.status};
@@ -3896,7 +3896,10 @@ async function asSend(text,opts){
   if(!opts.voice) asStopRec(true);
   if(AS.busy){ const i=document.getElementById('asstInput'); if(i&&!opts.display&&!i.value) i.value=text; showFlash(asT('یک لحظه صبر کنید…','One moment please…','Egy pillanat…'),'warn'); return; }
   asStopSpeaking();
-  AS.lastVoice=!!opts.voice||AS.live; asTexts();
+  AS.lastVoice=!!opts.voice||AS.live;
+  const ml=opts.lang&&['fa','en','hu'].includes(opts.lang)?opts.lang:asGuessLang(text); AS.msgLang=ml;
+  if(ml!==currentLang&&text.split(/\s+/).length>=3&&!asCheckoutOpen()&&!asModalOpen('loyaltyModal')) { try { setLang(ml); } catch(e){} }
+  asTexts();
   asUiAdd({t:'user', text:opts.display||text});
   AS.msgs.push({role:'user', content:text.slice(0,1500)}); AS.userSeq=(AS.userSeq||0)+1;
   if(AS.msgs.length>80) AS.msgs=AS.msgs.slice(-70);
@@ -3943,7 +3946,7 @@ async function asSpeakInner(text){
   if(!asSpeakOn()) return;
   const clean=asCleanForVoice(text); if(!clean) return;
   asStopRec(true);
-  const seq=AS.speakSeq=(AS.speakSeq||0)+1, lang=currentLang;
+  const seq=AS.speakSeq=(AS.speakSeq||0)+1, lang=asVoiceLang(clean); AS.lastSpoken=clean;
   const done=()=>{ if(seq===AS.speakSeq&&AS.phase==='speaking') asSetPhase(AS.busy?'thinking':'idle'); };
   if(AS.tts!==false){
     try {
@@ -3976,55 +3979,172 @@ async function asSpeakInner(text){
   done();
 }
 
-// ---------- listening: hands-free conversation ----------
-const AS_SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
-function asStopRec(silent){ const r=AS.rec; AS.recId++; if(!r) return; AS.rec=null; try { r.abort?r.abort():r.stop(); } catch(e){ try{ r.stop(); }catch(x){} } if(AS.phase==='listening') asSetPhase('idle'); }
-// Starts listening; the turn ends by itself after a short silence and is sent to the assistant.
+// ---------- listening: hands-free conversation (own microphone + Whisper; no beeps) ----------
+// The microphone stays open while the assistant panel is open. A small voice detector finds where the
+// customer starts and stops talking; that piece of audio goes to the server (Whisper), which also says
+// which language it was. While the assistant speaks, the customer can simply talk over it to interrupt.
+const AS_AC=window.AudioContext||window.webkitAudioContext||null;
+const AS_SR=!!(AS_AC&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+const MIC={ stream:null, ctx:null, src:null, node:null, rate:16000, state:'off', pre:[], preLen:0, cap:null, capLen:0, voiced:0,
+  floor:0.006, run:0, sil:0, idleMs:0, echo:0, barge:0, starting:null, denied:false };
+const AS_PRE_S=0.35, AS_MAX_S=15, AS_IDLE_PAUSE_S=60;
+function asMicPrime(){ // call from a tap: unlocks the audio context and asks for the microphone
+  if(!AS_SR) return Promise.resolve(false);
+  try { if(!MIC.ctx) MIC.ctx=new AS_AC(); if(MIC.ctx.state==='suspended') MIC.ctx.resume().catch(()=>{}); } catch(e){}
+  return asMicStart();
+}
+function asMicStart(){
+  if(MIC.stream&&MIC.stream.active&&MIC.node) { try { if(MIC.ctx.state==='suspended') MIC.ctx.resume().catch(()=>{}); } catch(e){} return Promise.resolve(true); }
+  if(MIC.starting) return MIC.starting;
+  MIC.starting=(async()=>{
+    try {
+      const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
+      if(!AS.open){ st.getTracks().forEach(t=>t.stop()); return false; }
+      if(!MIC.ctx) MIC.ctx=new AS_AC();
+      if(MIC.ctx.state==='suspended') { try { await MIC.ctx.resume(); } catch(e){} }
+      MIC.stream=st; MIC.src=MIC.ctx.createMediaStreamSource(st);
+      MIC.node=MIC.ctx.createScriptProcessor(2048,1,1);
+      MIC.node.onaudioprocess=e=>{ try { asMicFrame(e.inputBuffer.getChannelData(0), MIC.ctx.sampleRate); } catch(err){} };
+      MIC.src.connect(MIC.node); MIC.node.connect(MIC.ctx.destination);
+      MIC.denied=false; return true;
+    } catch(e){
+      MIC.denied=true; AS.live=false; asSetPhase('idle');
+      asUiAdd({t:'note', text:asT('اجازهٔ میکروفون داده نشده. روی 🎤 بزنید و اجازه دهید، یا بنویسید.','Microphone permission was not given. Tap 🎤 and allow it, or type.','A mikrofon nincs engedélyezve. Koppintson a 🎤-ra és engedélyezze, vagy írjon.')});
+      return false;
+    } finally { MIC.starting=null; }
+  })();
+  return MIC.starting;
+}
+function asMicRelease(){
+  MIC.state='off'; MIC.cap=null;
+  try { if(MIC.node){ MIC.node.onaudioprocess=null; MIC.node.disconnect(); } } catch(e){}
+  try { if(MIC.src) MIC.src.disconnect(); } catch(e){}
+  try { if(MIC.stream) MIC.stream.getTracks().forEach(t=>t.stop()); } catch(e){}
+  MIC.stream=MIC.src=MIC.node=null; MIC.pre=[]; MIC.preLen=0; asMicLevel(0);
+}
+function asMicLevel(v){ const m=document.getElementById('asstMic'); if(m) m.style.setProperty('--lvl', Math.min(1,v*12).toFixed(2)); }
+function asDown(buf, rate){ // to 16 kHz mono
+  const ratio=rate/16000; if(Math.abs(ratio-1)<0.01) return Float32Array.from(buf);
+  const n=Math.floor(buf.length/ratio), out=new Float32Array(n);
+  for(let i=0;i<n;i++){ const a=Math.floor(i*ratio), b=Math.min(buf.length,Math.floor((i+1)*ratio)); let s=0; for(let k=a;k<b;k++) s+=buf[k]; out[i]=s/Math.max(1,b-a); }
+  return out;
+}
+function asMicFrame(buf, rate){
+  if(MIC.state==='off') return;
+  const f=asDown(buf, rate), ms=f.length/16; let e=0; for(let i=0;i<f.length;i++) e+=f[i]*f[i]; const rms=Math.sqrt(e/Math.max(1,f.length));
+  // keep a short pre-roll so the first syllable is not lost
+  MIC.pre.push(f); MIC.preLen+=f.length; while(MIC.preLen-MIC.pre[0].length>AS_PRE_S*16000){ MIC.preLen-=MIC.pre.shift().length; }
+  const thr=Math.max(0.012, MIC.floor*3.2);
+  if(MIC.state==='idle'){
+    if(rms<MIC.floor*2.5||MIC.floor<0.002) MIC.floor=Math.max(0.0015, MIC.floor*0.97+rms*0.03);
+    asMicLevel(rms);
+    if(rms>thr){ MIC.run+=ms; if(MIC.run>=130) asCapStart(); } else { MIC.run=0; MIC.idleMs+=ms;
+      if(MIC.idleMs>AS_IDLE_PAUSE_S*1000){ MIC.idleMs=0; AS.live=false; MIC.state='off'; asSetPhase('idle'); } }
+    return;
+  }
+  if(MIC.state==='speech'){
+    MIC.cap.push(f); MIC.capLen+=f.length; asMicLevel(rms);
+    if(rms>thr*0.6){ MIC.sil=0; MIC.voiced+=ms; } else MIC.sil+=ms;
+    const endSil=(AS.msgLang||currentLang)==='fa'?1000:850;
+    if(MIC.sil>=endSil||MIC.capLen>=AS_MAX_S*16000) asCapEnd();
+    return;
+  }
+  if(MIC.state==='hold'){
+    asMicLevel(0);
+    // barge-in: the customer talks over the assistant (echo of our own voice is learnt and ignored)
+    if(AS.live&&AS.open&&AS.phase==='speaking'){
+      MIC.spk=(MIC.spk||0)+ms;
+      if(MIC.spk<700){ MIC.echo=Math.max(MIC.echo*0.95, rms); return; } // first moments: learn how loud our own voice comes back
+      const bthr=Math.max(0.05, MIC.echo*2.5, MIC.floor*8);
+      if(rms>bthr){ MIC.barge+=ms; if(MIC.barge>=380){ MIC.barge=0; asStopSpeaking(); asCancelTurn(); AS.voices.clear(); asCapStart(); } }
+      else { MIC.barge=Math.max(0,MIC.barge-ms); MIC.echo=MIC.echo*0.92+rms*0.08; }
+    } else { MIC.barge=0; MIC.spk=0; MIC.echo*=0.9; }
+  }
+}
+function asCapStart(){ MIC.state='speech'; MIC.cap=MIC.pre.slice(); MIC.capLen=MIC.preLen; MIC.voiced=MIC.run; MIC.sil=0; MIC.run=0; MIC.idleMs=0; asSetPhase('listening'); const s=document.getElementById('asstSub'); if(s) s.textContent=asT('🎙️ می‌شنوم…','🎙️ I am listening…','🎙️ Hallom…'); }
+function asCapEnd(){
+  const parts=MIC.cap||[], len=MIC.capLen, voiced=MIC.voiced; MIC.cap=null; MIC.capLen=0; MIC.voiced=0; MIC.run=0;
+  if(voiced<300){ MIC.state=AS.live?'idle':'off'; asSetPhase(AS.live?'listening':'idle'); return; } // a cough or a click
+  MIC.state='hold'; asMicLevel(0);
+  const pcm=new Float32Array(len); let o=0; for(const p of parts){ pcm.set(p,o); o+=p.length; }
+  asTranscribe(pcm);
+}
+function asWav(pcm){
+  const n=pcm.length, b=new ArrayBuffer(44+n*2), v=new DataView(b), w=(o,s)=>{ for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,16000,true); v.setUint32(28,32000,true); v.setUint16(32,2,true); v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,n*2,true);
+  let peak=0; for(let i=0;i<n;i++) peak=Math.max(peak,Math.abs(pcm[i])); const g=peak>0&&peak<0.5?Math.min(4,0.7/peak):1; // gentle level boost
+  for(let i=0;i<n;i++){ const s=Math.max(-1,Math.min(1,pcm[i]*g)); v.setInt16(44+i*2, s<0?s*0x8000:s*0x7FFF, true); }
+  return new Uint8Array(b);
+}
+function asB64(u8){ let s=''; for(let i=0;i<u8.length;i+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000)); return btoa(s); }
+async function asTranscribe(pcm){
+  const tk=AS.turn; asSetPhase('thinking'); asTyping(true);
+  let j=null, st=0;
+  try {
+    const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(),20000);
+    const r=await fetch(ASSIST_URL,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY},
+      body:JSON.stringify({action:'stt', lang:AS.msgLang||currentLang, sid:AS.sid, audio:asB64(asWav(pcm))})});
+    clearTimeout(timer); st=r.status; try { j=await r.json(); } catch(e){}
+  } catch(e){ j={error:'NETWORK'}; }
+  asTyping(false);
+  if(tk!==AS.turn||!AS.open) return;
+  if(!j||j.error){
+    const err=(j&&j.error)||'HTTP_'+st;
+    if(err==='LIMIT'){ AS.live=false; MIC.state='off'; asUiAdd({t:'note', text:asErrorText({error:'LIMIT'})}); asSetPhase('idle'); return; }
+    if(err==='NO_STT'){ AS.live=false; MIC.state='off'; asSetPhase('idle'); asUiAdd({t:'note', text:asT('شنیدن صدا الان کار نمی‌کند. لطفاً بنویسید.','Listening does not work right now. Please type.','A hallgatás most nem működik. Kérjük, írjon.')}); return; }
+    asUiAdd({t:'note', text:asT('صدا را درست نشنیدم. لطفاً دوباره بگویید یا بنویسید.','I could not hear that well. Please say it again or type.','Nem hallottam jól. Kérem, mondja újra vagy írja be.')});
+    asAfterTurn(); return;
+  }
+  const txt=String(j.text||'').trim();
+  if(!txt||asIsEcho(txt)){ asAfterTurn(); return; }
+  asSend(txt,{voice:true, lang:j.lang});
+}
+// ignore our own voice coming back through the speaker (when the phone has no echo cancelling)
+function asIsEcho(t){
+  const a=asNorm(t).split(' ').filter(w=>w.length>1), b=new Set(asNorm(AS.lastSpoken||'').split(' ').filter(w=>w.length>1));
+  if(a.length<3||!b.size) return false; let hit=0; a.forEach(w=>{ if(b.has(w)) hit++; }); return hit/a.length>0.75;
+}
+function asStopRec(silent){ // stop capturing (the microphone itself stays open for a quick restart)
+  if(MIC.state==='speech'){ MIC.cap=null; MIC.capLen=0; }
+  if(MIC.state!=='off') MIC.state='hold';
+  if(AS.phase==='listening') asSetPhase('idle');
+}
 function asListen(){
-  if(!AS_SR||AS.busy||!AS.open||asIsSpeaking()) return;
-  if(AS.rec) asStopRec(true);
-  const id=++AS.recId, inp=document.getElementById('asstInput');
-  let finalT='', interimT='', heard=false, sent=false, timer=null;
-  const rec=new AS_SR(); AS.rec=rec;
-  rec.lang={fa:'fa-IR',en:'en-US',hu:'hu-HU'}[currentLang]; rec.interimResults=true; rec.continuous=true; rec.maxAlternatives=1;
-  const finish=()=>{ if(sent||id!==AS.recId) return; sent=true; clearTimeout(timer); const txt=(finalT+' '+interimT).trim(); inp.value=''; AS.rec=null; AS.recId++; try{ rec.abort?rec.abort():rec.stop(); }catch(e){} AS.noSpeech=0; if(txt) asSend(txt,{voice:true}); else asAfterTurn(); };
-  const android=/Android/i.test(navigator.userAgent||'');
-  rec.onresult=ev=>{ if(id!==AS.recId) return; interimT=''; const fin=[];
-    for(let i=0;i<ev.results.length;i++){ const t=String(ev.results[i][0].transcript||'').trim(); if(ev.results[i].isFinal) fin.push(t); else interimT+=(interimT?' ':'')+t; }
-    if(fin.length) finalT=android?fin[fin.length-1]:fin.join(' ');
-    heard=heard||!!(finalT+interimT).trim(); inp.value=(finalT+' '+interimT).trim();
-    clearTimeout(timer); timer=setTimeout(finish, interimT.trim()?1800:1100); };
-  rec.onerror=ev=>{ if(id!==AS.recId) return;
-    if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){ AS.live=false; AS.recId++; AS.rec=null; asSetPhase('idle'); asUiAdd({t:'note', text:asT('اجازهٔ میکروفون داده نشده. روی 🎤 بزنید و اجازه دهید، یا بنویسید.','Microphone permission was not given. Tap 🎤 and allow it, or type.','A mikrofon nincs engedélyezve. Koppintson a 🎤-ra és engedélyezze, vagy írjon.')}); }
-    else if(ev.error==='network'){ AS.live=false; AS.recId++; AS.rec=null; asSetPhase('idle'); asUiAdd({t:'note', text:asT('تشخیص صدا به اینترنت نیاز دارد. لطفاً بنویسید.','Speech recognition needs the internet. Please type.','A beszédfelismeréshez internet kell. Kérjük, írjon.')}); }
-    else if(ev.error==='audio-capture'){ AS.live=false; AS.recId++; AS.rec=null; asSetPhase('idle'); asUiAdd({t:'note', text:asT('میکروفون پیدا نشد. لطفاً بنویسید.','No microphone was found. Please type.','Nem található mikrofon. Kérjük, írjon.')}); }
-  };
-  rec.onend=()=>{ if(id!==AS.recId||sent) return;
-    if(heard){ finish(); return; }
-    AS.rec=null;
-    // silence: listen again a few times, then wait for a tap
-    AS.noSpeech=(AS.noSpeech||0)+1;
-    if(AS.live&&AS.noSpeech<3) setTimeout(()=>{ if(id===AS.recId&&AS.live&&!AS.busy) asListen(); },250);
-    else { AS.noSpeech=0; asSetPhase('idle'); }
-  };
-  try { rec.start(); asSetPhase('listening'); inp.value=''; } catch(err){ AS.rec=null; asSetPhase('idle'); }
+  if(!AS_SR||AS.busy||!AS.open||!AS.live||asIsSpeaking()) return;
+  asMicStart().then(ok=>{
+    if(!ok||!AS.live||AS.busy||!AS.open||asIsSpeaking()) return;
+    if(MIC.ctx&&MIC.ctx.state==='suspended'){ MIC.state='off'; asSetPhase('idle'); return; } // needs a tap
+    MIC.state='idle'; MIC.run=0; MIC.idleMs=0; asSetPhase('listening');
+    const inp=document.getElementById('asstInput'); if(inp&&document.activeElement!==inp) inp.value='';
+  });
 }
 // The microphone button: listen / pause / interrupt the assistant
 function asMicTap(e){
   if(e) e.preventDefault();
   if(!AS_SR) return;
-  asUnlockAudio();
+  asUnlockAudio(); asMicPrime();
   if(AS.phase==='speaking'||asIsSpeaking()){ asStopSpeaking(); asCancelTurn(); AS.voices.clear(); AS.live=true; asSetPhase('idle'); asListen(); return; }
-  if(AS.phase==='listening'){ AS.live=false; asStopRec(true); asSetPhase('idle'); return; }
+  if(AS.phase==='listening'){ AS.live=false; if(MIC.state==='speech') asCapEnd(); else MIC.state='off'; asSetPhase('idle'); return; }
   if(AS.busy) return;
-  AS.turn++; AS.live=true; AS.noSpeech=0; asTexts(); asListen();
+  AS.turn++; AS.live=true; asTexts(); asListen();
 }
 (function(){
   const mic=document.getElementById('asstMic'); if(!mic) return;
   mic.addEventListener('click',asMicTap);
   mic.addEventListener('contextmenu',e=>e.preventDefault());
 })();
-document.addEventListener('visibilitychange',()=>{ if(document.hidden&&AS.rec){ asStopRec(true); } else if(!document.hidden&&AS.live&&AS.open&&!AS.busy&&AS.phase==='idle') asListen(); });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ asMicRelease(); if(AS.phase==='listening') asSetPhase('idle'); } else if(AS.live&&AS.open&&!AS.busy&&AS.phase==='idle') asListen(); });
+// language of a typed or heard message, and of an answer (for the voice)
+function asGuessLang(t){
+  t=String(t||'');
+  if(/[؀-ۿ]/.test(t)) return 'fa';
+  if(/[őűŐŰ]/.test(t)||/\b(szia|szeretnék|kérek|köszönöm|igen|nem|kenyér|rizs|mennyi|hol|van|rendel|kosár|házhoz)\b/i.test(t)) return 'hu';
+  if(/[áéíóöúü]/i.test(t)) return 'hu';
+  if(/[a-z]/i.test(t)){ const w=t.trim().split(/\s+/).length; if(w<3&&(AS.msgLang==='hu'||AS.msgLang==='en')) return AS.msgLang; return 'en'; }
+  return AS.msgLang||currentLang;
+}
+function asVoiceLang(t){ if(/[؀-ۿ]/.test(t)) return 'fa'; const g=asGuessLang(t); return g==='fa'?'en':g; }
 
 // ---------- welcome screen: talk to the assistant, or browse ----------
 function asWelcomeTexts(){
@@ -4056,7 +4176,7 @@ function asWelcomeChoose(kind){
   if(kind==='voice'){
     asUnlockAudio();
     // ask for the microphone now, while the customer's tap counts
-    try { if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia) navigator.mediaDevices.getUserMedia({audio:true}).then(st=>st.getTracks().forEach(t=>t.stop())).catch(()=>{}); } catch(e){}
+    try { if(!MIC.ctx&&AS_AC) MIC.ctx=new AS_AC(); if(MIC.ctx&&MIC.ctx.state==='suspended') MIC.ctx.resume().catch(()=>{}); navigator.mediaDevices.getUserMedia({audio:true}).then(st=>st.getTracks().forEach(t=>t.stop())).catch(()=>{}); } catch(e){}
   }
   asWhenReady(()=>{ if(l!==currentLang) setLang(l); if(kind==='voice') asstOpen({live:true}); });
 }
