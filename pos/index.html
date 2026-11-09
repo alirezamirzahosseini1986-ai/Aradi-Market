@@ -192,6 +192,7 @@ tr:hover td{background:#fafafa}
   <div class="tab" onclick="showPage('online',this)">🛒 سفارش آنلاین <span id="onlineBadge" style="display:none;font-size:10px;background:var(--red);color:white;border-radius:20px;padding:1px 6px"></span></div>
   <div class="tab" onclick="showPage('codes',this)">🎟️ کد تخفیف</div>
   <div class="tab" onclick="showPage('aiknow',this)">🧠 دستیار</div>
+  <div class="tab" onclick="showPage('invite',this)">🎁 دعوت</div>
 </div>
 
 <!-- POS PAGE -->
@@ -509,6 +510,25 @@ tr:hover td{background:#fafafa}
 </div>
 
 <!-- ONLINE ORDERS PAGE -->
+<div class="page" id="page-invite">
+  <div class="card">
+    <div class="card-title">🎁 دعوت دوستان و کیف پول آرادی
+      <button class="btn btn-blue btn-sm" onclick="reloadInvite()">🔄</button>
+    </div>
+    <div style="font-size:13px;color:#555;line-height:1.9;margin-bottom:10px">
+      دوست جدید: هر ۱۰٬۰۰۰ فورینت خرید = ۱٬۰۰۰ تخفیف (حداکثر ۳٬۰۰۰، فقط اولین سفارش آنلاین).
+      دعوت‌کننده: ۱۰٪ خرید دوست، بعد از «✅ تحویل شد» خودکار به کیف پولش می‌رود و در تلگرام خبر می‌گیرد.
+      کیف پول: فقط آنلاین، تا ۲۰٪ هر سفارش، ۹۰ روز اعتبار.
+    </div>
+    <div id="ivTotals" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div style="font-weight:700;margin:6px 0">👥 دعوت‌کننده‌ها</div>
+    <input id="ivSearch" class="fi" placeholder="🔍 جستجوی اسم، تلفن یا کد…" oninput="renderInvite()" style="margin-bottom:8px">
+    <div id="ivList"></div>
+    <div style="font-weight:700;margin:14px 0 6px">🧾 سفارش‌های دعوت و کیف پول</div>
+    <div id="ivOrders"></div>
+  </div>
+</div>
+
 <div class="page" id="page-aiknow">
   <div class="card">
     <div class="card-title">🧠 دفترچهٔ دانش دستیار خرید
@@ -1797,7 +1817,9 @@ function renderOnlineOrders(){
       <div style="font-size:12px;color:var(--gray)">📞 ${escP(o.phone)} | ${o.delivery_type==='delivery'?'🚚 ارسال':'🏪 تحویل از فروشگاه'} | 📅 ${escP(o.time_slot||'')}</div>
       ${o.address?`<div style="font-size:12px;color:var(--gray)">📍 ${escP(o.address)}</div>`:''}
       <div style="font-size:13px;margin:8px 0;background:#fafafa;border-radius:6px;padding:6px 8px">${items}</div>
-      ${o.discount_code?`<div style="font-size:12px;color:var(--green)">🎟️ ${escP(o.discount_code)}: − ${(o.code_discount||0).toLocaleString()} Ft</div>`:''}
+      ${o.discount_code&&!o.ref_code&&((o.code_discount||0)-(o.wallet_used||0))>0?`<div style="font-size:12px;color:var(--green)">🎟️ ${escP(o.discount_code)}: − ${((o.code_discount||0)-(o.wallet_used||0)).toLocaleString()} Ft</div>`:''}
+      ${o.ref_discount>0?`<div style="font-size:12px;color:var(--green)">🎁 هدیهٔ دعوت دوست (${escP(o.ref_code||'')}): − ${Number(o.ref_discount).toLocaleString()} Ft${o.ref_reward>0?` <span style="color:#8a5a00">· جایزهٔ دعوت‌کننده: ${Number(o.ref_reward).toLocaleString()} Ft</span>`:''}${o.ref_note?` <span style="color:#c0392b">· بدون جایزه (${escP(o.ref_note)})</span>`:''}</div>`:''}
+      ${o.wallet_used>0?`<div style="font-size:12px;color:var(--green)">👛 کیف پول آرادی: − ${Number(o.wallet_used).toLocaleString()} Ft</div>`:''}
       ${o.points_used?`<div style="font-size:12px;color:var(--green)">⭐ امتیاز: − ${o.points_used.toLocaleString()} Ft</div>`:''}
       ${o.delivery_cost?`<div style="font-size:12px;color:var(--orange)">🚚 + ${(o.delivery_cost||0).toLocaleString()} Ft</div>`:''}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
@@ -2946,7 +2968,9 @@ function orderSlipBlock(o,lang){
   <table><thead><tr><th>${T.prod}</th><th>${T.qty}</th><th>${T.price}</th><th>${T.sum}</th></tr></thead><tbody>${rows}</tbody></table>
   <div class="tots">
    ${line(T.sub,f(o.subtotal)+' Ft')}
-   ${o.code_discount?line(T.code+(o.discount_code?' '+E(o.discount_code):''),'− '+f(o.code_discount)+' Ft','#c0392b'):''}
+   ${(o.code_discount-(o.ref_discount||0)-(o.wallet_used||0))>0?line(T.code+(o.discount_code&&!o.ref_code?' '+E(o.discount_code):''),'− '+f(o.code_discount-(o.ref_discount||0)-(o.wallet_used||0))+' Ft','#c0392b'):''}
+   ${o.ref_discount>0?line({fa:'هدیهٔ دعوت دوست',en:'Invite gift',hu:'Meghívó ajándék'}[lang]||'Invite gift','− '+f(o.ref_discount)+' Ft','#c0392b'):''}
+   ${o.wallet_used>0?line({fa:'کیف پول آرادی',en:'ARÁDI wallet',hu:'ARÁDI pénztárca'}[lang]||'Wallet','− '+f(o.wallet_used)+' Ft','#c0392b'):''}
    ${o.points_used?line(T.pts,'− '+f(o.points_used)+' Ft','#c0392b'):''}
    ${o.delivery_cost?line(T.deliv,'+ '+f(o.delivery_cost)+' Ft'):''}
   </div>
@@ -3734,6 +3758,56 @@ async function loadAiUsage(){
 }
 const _showPageV11=showPage;
 showPage=function(name,el){ const r=_showPageV11.apply(this,arguments); if(name==='aiknow') reloadKnowledge(); return r; };
+</script>
+
+<script>
+// =====================================================================
+// ===== v12: invite friends (referral) + ARÁDI wallet report ==========
+// =====================================================================
+let ivData=null;
+async function reloadInvite(){
+  const el=document.getElementById('ivList'); if(!el) return;
+  let r; try { r=await db.rpc('ref_report'); } catch(e){ r={error:e}; }
+  if(r.error||!r.data){ const m=String((r.error&&(r.error.message||r.error.code))||'');
+    el.innerHTML='<div class="no-data">'+(/ref_report|PGRST202|function/.test(m)?'اول فایل aradi_referral_1.sql را در Supabase اجرا کنید.':escP(m||'خطا'))+'</div>';
+    document.getElementById('ivOrders').innerHTML=''; document.getElementById('ivTotals').innerHTML=''; return; }
+  ivData=r.data; renderInvite();
+}
+function renderInvite(){
+  if(!ivData) return;
+  const f=n=>Number(n||0).toLocaleString(), t=ivData.totals||{};
+  const box=(a,b,c)=>`<div style="flex:1;min-width:120px;background:${c};border-radius:10px;padding:8px 12px"><div style="font-size:11px;color:#666">${a}</div><div style="font-weight:800;font-size:16px">${b}</div></div>`;
+  document.getElementById('ivTotals').innerHTML=box('🛒 سفارش با کد دعوت',f(t.ref_orders),'#eef6f1')+box('💰 فروش تحویل‌شده',f(t.ref_sales)+' Ft','#eef6f1')
+    +box('🎁 تخفیف دوستان',f(t.ref_discounts)+' Ft','#fff4e0')+box('👛 جایزه‌ها',f(t.rewards)+' Ft','#fff4e0')+box('💳 خرج‌شده از کیف پول',f(t.wallet_spent)+' Ft','#e3f0fd')+box('⏳ موجودی باز کیف پول‌ها',f(t.wallet_open)+' Ft','#e3f0fd');
+  const q=(document.getElementById('ivSearch').value||'').trim().toLowerCase();
+  const list=(ivData.referrers||[]).filter(x=>!q||((x.name||'')+' '+(x.phone||'')+' '+(x.ref_code||'')).toLowerCase().includes(q));
+  document.getElementById('ivList').innerHTML=list.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+    <tr style="background:#f6f8f7"><th style="padding:6px">#</th><th>نام</th><th>تلفن</th><th>کد</th><th>دوست خریدار</th><th>در راه</th><th>کل جایزه</th><th>موجودی</th><th></th></tr>
+    ${list.map((x,i)=>`<tr style="border-top:1px solid var(--border)"><td style="padding:6px"><span class="row-no sm">${i+1}</span></td><td>${escP(x.name||'')}</td><td><bdi dir="ltr">${escP(x.phone||'')}</bdi></td>
+      <td style="direction:ltr;font-weight:700">${escP(x.ref_code||'')}</td><td>${f(x.friends)}</td><td>${f(x.pending)}</td><td>${f(x.earned)} Ft</td><td style="font-weight:700">${f(x.balance)} Ft</td>
+      <td><button class="btn btn-sm" style="background:#e3f0fd;color:#1565c0" onclick="ivAdjust(${Number(x.id)},${JSON.stringify(String(x.name||'')).replace(/"/g,'&quot;')})">± کیف پول</button></td></tr>`).join('')}</table></div>`
+    :'<div class="no-data">'+((ivData.referrers||[]).length?'چیزی پیدا نشد':'هنوز کسی «دعوت دوستان» را فعال نکرده')+'</div>';
+  const ST={new:'جدید',delivered:'تحویل شد',cancelled:'لغو',archived:'بایگانی'};
+  const os=ivData.orders||[];
+  document.getElementById('ivOrders').innerHTML=os.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">
+    <tr style="background:#f6f8f7"><th style="padding:6px">سفارش</th><th>تاریخ</th><th>مشتری</th><th>دعوت‌کننده</th><th>وضعیت</th><th>کالا</th><th>تخفیف دوست</th><th>کیف پول</th><th>جایزه</th></tr>
+    ${os.map(o=>`<tr style="border-top:1px solid var(--border)"><td style="padding:6px;direction:ltr">${escP(o.order_id||'')}</td><td>${new Date(o.created_at).toLocaleDateString('fa-IR')}</td>
+      <td>${escP(o.customer_name||'')}</td><td>${escP(o.referrer||'—')}</td><td>${ST[o.status]||escP(o.status||'جدید')}</td><td>${f(o.subtotal)}</td>
+      <td>${o.ref_discount>0?f(o.ref_discount):'—'}</td><td>${o.wallet_used>0?f(o.wallet_used):'—'}</td>
+      <td>${o.ref_reward>0?'<b style="color:#1a7a4a">'+f(o.ref_reward)+'</b>':o.ref_note?'<span style="color:#c0392b" title="'+escP(o.ref_note)+'">✖ '+({SAME_ADDRESS:'آدرس یکی',SAME_PHONE:'شماره یکی',CANCELLED:'لغو شد',ZERO:'صفر',NO_REFERRER:'بدون معرف'}[o.ref_note]||escP(o.ref_note))+'</span>':(o.ref_code?'بعد از تحویل':'—')}</td></tr>`).join('')}</table></div>`
+    :'<div class="no-data">هنوز سفارشی نیست</div>';
+}
+async function ivAdjust(id,name){
+  const v=prompt('کیف پول «'+name+'»\nمبلغ را بنویسید: مثبت = اضافه، منفی = کم کردن (مثلاً -500 برای مرجوعی بخشی از سفارش دوست)');
+  if(v===null) return; const n=Math.round(Number(String(v).replace(/[^\d-]/g,'')));
+  if(!n){ alert('عدد درست نیست'); return; }
+  const note=prompt('دلیل (اختیاری):')||'';
+  const r=await db.rpc('wallet_adjust',{p_customer:id,p_amount:n,p_note:note});
+  if(r.error){ alert('❌ '+(r.error.message||'خطا')); return; }
+  showToast('✅ موجودی جدید: '+Number(r.data||0).toLocaleString()+' Ft','ok'); reloadInvite();
+}
+const _showPageV12=showPage;
+showPage=function(name,el){ const r=_showPageV12.apply(this,arguments); if(name==='invite') reloadInvite(); return r; };
 </script>
 </body>
 </html>
