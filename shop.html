@@ -1841,7 +1841,7 @@ async function submitOrder(){
   if(selectedDelivery==='delivery'&&!district){ alert(currentLang==='fa'?'لطفاً منطقه را انتخاب کنید':'Please select your district'); return; }
   if(selectedDelivery==='delivery'&&!selectedDate){ alert(currentLang==='fa'?'لطفاً تاریخ دلیوری را انتخاب کنید':'Please select delivery date'); return; }
   if(!selectedSlot){ alert(currentLang==='fa'?'لطفاً زمان تحویل را انتخاب کنید':'Please select delivery time'); return; }
-  if(memberInfo && memberInfo.phone!==phone){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); }
+  if(memberInfo && !memberInfo.session && memberInfo.phone!==phone){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); }
   if(appliedReferral&&appliedReferral.type==='ref'&&!(document.getElementById('refTermsChk')||{}).checked){ alert(L3(...ERR_TXT.REF_TERMS)); return; }
   _orderBusy=true;
   const btn=document.getElementById('submitOrderBtn'); if(btn) btn.disabled=true;
@@ -1874,7 +1874,8 @@ async function submitOrder(){
       ref_code: appliedReferral&&appliedReferral.type==='ref'?appliedReferral.code:null,
       ref_terms: !!(appliedReferral&&appliedReferral.type==='ref'&&(document.getElementById('refTermsChk')||{}).checked),
       use_wallet: !!(useWallet&&memberInfo&&memberInfo.wallet>0),
-      use_points: !!(usePoints&&memberInfo&&memberInfo.usable), member_code: memberInfo?memberInfo.code:null
+      use_points: !!(usePoints&&memberInfo&&memberInfo.usable), member_code: memberInfo?memberInfo.code:null,
+      session: memberInfo&&memberInfo.session?memberInfo.session:null
     };
     let res;
     try { res = await db.rpc('place_order',{p:payload}); } catch(e){ res={error:e}; }
@@ -1892,6 +1893,7 @@ async function submitOrder(){
       if(known){
         alert(known);
         if(/CODE_|REF_(INVALID|SELF|NOT_NEW|MIN|WITH_CODE)/.test(String(res.error.message||''))){ appliedReferral=null; document.getElementById('referralResult').innerHTML='<span style="color:var(--red)">❌ '+known+'</span>'; if(/REF_(SELF|NOT_NEW|INVALID)/.test(String(res.error.message||''))) refForget(); }
+        if(/MEMBER_NOT_FOUND/.test(String(res.error.message||''))&&memberInfo&&memberInfo.session&&typeof acRefresh==='function') acRefresh();
         if(/POINTS_LOW|MEMBER_NOT_FOUND|WALLET_EMPTY/.test(String(res.error.message||''))){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); }
         updateOrderSummary();
         return;
@@ -3169,7 +3171,7 @@ try {
   const _qp=new URLSearchParams(location.search);
   if(_qp.get('join')==='1'){ const ph=(_qp.get('phone')||'').replace(/[^\d+]/g,''); setTimeout(()=>openLoyaltyModal(ph&&ph[0]!=='+'?'+'+ph:ph),400); }
 } catch(e){}
-document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); updateOrderSummary(); } });
+document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo&&!memberInfo.session){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); updateOrderSummary(); } });
 </script>
 
 <!-- WHOLESALE LOGIN -->
@@ -4472,6 +4474,296 @@ function ivNativeShare(){ try { navigator.share({title:'ARÁDI Market', text:ivS
   const _sl=setLang; setLang=function(){ const r=_sl.apply(this,arguments); try { lbl(); if(document.getElementById('inviteModal').classList.contains('open')) openInvite(); } catch(e){} return r; };
   lbl();
   try { if(new URLSearchParams(location.search).get('invite')==='1') setTimeout(openInvite,500); } catch(e){}
+})();
+</script>
+
+<!-- ===================== MY ARÁDI (account, stays signed in) — Nov 2026 ===================== -->
+<style>
+#acctModal .modal-box{max-width:520px;padding:0;overflow-x:hidden}
+#acctModal .ac-top{background:linear-gradient(135deg,#0f5c36,#1a7a4a);color:#fff;padding:18px 18px 14px;position:relative}
+#acctModal .ac-top h3{font-size:19px;margin:0}
+#acctModal .ac-top small{opacity:.85;font-size:12px}
+#acctModal .ac-x{position:absolute;top:10px;inset-inline-end:12px;background:rgba(255,255,255,.18);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer}
+#acctModal .ac-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:#0f5c36}
+#acctModal .ac-tabs button{background:none;border:none;color:rgba(255,255,255,.75);padding:10px 2px;font-size:12px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent}
+#acctModal .ac-tabs button.on{color:#fff;border-bottom-color:#f5c04a}
+#acctModal .ac-body{padding:16px}
+#acctModal .ac-card{border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;background:#fff}
+#acctModal .ac-big{font-size:28px;font-weight:800;color:var(--green);line-height:1.2}
+#acctModal .ac-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#acctModal .ac-lbl{font-size:12px;color:var(--gray)}
+#acctModal .ac-btn{background:var(--green);color:#fff;border:none;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;width:100%}
+#acctModal .ac-btn.alt{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+#acctModal .ac-btn:disabled{opacity:.5}
+#acctModal .ac-in{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;margin-bottom:8px}
+#acctModal .ac-code{font-size:26px;letter-spacing:8px;text-align:center;direction:ltr}
+#acctModal .ac-coupon{display:flex;gap:10px;align-items:center;border:2px dashed #f5c04a;background:#fffaf0;border-radius:12px;padding:10px;margin-bottom:8px}
+#acctModal .ac-coupon b{font-size:20px;color:#b26a00}
+#acctModal .ac-order{border-bottom:1px solid #eee;padding:10px 0}
+#acctModal .ac-msg{font-size:13px;margin:6px 0;min-height:18px}
+#acctBtn{background:#fff;border:none;color:var(--green);padding:7px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:800}
+</style>
+<div class="modal-ov" id="acctModal">
+  <div class="modal-box">
+    <div class="ac-top"><button class="ac-x" onclick="acClose()" aria-label="close">×</button>
+      <h3 id="acTitle"></h3><small id="acSub"></small></div>
+    <div class="ac-tabs" id="acTabs" style="display:none">
+      <button data-t="home" onclick="acTab('home')"></button><button data-t="invite" onclick="acTab('invite')"></button>
+      <button data-t="orders" onclick="acTab('orders')"></button><button data-t="me" onclick="acTab('me')"></button>
+    </div>
+    <div class="ac-body" id="acBody"></div>
+  </div>
+</div>
+<script>
+const AC={token:null, me:null, tab:'home', phone:'', ch:null};
+function acStore(){ try { return window.localStorage; } catch(e){ return null; } }
+function acSaveTok(t){ AC.token=t; try { const s=acStore(); if(s){ if(t) s.setItem('aradi_acct',t); else s.removeItem('aradi_acct'); } } catch(e){} }
+function acDevice(){ return String(navigator.userAgent||'').slice(0,180); }
+function acF(n){ return Math.floor(Number(n||0)).toLocaleString(); }
+async function acRefresh(){
+  if(!AC.token) return null;
+  let r; try { r=await db.rpc('acc_me',{p_token:AC.token}); } catch(e){ r={error:e}; }
+  if(r.error||!r.data) return AC.me;               // offline: keep what we have
+  if(!r.data.ok){ acSaveTok(null); AC.me=null; acHeader(); return null; }
+  AC.me=r.data; acHeader(); return AC.me;
+}
+function acHeader(){
+  const b=document.getElementById('acctBtn'); if(!b) return;
+  b.textContent='👤 '+(AC.me?AC.me.first_name:L3('آرادی من','My ARÁDI','Az én ARÁDI-m'));
+  const ly=document.getElementById('loyaltyJoinBtn'); if(ly) ly.style.display=(AC.me&&AC.me.is_member)?'none':'';
+}
+function acOpen(tab){
+  document.getElementById('acctModal').classList.add('open');
+  if(AC.token&&AC.me){ acTab(tab||AC.tab||'home'); acRefresh().then(()=>{ if(AC.me) acTab(AC.tab); else acLogin(); }); }
+  else if(AC.token){ acTab(tab||'home'); acRefresh().then(()=>{ if(AC.me) acTab(AC.tab); else acLogin(); }); }
+  else acLogin();
+}
+function acClose(){ document.getElementById('acctModal').classList.remove('open'); }
+function acSet(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
+
+// ---------- sign in ----------
+function acLogin(msg){
+  document.getElementById('acTabs').style.display='none';
+  acSet('acTitle', L3('آرادی من','My ARÁDI','Az én ARÁDI-m'));
+  acSet('acSub', L3('یک بار وارد شوید؛ روی همین گوشی وارد می‌مانید.','Sign in once — you stay signed in on this phone.','Lépjen be egyszer — ezen a telefonon belépve marad.'));
+  document.getElementById('acBody').innerHTML=`
+    <div class="ac-card" style="background:var(--green-l);border:none;font-size:13px;line-height:1.8">
+      ⭐ ${L3('امتیازها و کیف پول','Points & wallet','Pontok és pénztárca')} · 🎟️ ${L3('کدهای تخفیف شما','Your discount codes','Kedvezménykódjai')} · 🎁 ${L3('لینک دعوت','Invite link','Meghívólink')} · 📦 ${L3('سفارش دوباره با یک دکمه','Re-order in one tap','Újrarendelés egy érintéssel')}</div>
+    <label class="ac-lbl">${L3('شماره تلفن','Phone number','Telefonszám')}</label>
+    <input class="ac-in" id="acPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+36..." value="${escH(AC.phone)}" style="direction:ltr">
+    <div class="ac-msg" id="acMsg">${msg||''}</div>
+    <button class="ac-btn" id="acGo" onclick="acSend()">${L3('ارسال کد ورود','Send me a login code','Belépési kód küldése')}</button>
+    <div style="font-size:12px;color:var(--gray);line-height:1.7;margin-top:10px;text-align:center">${L3('کد به تلگرام یا ایمیلی که در آرادی ثبت کرده‌اید فرستاده می‌شود.','The code goes to the Telegram or e-mail you registered with ARÁDI.','A kódot az ARÁDI-nál megadott Telegramra vagy e-mailre küldjük.')}
+      <br><a href="#" onclick="acMemberLogin();return false" style="color:var(--green);font-weight:700">${L3('کد عضویت دارم (ARADI-…)','I have a member code (ARADI-…)','Van tagsági kódom (ARADI-…)')}</a></div>`;
+}
+async function acSend(channel){
+  const ph=(document.getElementById('acPhone')||{}).value||AC.phone; const m=document.getElementById('acMsg');
+  if(!String(ph).trim()){ m.innerHTML='<span style="color:var(--red)">'+L3('شماره تلفن را بنویسید.','Please enter your phone number.','Adja meg telefonszámát.')+'</span>'; return; }
+  AC.phone=String(ph).trim(); m.textContent='⏳'; const g=document.getElementById('acGo'); if(g) g.disabled=true;
+  let r; try { r=await db.rpc('acc_start',{p_phone:AC.phone, p_channel:channel||null, p_lang:currentLang}); } catch(e){ r={error:e}; }
+  if(g) g.disabled=false;
+  if(r.error||!r.data){ m.innerHTML='<span style="color:var(--red)">'+L3('اتصال برقرار نشد. دوباره امتحان کنید.','Could not connect. Please try again.','Nem sikerült kapcsolódni.')+'</span>'; return; }
+  const d=r.data;
+  if(d.ok){ AC.ch=d; acCodeView(); return; }
+  if(d.reason==='NOT_FOUND') m.innerHTML=`<span style="color:var(--red)">${L3('این شماره در آرادی ثبت نیست.','This number is not registered with ARÁDI.','Ez a szám nincs regisztrálva az ARÁDI-nál.')}</span>
+     <button class="ac-btn alt" style="margin-top:8px" onclick="acClose();openLoyaltyModal(${escH(JSON.stringify(AC.phone))})">⭐ ${L3('عضویت رایگان در باشگاه','Join the club for free','Ingyenes klubtagság')}</button>`;
+  else if(d.reason==='NO_CHANNEL') m.innerHTML=`<div style="line-height:1.8">${L3('برای این شماره هنوز تلگرام یا ایمیلی ثبت نشده. تلگرام را یک بار به ربات آرادی وصل کنید (دکمهٔ «📱 ارسال شماره من» در ربات)، بعد برگردید و دوباره «ارسال کد ورود» را بزنید.','No Telegram or e-mail is registered for this number yet. Connect Telegram to the ARÁDI bot once (tap «📱 Share my number» in the bot), then come back and tap «Send me a login code» again.','Ehhez a számhoz még nincs Telegram vagy e-mail. Kapcsolja össze egyszer a Telegramot az ARÁDI bottal («📱 Számom megosztása»), majd jöjjön vissza és kérjen újra kódot.')}</div>
+     ${d.tg_link?`<a href="${escH(d.tg_link)}" target="_blank" rel="noopener" class="ac-btn" style="display:block;text-align:center;text-decoration:none;background:#229ED9;margin-top:8px">📲 ${L3('وصل کردن تلگرام','Connect Telegram','Telegram összekapcsolása')}</a>`:''}`;
+  else if(d.reason==='TOO_MANY') m.innerHTML='<span style="color:var(--red)">'+L3('تعداد درخواست زیاد بود. یک ساعت دیگر امتحان کنید.','Too many requests. Please try again in an hour.','Túl sok kérés. Próbálja újra egy óra múlva.')+'</span>';
+  else m.innerHTML='<span style="color:var(--red)">'+L3('کد فرستاده نشد. کمی بعد دوباره امتحان کنید.','The code could not be sent. Please try again later.','A kódot nem sikerült elküldeni. Próbálja később.')+'</span>';
+}
+function acCodeView(msg){
+  const d=AC.ch, where=d.channel==='email'?L3('ایمیل','e-mail','e-mail')+' '+(d.to||''):L3('تلگرام','Telegram','Telegram');
+  const other=(d.channels||[]).find(c=>c!==d.channel);
+  document.getElementById('acBody').innerHTML=`
+    <div style="font-size:14px;line-height:1.8;margin-bottom:10px">✅ ${L3('کد ۶ رقمی به','A 6-digit code was sent to your','6 jegyű kódot küldtünk ide:')} <b dir="auto">${escH(where)}</b> ${L3('شما فرستاده شد.','.','')}</div>
+    <input class="ac-in ac-code" id="acCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" oninput="if(this.value.replace(/\\D/g,'').length===6) acVerify()">
+    <div class="ac-msg" id="acMsg">${msg||''}</div>
+    <button class="ac-btn" id="acGo" onclick="acVerify()">${L3('ورود','Sign in','Belépés')}</button>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:12.5px">
+      <a href="#" onclick="acLogin();return false" style="color:var(--gray)">← ${L3('شمارهٔ دیگر','Other number','Másik szám')}</a>
+      ${other?`<a href="#" onclick="acSend('${other}');return false" style="color:var(--green);font-weight:700">${other==='email'?L3('بفرست به ایمیل','Send by e-mail','Küldés e-mailben'):L3('بفرست به تلگرام','Send by Telegram','Küldés Telegramon')}</a>`:
+        `<a href="#" onclick="acSend();return false" style="color:var(--green);font-weight:700">${L3('دوباره بفرست','Send again','Újraküldés')}</a>`}
+    </div>`;
+  setTimeout(()=>{ try{ document.getElementById('acCode').focus(); }catch(e){} },100);
+}
+async function acVerify(){
+  const c=(document.getElementById('acCode').value||'').replace(/\D/g,''), m=document.getElementById('acMsg');
+  if(c.length!==6){ m.innerHTML='<span style="color:var(--red)">'+L3('کد ۶ رقمی را بنویسید.','Please enter the 6-digit code.','Adja meg a 6 jegyű kódot.')+'</span>'; return; }
+  m.textContent='⏳'; document.getElementById('acGo').disabled=true;
+  let r; try { r=await db.rpc('acc_verify',{p_phone:AC.phone, p_code:c, p_device:acDevice()}); } catch(e){ r={error:e}; }
+  const g=document.getElementById('acGo'); if(g) g.disabled=false;
+  if(r.error||!r.data){ m.innerHTML='<span style="color:var(--red)">'+L3('اتصال برقرار نشد.','Could not connect.','Nem sikerült kapcsolódni.')+'</span>'; return; }
+  if(!r.data.ok){
+    const t={CODE_WRONG:L3('کد درست نیست.','The code is not correct.','A kód nem megfelelő.'),CODE_EXPIRED:L3('کد منقضی شده؛ دوباره بفرستید.','The code has expired — send a new one.','A kód lejárt — kérjen újat.'),TOO_MANY:L3('چند بار اشتباه زده شد؛ کد جدید بگیرید.','Too many wrong tries — get a new code.','Túl sok hibás próbálkozás — kérjen új kódot.')}[r.data.reason]||r.data.reason;
+    m.innerHTML='<span style="color:var(--red)">❌ '+escH(t)+'</span>'; return;
+  }
+  acSaveTok(r.data.token); await acRefresh(); acTab('home');
+  showFlash&&showFlash(L3('✅ وارد شدید','✅ Signed in','✅ Belépve'),'ok');
+}
+function acMemberLogin(){
+  document.getElementById('acBody').innerHTML=`
+    <label class="ac-lbl">${L3('شماره تلفن','Phone number','Telefonszám')}</label>
+    <input class="ac-in" id="acPhone" type="tel" placeholder="+36..." value="${escH(AC.phone)}" style="direction:ltr">
+    <label class="ac-lbl">${L3('کد عضویت','Member code','Tagsági kód')}</label>
+    <input class="ac-in" id="acMcode" placeholder="ARADI-XXXXXX" style="direction:ltr;text-transform:uppercase">
+    <div class="ac-msg" id="acMsg"></div>
+    <button class="ac-btn" id="acGo" onclick="acMemberGo()">${L3('ورود','Sign in','Belépés')}</button>
+    <div style="text-align:center;margin-top:10px"><a href="#" onclick="acLogin();return false" style="color:var(--gray);font-size:12.5px">← ${L3('ورود با کد تلگرام یا ایمیل','Sign in with a Telegram or e-mail code','Belépés Telegram- vagy e-mail-kóddal')}</a></div>`;
+}
+async function acMemberGo(){
+  const p=document.getElementById('acPhone').value.trim(), c=document.getElementById('acMcode').value.trim(), m=document.getElementById('acMsg');
+  if(!p||!c){ m.innerHTML='<span style="color:var(--red)">'+L3('شماره و کد عضویت را بنویسید.','Enter your phone and member code.','Adja meg telefonszámát és tagsági kódját.')+'</span>'; return; }
+  m.textContent='⏳'; AC.phone=p;
+  let r; try { r=await db.rpc('acc_login_member',{p_phone:p, p_code:c, p_device:acDevice()}); } catch(e){ r={error:e}; }
+  if(r.error||!r.data||!r.data.ok){ m.innerHTML='<span style="color:var(--red)">❌ '+L3(...ERR_TXT.MEMBER_NOT_FOUND)+'</span>'; return; }
+  acSaveTok(r.data.token); await acRefresh(); acTab('home');
+}
+
+// ---------- signed in ----------
+function acTab(t){
+  if(!AC.me){ return; }
+  AC.tab=t; const tabs=document.getElementById('acTabs'); tabs.style.display='grid';
+  const names={home:'🏠 '+L3('خانه','Home','Főoldal'), invite:'🎁 '+L3('دعوت','Invite','Meghívás'), orders:'📦 '+L3('سفارش‌ها','Orders','Rendelések'), me:'👤 '+L3('اطلاعات','Profile','Adataim')};
+  tabs.querySelectorAll('button').forEach(b=>{ b.textContent=names[b.dataset.t]; b.classList.toggle('on',b.dataset.t===t); });
+  acSet('acTitle', L3('سلام','Hello','Szia')+' '+(AC.me.first_name||'')+' 👋');
+  acSet('acSub', AC.me.is_member?(AC.me.member_code||''):L3('هنوز عضو باشگاه نیستید','Not a club member yet','Még nem klubtag'));
+  ({home:acHome, invite:acInvite, orders:acOrders, me:acProfile})[t]();
+}
+function acHome(){
+  const m=AC.me, b=document.getElementById('acBody');
+  const codes=(m.codes||[]).map(c=>`<div class="ac-coupon"><b>${Number(c.percent)}%</b><div style="flex:1;font-size:12px;line-height:1.6">
+      <div style="font-weight:800;direction:ltr;text-align:start">${escH(c.code)}</div>
+      ${c.min_total>0?L3('حداقل خرید','Min. order','Min. rendelés')+' '+acF(c.min_total)+' Ft · ':''}${c.expires?'⏳ '+L3('تا','until','eddig:')+' '+escH(c.expires):''}</div>
+      <button class="ac-btn" style="width:auto;padding:8px 12px;font-size:12.5px" onclick="acUseCode(${escH(JSON.stringify(c.code))})">${L3('استفاده','Use','Felhasználás')}</button></div>`).join('');
+  b.innerHTML=`${m.is_member?`<div class="ac-card">
+      <div class="ac-row"><div><div class="ac-lbl">⭐ ${L3('امتیاز باشگاه','Club points','Klubpontok')}</div><div class="ac-big">${acF(m.points)}</div></div>
+        <div style="text-align:end"><div class="ac-lbl">👛 ${L3('کیف پول آرادی','ARÁDI wallet','ARÁDI pénztárca')}</div><div class="ac-big" style="color:#b26a00">${acF(m.wallet)} <span style="font-size:14px">Ft</span></div></div></div>
+      ${pointsBarHtml(Number(m.points||0), Number(m.points_min||300))}
+      <div style="font-size:11.5px;color:var(--gray);line-height:1.7">${L3('هر ۱٬۰۰۰ فورینت خرید','Every 1,000 Ft you spend earns','Minden 1 000 Ft után')} ${Number(m.points_per_1000||10)} ${L3('امتیاز؛ هر امتیاز = ۱ فورینت.','points; 1 point = 1 Ft.','pont jár; 1 pont = 1 Ft.')}${m.points_expires?' ⏳ '+L3('اعتبار تا','valid until','érvényes')+' '+escH(m.points_expires):''}</div></div>`
+    :`<div class="ac-card" style="text-align:center"><div style="font-size:14px;line-height:1.8;margin-bottom:8px">${L3('با عضویت رایگان در باشگاه، از هر خرید امتیاز بگیرید و دوستانتان را دعوت کنید.','Join the club for free to earn points on every purchase and invite friends.','Ingyenes klubtagsággal minden vásárlás után pontot gyűjt és meghívhatja barátait.')}</div>
+      <button class="ac-btn" onclick="acClose();openLoyaltyModal(${escH(JSON.stringify(m.phone||''))})">⭐ ${L3('عضویت رایگان + ۱۰۰ امتیاز','Join free + 100 points','Csatlakozás ingyen + 100 pont')}</button></div>`}
+    <div style="font-weight:800;margin:4px 0 8px">🎟️ ${L3('کدهای تخفیف من','My discount codes','Kedvezménykódjaim')}</div>
+    ${codes||`<div class="ac-card" style="font-size:12.5px;color:var(--gray)">${L3('فعلاً کد تخفیفی ندارید. هدیهٔ تولد و پیشنهادهای ویژه اینجا می‌آید.','No discount codes right now. Birthday gifts and special offers will appear here.','Most nincs kedvezménykódja. A születésnapi ajándék és a különleges ajánlatok itt jelennek meg.')}</div>`}
+    ${m.is_member?`<div class="ac-card" style="background:#fff8e1;border-color:#f5c04a;cursor:pointer" onclick="acTab('invite')">
+      <div style="font-weight:800">🎁 ${L3('دوستانتان را دعوت کنید','Invite your friends','Hívja meg barátait')}</div>
+      <div style="font-size:12.5px;line-height:1.7">${L3('۱۰٪ خرید هر دوست جدید به کیف پول شما — بدون سقف','10% of every new friend\'s order to your wallet — no limit','Minden új barát rendelésének 10%-a a pénztárcájába — korlátlanul')} ←</div></div>`:''}
+    ${!m.tg_linked&&m.tg_link?`<a class="ac-card" href="${escH(m.tg_link)}" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;background:#eaf6fd;border-color:#9fd3f0">
+      <b>📲 ${L3('تلگرام را وصل کنید','Connect Telegram','Kapcsolja össze a Telegramot')}</b><div style="font-size:12.5px;line-height:1.7">${L3('کد ورود، خبر سفارش، امتیازها و هدیهٔ تولد در تلگرام برایتان می‌آید.','Get login codes, order updates, points and your birthday gift on Telegram.','Belépési kódok, rendelésértesítők, pontok és születésnapi ajándék Telegramon.')}</div></a>`:''}
+    <button class="ac-btn alt" onclick="acClose();window.scrollTo({top:0,behavior:'smooth'})">🛒 ${L3('شروع خرید','Start shopping','Vásárlás')}</button>`;
+}
+function acUseCode(code){
+  try { acStore()&&acStore().setItem('aradi_use_code',code); } catch(e){}
+  try { navigator.clipboard&&navigator.clipboard.writeText(code).catch(()=>{}); } catch(e){}
+  showFlash&&showFlash(L3('✅ کد موقع ثبت سفارش خودکار اعمال می‌شود','✅ The code will be applied at checkout','✅ A kódot a rendelésnél automatikusan alkalmazzuk'),'ok');
+  acClose(); if(cart.length) { try { openOrderModal(); } catch(e){} }
+}
+function acInvite(){
+  const m=AC.me; IV.token=AC.token; IV.phone=m.phone||''; IV.code='';
+  IV.st=Object.assign({name:m.first_name}, m.invite||{active:false});
+  const host=document.getElementById('acBody');
+  if(!m.is_member){ host.innerHTML=`<div class="ac-card" style="text-align:center">${L3('برای دعوت دوستان، اول عضو باشگاه شوید (رایگان).','Join the club (free) to invite friends.','A meghíváshoz először csatlakozzon a klubhoz (ingyenes).')}</div>`; return; }
+  // reuse the invite window's views inside the account page
+  const real=document.getElementById('ivBody'); const tmp=document.createElement('div'); tmp.id='ivBody';
+  if(real) real.id='ivBodyHidden';
+  host.innerHTML=''; host.appendChild(tmp);
+  if(IV.st.active) ivShowActive(); else ivShowTerms();
+  tmp.id='acInviteBody'; if(real) real.id='ivBody';
+  tmp.querySelectorAll('#ivAct').forEach(x=>x.setAttribute('onclick','acActivate()'));
+}
+async function acActivate(){
+  const b=document.getElementById('ivAct'), m=document.querySelector('#acInviteBody #ivMsg');
+  if(b) b.disabled=true; if(m) m.textContent='⏳';
+  let r; try { r=await db.rpc('acc_ref_activate',{p_token:AC.token, p_terms_ver:REF_TERMS_VER, p_lang:currentLang}); } catch(e){ r={error:e}; }
+  if(r.error||!r.data){ if(m) m.innerHTML='<span style="color:var(--red)">❌ '+(rpcErrText(r.error)||L3('فعال نشد.','Could not activate.','Nem sikerült.'))+'</span>'; if(b) b.disabled=false; return; }
+  await acRefresh(); acTab('invite');
+}
+function acOrders(){
+  const os=AC.me.orders||[], ST={new:['⏳',L3('در حال آماده‌سازی','Being prepared','Előkészítés alatt')],delivered:['✅',L3('تحویل شد','Delivered','Kézbesítve')],cancelled:['✖',L3('لغو شد','Cancelled','Lemondva')],archived:['📁',L3('بایگانی','Archived','Archivált')]};
+  document.getElementById('acBody').innerHTML=os.length?os.map((o,i)=>{ const s=ST[o.status]||ST.new; const shipped=o.status==='new'&&o.shipped_at;
+    const its=(o.items||[]).map(x=>escH(x.name)+' × '+Number(x.qty)).join('، ');
+    return `<div class="ac-order"><div class="ac-row"><b dir="ltr">${escH(o.order_id)}</b><span style="font-size:12px">${shipped?'🚚 '+L3('ارسال شد','On the way','Úton'):s[0]+' '+s[1]}</span></div>
+      <div style="font-size:12px;color:var(--gray)">${new Date(o.created_at).toLocaleDateString(currentLang==='fa'?'fa-IR':currentLang==='hu'?'hu-HU':'en-GB')} · ${acF(o.total)} Ft${o.points_earned>0?' · ⭐ +'+Number(o.points_earned):''}</div>
+      <div style="font-size:12.5px;line-height:1.7;margin:4px 0">${its}</div>
+      <button class="ac-btn alt" style="width:auto;padding:7px 12px;font-size:12.5px" onclick="acReorder(${i})">🔁 ${L3('همین را دوباره سفارش بده','Order this again','Újrarendelés')}</button></div>`; }).join('')
+    :`<div class="ac-card" style="text-align:center;color:var(--gray)">${L3('هنوز سفارش آنلاینی ندارید.','No online orders yet.','Még nincs online rendelése.')}</div>`;
+}
+function acReorder(i){
+  const o=(AC.me.orders||[])[i]; if(!o) return; let added=0, miss=[];
+  (o.items||[]).forEach(x=>{ const p=(typeof products!=='undefined'?products:[]).find(p=>String(p.id)===String(x.id));
+    if(!p||(typeof isOut==='function'&&isOut(p))){ miss.push(x.name); return; }
+    for(let k=0;k<Math.max(1,Math.round(Number(x.qty)||1));k++) addToCart(p.id); added++; });
+  acClose();
+  showFlash&&showFlash((added?'✅ '+added+' '+L3('کالا به سبد اضافه شد','items added to your cart','termék a kosárba került'):'')+(miss.length?' — '+L3('موجود نیست:','not available:','nem kapható:')+' '+miss.join('، '):''), miss.length?'warn':'ok');
+  if(added&&typeof toggleCart==='function') setTimeout(toggleCart,300);
+}
+function acProfile(){
+  const m=AC.me, dists=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII','XXIII'];
+  const curD=String(m.district||'');
+  document.getElementById('acBody').innerHTML=`
+    <label class="ac-lbl">${L3('نام','Name','Név')}</label><input class="ac-in" id="apName" value="${escH(m.name||'')}">
+    <label class="ac-lbl">${L3('تلفن','Phone','Telefon')}</label><input class="ac-in" value="${escH(m.phone||'')}" disabled style="direction:ltr;background:#f5f5f5">
+    <label class="ac-lbl">${L3('ایمیل','E-mail','E-mail')}</label><input class="ac-in" id="apEmail" type="email" value="${escH(m.email||'')}" style="direction:ltr">
+    <label class="ac-lbl">${L3('آدرس ارسال (برای پر شدن خودکار فرم سفارش)','Delivery address (fills the order form for you)','Szállítási cím (automatikusan kitölti a rendelést)')}</label>
+    <input class="ac-in" id="apAddr" value="${escH(m.address||'')}" placeholder="${L3('بوداپست، خیابان…','Budapest, street…','Budapest, utca…')}">
+    <label class="ac-lbl">${L3('منطقه','District','Kerület')}</label>
+    <select class="ac-in" id="apDist"><option value="">—</option>${dists.map((d,k)=>`<option value="${k+1}" ${curD==String(k+1)||curD===d?'selected':''}>${d}.</option>`).join('')}</select>
+    <label class="ac-lbl">${L3('تاریخ تولد (برای هدیهٔ تولد؛ فقط یک بار ثبت می‌شود)','Birthday (for your birthday gift; can be set once)','Születésnap (a születésnapi ajándékhoz; egyszer adható meg)')}</label>
+    <input class="ac-in" id="apBirth" type="date" value="${escH(String(m.birthday||'').slice(0,10))}" ${m.birthday?'disabled style="background:#f5f5f5"':''}>
+    <div class="ac-msg" id="acMsg"></div>
+    <button class="ac-btn" id="acGo" onclick="acSaveProfile()">💾 ${L3('ذخیره','Save','Mentés')}</button>
+    <button class="ac-btn alt" style="margin-top:10px" onclick="acLogout()">🚪 ${L3('خروج از حساب در این گوشی','Sign out on this phone','Kijelentkezés ezen a telefonon')}</button>`;
+}
+async function acSaveProfile(){
+  const v=id=>document.getElementById(id).value, m=document.getElementById('acMsg'); m.textContent='⏳';
+  const p={name:v('apName'), email:v('apEmail'), address:v('apAddr'), district:v('apDist'), lang:currentLang};
+  if(!AC.me.birthday&&v('apBirth')) p.birthday=v('apBirth');
+  let r; try { r=await db.rpc('acc_update',{p_token:AC.token, p}); } catch(e){ r={error:e}; }
+  if(r.error||!r.data||!r.data.ok){ m.innerHTML='<span style="color:var(--red)">❌ '+(r.data&&r.data.reason==='BAD_EMAIL'?L3('ایمیل درست نیست.','The e-mail is not valid.','Az e-mail cím nem érvényes.'):L3('ذخیره نشد.','Could not save.','Nem sikerült menteni.'))+'</span>'; return; }
+  AC.me=r.data; acHeader(); acProfile(); document.getElementById('acMsg').innerHTML='<span style="color:var(--green)">✅ '+L3('ذخیره شد','Saved','Mentve')+'</span>';
+}
+async function acLogout(){
+  try { await db.rpc('acc_logout',{p_token:AC.token}); } catch(e){}
+  acSaveTok(null); AC.me=null; acHeader(); memberInfo=null; usePoints=false; useWallet=false; acLogin();
+}
+
+// ---------- the order form uses the account ----------
+function acMemberInfo(){
+  const m=AC.me; if(!m||!m.is_member) return null;
+  return {session:AC.token, code:null, phone:m.phone, name:m.first_name, points:Number(m.points||0), min:Number(m.points_min||300), usable:!!m.points_usable,
+          expires:m.points_expires, wallet:Number(m.wallet||0), wallet_pct:Number(m.wallet_pct||20)};
+}
+(function(){
+  const _open=openOrderModal;
+  openOrderModal=function(){
+    const r=_open.apply(this,arguments);
+    try {
+      if(AC.me){
+        const set=(id,v)=>{ const e=document.getElementById(id); if(e&&!e.value&&v) e.value=v; };
+        set('oName',AC.me.name); set('oPhone',AC.me.phone); set('oAddress',AC.me.address);
+        const d=document.getElementById('oDistrict'); if(d&&!d.value&&AC.me.district){ d.value=String(AC.me.district); try{ updateDeliveryCost(); }catch(e){} }
+        if(!memberInfo){ memberInfo=acMemberInfo(); if(memberInfo){ usePoints=memberInfo.usable; useWallet=memberInfo.wallet>0; renderPointsBox(); updateOrderSummary(); } }
+      }
+      let uc=null; try { uc=acStore()&&acStore().getItem('aradi_use_code'); } catch(e){}
+      const inp=document.getElementById('oReferral');
+      if(uc&&inp&&!inp.value&&!appliedReferral){ inp.value=uc; try{ acStore().removeItem('aradi_use_code'); }catch(e){} setTimeout(applyReferral,60); }
+    } catch(e){}
+    return r;
+  };
+  const _submit=submitOrder;
+  submitOrder=async function(){ const r=await _submit.apply(this,arguments); try { if(AC.token&&document.getElementById('orderSuccess').style.display==='block') acRefresh(); } catch(e){} return r; };
+  // invite window: use the account when signed in
+  const _oi=openInvite;
+  openInvite=function(){ if(AC.me&&AC.me.is_member){ acOpen('invite'); return; } return _oi.apply(this,arguments); };
+  const _sl=setLang;
+  setLang=function(){ const r=_sl.apply(this,arguments); try { acHeader(); if(document.getElementById('acctModal').classList.contains('open')){ if(AC.me) acTab(AC.tab); else acLogin(); } } catch(e){} return r; };
+  // header button
+  const ly=document.getElementById('loyaltyJoinBtn');
+  if(ly&&!document.getElementById('acctBtn')){ const b=document.createElement('button'); b.id='acctBtn'; b.onclick=()=>acOpen(); ly.parentNode.insertBefore(b, ly); }
+  try { AC.token=acStore()&&acStore().getItem('aradi_acct'); } catch(e){}
+  acHeader();
+  if(AC.token) acRefresh();
+  try { if(new URLSearchParams(location.search).get('account')==='1') setTimeout(()=>acOpen(),500); } catch(e){}
 })();
 </script>
 </body>
