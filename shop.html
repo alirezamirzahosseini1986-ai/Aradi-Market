@@ -195,6 +195,7 @@ body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
         <button id="installAppBtn" onclick="showInstallBanner()" style="display:none;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 10px;border-radius:20px;cursor:pointer;font-size:12px" title="App">📲</button>
         <button onclick="openAdminPanel()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:11px;padding:4px 8px" title="Admin">⚙️</button>
       <button onclick="openLoyaltyModal()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s" id="loyaltyJoinBtn">⭐ <span id="loyaltyBtnText">Join Club</span></button>
+      <button onclick="openInvite()" style="background:#f5c04a;border:none;color:#3d2a00;padding:7px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:700" id="inviteBtn">🎁 <span id="inviteBtnText">دعوت دوستان</span></button>
       <button class="cart-btn" onclick="toggleCart()">
         🛒 <span id="cartLabel">سبد</span>
         <span class="cart-count" id="cartCount">0</span>
@@ -631,7 +632,7 @@ body.en .cart-sidebar.open,body.hu .cart-sidebar.open{transform:translateX(0)}
       <div class="order-summary" id="orderSummaryBox"></div>
 
       <div class="form-group" id="referralGroup">
-  <label id="referralLabel">🎁 کد تخفیف (اختیاری)</label>
+  <label id="referralLabel">🎁 کد تخفیف یا کد دعوت (اختیاری)</label>
   <div style="display:flex;gap:8px">
     <input type="text" id="oReferral" placeholder="کد را وارد کنید..." style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;direction:ltr;text-transform:uppercase">
     <button onclick="applyReferral()" style="background:var(--green);color:white;border:none;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px">اعمال</button>
@@ -696,7 +697,7 @@ const T = {
     nameLabel:'نام *', phoneLabel:'شماره تماس *', noteLabel:'یادداشت',
     today:'امروز', tomorrow:'فردا', submitOrder:'✅ ثبت سفارش', cancel:'انصراف',
     successTitle:'سفارش ثبت شد!', successBtn:'بستن', noResults:'محصولی یافت نشد',
-    ft:'Ft', deliveryCost:'هزینه ارسال', referralLabel:'🎁 کد تخفیف (اختیاری)'
+    ft:'Ft', deliveryCost:'هزینه ارسال', referralLabel:'🎁 کد تخفیف یا کد دعوت (اختیاری)'
   },
   en:{
     hSub:'Product Catalog', cartLabel:'Cart', searchPh:'Search products...',
@@ -719,7 +720,7 @@ const T = {
     nameLabel:'Name *', phoneLabel:'Phone *', noteLabel:'Note',
     today:'Today', tomorrow:'Tomorrow', submitOrder:'✅ Place Order', cancel:'Cancel',
     successTitle:'Order Placed!', successBtn:'Close', noResults:'No products found',
-    ft:'Ft', deliveryCost:'Delivery fee', referralLabel:'🎁 Discount code (optional)'
+    ft:'Ft', deliveryCost:'Delivery fee', referralLabel:'🎁 Discount or invite code (optional)'
   },
   hu:{
     hSub:'Termékkatalógus', cartLabel:'Kosár', searchPh:'Termékek keresése...',
@@ -742,7 +743,7 @@ const T = {
     nameLabel:'Név *', phoneLabel:'Telefon *', noteLabel:'Megjegyzés',
     today:'Ma', tomorrow:'Holnap', submitOrder:'✅ Rendelés leadása', cancel:'Mégsem',
     successTitle:'Rendelés leadva!', successBtn:'Bezárás', noResults:'Nem található termék',
-    ft:'Ft', deliveryCost:'Szállítási díj', referralLabel:'🎁 Kedvezménykód (opcionális)'
+    ft:'Ft', deliveryCost:'Szállítási díj', referralLabel:'🎁 Kedvezmény- vagy meghívókód (opcionális)'
   }
 };
 
@@ -1000,7 +1001,15 @@ const ERR_TXT = {
   MEMBER_NOT_FOUND:['شماره تلفن یا کد عضویت درست نیست.','The phone number or member code is not correct.','A telefonszám vagy a tagsági kód nem megfelelő.'],
   ORDER_NAME_PHONE:['نام و شماره تماس را درست وارد کنید.','Please enter your name and a valid phone number.','Kérjük, adja meg nevét és érvényes telefonszámát.'],
   JOIN_NAME_PHONE:['نام و شماره تماس را درست وارد کنید.','Please enter your name and a valid phone number.','Kérjük, adja meg nevét és érvényes telefonszámát.'],
-  ORDER_ITEMS:['سبد خرید خالی است.','Your cart is empty.','A kosár üres.']
+  ORDER_ITEMS:['سبد خرید خالی است.','Your cart is empty.','A kosár üres.'],
+  REF_INVALID:['کد دعوت معتبر نیست.','This invite code is not valid.','Ez a meghívókód érvénytelen.'],
+  REF_SELF:['کد دعوت خودتان را نمی‌توانید برای خودتان استفاده کنید.','You cannot use your own invite code.','A saját meghívókódját nem használhatja.'],
+  REF_NOT_NEW:['کد دعوت فقط برای اولین خرید مشتری جدید است. این شماره قبلاً خرید کرده است.','Invite codes are only for a new customer\'s first order. This phone number has shopped with us before.','A meghívókód csak új vásárló első rendelésére érvényes. Ez a telefonszám már vásárolt nálunk.'],
+  REF_MIN:['هدیهٔ دعوت از ۱۰٬۰۰۰ فورینت خرید به بالا است.','The invite gift starts from a 10,000 Ft order.','A meghívó ajándéka 10 000 Ft-os rendeléstől érvényes.'],
+  REF_TERMS:['لطفاً قوانین «دعوت دوستان» را بخوانید و تیک تأیید را بزنید.','Please read the "Invite friends" terms and tick the box.','Kérjük, olvassa el a „Hívd meg a barátaidat” feltételeit és jelölje be a négyzetet.'],
+  REF_WITH_CODE:['کد دعوت و کد تخفیف با هم استفاده نمی‌شوند.','An invite code and a discount code cannot be used together.','Meghívókód és kedvezménykód nem használható együtt.'],
+  REF_TERMS_OLD:['قوانین به‌روز شده است. صفحه را دوباره باز کنید.','The terms have been updated. Please reload the page.','A feltételek frissültek. Kérjük, töltse újra az oldalt.'],
+  WALLET_EMPTY:['موجودی کیف پول برای این سفارش کافی نیست.','There is no wallet balance to use on this order.','Ehhez a rendeléshez nincs felhasználható egyenleg.']
 };
 function rpcErrText(e){
   const m=String((e&&(e.message||e.details||e.hint))||e||'');
@@ -1024,6 +1033,7 @@ async function applyReferral(){
   if(!code){ result.textContent=''; updateOrderSummary(); return; }
   result.textContent = '⏳';
   const sub = cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
+  if(/^R-?[A-Z0-9]{6}$/.test(code)) return applyInvite(code.replace(/^R-?/,'R-'), sub);
   let r; try { r = await db.rpc('check_code',{p_code:code, p_subtotal:sub}); } catch(e){ r={error:e}; }
   if(r.error || !r.data){
     result.innerHTML = '<span style="color:var(--red)">❌ '+L3('بررسی کد ممکن نشد. دوباره امتحان کنید.','Could not check the code. Please try again.','Nem sikerült ellenőrizni a kódot.')+'</span>';
@@ -1038,12 +1048,17 @@ async function applyReferral(){
 
 function getReferralDiscount(subtotal){
   if(!appliedReferral) return 0;
+  if(appliedReferral.type==='ref') return subtotal<appliedReferral.step?0:Math.min(appliedReferral.max, Math.floor(subtotal/appliedReferral.step)*appliedReferral.stepDisc);
   if(appliedReferral.type==='percent') return Math.round(subtotal * appliedReferral.value / 100);
   return 0;
 }
 
 // ----- club points inside the order form -----
-let memberInfo = null, usePoints = false;
+let memberInfo = null, usePoints = false, useWallet = false;
+function walletDiscount(sub, before){
+  if(!useWallet || !memberInfo || !(memberInfo.wallet>0)) return 0;
+  return Math.max(0, Math.min(Math.floor(memberInfo.wallet), Math.floor(Math.max(0, sub-before)*(memberInfo.wallet_pct||20)/100)));
+}
 function pointsDiscount(sub, refDisc){
   if(!usePoints || !memberInfo || !memberInfo.usable) return 0;
   return Math.max(0, Math.min(memberInfo.points, Math.floor(sub - refDisc)));
@@ -1062,7 +1077,12 @@ function renderPointsBox(){
     ${memberInfo.expires?`<div style="font-size:11px;color:var(--gray)">⏳ ${L3('اعتبار تا','valid until','érvényes')}: ${memberInfo.expires}</div>`:''}
     ${memberInfo.usable?`<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;font-weight:600;cursor:pointer">
       <input type="checkbox" id="usePointsChk" ${usePoints?'checked':''} onchange="usePoints=this.checked;updateOrderSummary()" style="width:18px;height:18px">
-      ${L3('استفاده از امتیازها (هر امتیاز = ۱ فورینت)','Use my points (1 point = 1 Ft)','Pontjaim felhasználása (1 pont = 1 Ft)')}</label>`:''}`;
+      ${L3('استفاده از امتیازها (هر امتیاز = ۱ فورینت)','Use my points (1 point = 1 Ft)','Pontjaim felhasználása (1 pont = 1 Ft)')}</label>`:''}
+    ${memberInfo.wallet>0?`<div style="border-top:1px dashed #b9d9c6;margin-top:10px;padding-top:8px">
+      <div style="font-size:13px;font-weight:700">👛 ${L3('کیف پول آرادی','ARÁDI wallet','ARÁDI pénztárca')}: ${Math.floor(memberInfo.wallet).toLocaleString()} Ft</div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px;font-weight:600;cursor:pointer">
+      <input type="checkbox" id="useWalletChk" ${useWallet?'checked':''} onchange="useWallet=this.checked;updateOrderSummary()" style="width:18px;height:18px">
+      ${L3('استفاده از کیف پول (تا ۲۰٪ مبلغ کالاها)','Use my wallet (up to 20% of the goods)','Pénztárca felhasználása (az áru max. 20%-áig)')}</label></div>`:''}`;
 }
 async function checkMemberPoints(){
   const phone=document.getElementById('oPhone').value.trim();
@@ -1075,7 +1095,7 @@ async function checkMemberPoints(){
   if(r.error || !r.data){ msg.innerHTML='<span style="color:var(--red)">'+L3('بررسی ممکن نشد. دوباره امتحان کنید.','Could not check. Please try again.','Nem sikerült ellenőrizni.')+'</span>'; return; }
   if(!r.data.found){ msg.innerHTML='<span style="color:var(--red)">❌ '+L3(...ERR_TXT.MEMBER_NOT_FOUND)+'</span>'; return; }
   memberInfo = Object.assign({code: code.trim().toUpperCase(), phone}, r.data);
-  usePoints = !!r.data.usable;
+  usePoints = !!r.data.usable; useWallet = r.data.wallet>0;
   renderPointsBox(); updateOrderSummary();
 }
 
@@ -1086,21 +1106,23 @@ function getOrderTotals(){
   const saved=Math.max(0,listSub-sub);
   const deliv=selectedDelivery==='delivery'?getDeliveryCost():0;
   const refDisc=getReferralDiscount(sub);
-  const ptsDisc=pointsDiscount(sub, refDisc);
-  const total=Math.max(0,sub+deliv-refDisc-ptsDisc);
-  return {listSub,sub,saved,deliv,refDisc,ptsDisc,total};
+  const walDisc=walletDiscount(sub, refDisc);
+  const ptsDisc=pointsDiscount(sub, refDisc+walDisc);
+  const total=Math.max(0,sub+deliv-refDisc-walDisc-ptsDisc);
+  return {listSub,sub,saved,deliv,refDisc,walDisc,ptsDisc,total};
 }
 
 function updateOrderSummary(){
   const t=T[currentLang];
-  const {listSub,sub,saved,deliv,refDisc,ptsDisc,total}=getOrderTotals();
+  const {listSub,sub,saved,deliv,refDisc,walDisc,ptsDisc,total}=getOrderTotals();
   const discLabel=activeWholesale?('🏪 B2B −'+activeWholesale.discount+'%')
     :(currentLang==='fa'?'🎁 تخفیف':currentLang==='hu'?'🎁 Kedvezmény':'🎁 Discount');
   document.getElementById('orderSummaryBox').innerHTML=`
     <div class="order-summary-row"><span>${t.cartTotal}</span><span>${(saved?listSub:sub).toLocaleString()} ${t.ft}</span></div>
     ${saved?`<div class="order-summary-row" style="color:var(--red)"><span>${discLabel}</span><span>− ${saved.toLocaleString()} ${t.ft}</span></div>`:''}
     ${deliv?`<div class="order-summary-row" style="color:var(--orange)"><span>${t.deliveryCost}</span><span>+ ${deliv.toLocaleString()} ${t.ft}</span></div>`:''}
-    ${refDisc?`<div class="order-summary-row" style="color:var(--green)"><span>🎟️ ${escH(appliedReferral?.code||'')} (${appliedReferral?.value||''}%)</span><span>− ${refDisc.toLocaleString()} ${t.ft}</span></div>`:''}
+    ${refDisc?`<div class="order-summary-row" style="color:var(--green)"><span>${appliedReferral?.type==='ref'?'🎁 '+L3('هدیهٔ دعوت دوست','Invite gift','Meghívó ajándék'):'🎟️ '+escH(appliedReferral?.code||'')+' ('+(appliedReferral?.value||'')+'%)'}</span><span>− ${refDisc.toLocaleString()} ${t.ft}</span></div>`:''}
+    ${walDisc?`<div class="order-summary-row" style="color:var(--green)"><span>👛 ${L3('کیف پول آرادی','ARÁDI wallet','ARÁDI pénztárca')}</span><span>− ${walDisc.toLocaleString()} ${t.ft}</span></div>`:''}
     ${ptsDisc?`<div class="order-summary-row" style="color:var(--green)"><span>⭐ ${L3('امتیاز باشگاه','Club points','Klubpontok')}</span><span>− ${ptsDisc.toLocaleString()} ${t.ft}</span></div>`:''}
     <div class="order-summary-total"><span>💰 Total:</span><span>${total.toLocaleString()} ${t.ft}</span></div>`;
 }
@@ -1787,6 +1809,7 @@ function selectDelivery(type){
 // Totals used by the order summary, the Telegram message and the saved order.
 function openOrderModal(){
   if(!cart.length) return;
+  try { const ri=refStored(), inp=document.getElementById('oReferral'); if(ri&&inp&&!inp.value&&!appliedReferral){ inp.value=ri; setTimeout(applyReferral,50); } } catch(e){}
   renderPointsBox();
   updateOrderSummary();
   document.getElementById('orderModal').classList.add('open');
@@ -1800,7 +1823,7 @@ function closeOrderModal(){
 
 let _orderBusy=false;
 function resetOrderExtras(){
-  appliedReferral=null; memberInfo=null; usePoints=false;
+  appliedReferral=null; memberInfo=null; usePoints=false; useWallet=false;
   const a=document.getElementById('oReferral'); if(a) a.value='';
   const b=document.getElementById('referralResult'); if(b) b.textContent='';
   renderPointsBox();
@@ -1818,7 +1841,8 @@ async function submitOrder(){
   if(selectedDelivery==='delivery'&&!district){ alert(currentLang==='fa'?'لطفاً منطقه را انتخاب کنید':'Please select your district'); return; }
   if(selectedDelivery==='delivery'&&!selectedDate){ alert(currentLang==='fa'?'لطفاً تاریخ دلیوری را انتخاب کنید':'Please select delivery date'); return; }
   if(!selectedSlot){ alert(currentLang==='fa'?'لطفاً زمان تحویل را انتخاب کنید':'Please select delivery time'); return; }
-  if(memberInfo && memberInfo.phone!==phone){ memberInfo=null; usePoints=false; renderPointsBox(); }
+  if(memberInfo && memberInfo.phone!==phone){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); }
+  if(appliedReferral&&appliedReferral.type==='ref'&&!(document.getElementById('refTermsChk')||{}).checked){ alert(L3(...ERR_TXT.REF_TERMS)); return; }
   _orderBusy=true;
   const btn=document.getElementById('submitOrderBtn'); if(btn) btn.disabled=true;
   try {
@@ -1846,7 +1870,10 @@ async function submitOrder(){
       delivery_type: selectedDelivery, items: cart, delivery_cost: deliv,
       time_slot: (selectedDate||day)+' '+selectedSlot, delivery_date: selectedDate||null,
       payment_method: selectedPayment, telegram_text: msg,
-      discount_code: appliedReferral?appliedReferral.code:null,
+      discount_code: appliedReferral&&appliedReferral.type!=='ref'?appliedReferral.code:null,
+      ref_code: appliedReferral&&appliedReferral.type==='ref'?appliedReferral.code:null,
+      ref_terms: !!(appliedReferral&&appliedReferral.type==='ref'&&(document.getElementById('refTermsChk')||{}).checked),
+      use_wallet: !!(useWallet&&memberInfo&&memberInfo.wallet>0),
       use_points: !!(usePoints&&memberInfo&&memberInfo.usable), member_code: memberInfo?memberInfo.code:null
     };
     let res;
@@ -1864,8 +1891,8 @@ async function submitOrder(){
       const known=rpcErrText(res.error);
       if(known){
         alert(known);
-        if(/CODE_/.test(String(res.error.message||''))){ appliedReferral=null; document.getElementById('referralResult').innerHTML='<span style="color:var(--red)">❌ '+known+'</span>'; }
-        if(/POINTS_LOW|MEMBER_NOT_FOUND/.test(String(res.error.message||''))){ memberInfo=null; usePoints=false; renderPointsBox(); }
+        if(/CODE_|REF_(INVALID|SELF|NOT_NEW|MIN|WITH_CODE)/.test(String(res.error.message||''))){ appliedReferral=null; document.getElementById('referralResult').innerHTML='<span style="color:var(--red)">❌ '+known+'</span>'; if(/REF_(SELF|NOT_NEW|INVALID)/.test(String(res.error.message||''))) refForget(); }
+        if(/POINTS_LOW|MEMBER_NOT_FOUND|WALLET_EMPTY/.test(String(res.error.message||''))){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); }
         updateOrderSummary();
         return;
       }
@@ -1894,6 +1921,7 @@ async function submitOrder(){
       if(!memberInfo) h+=`<button onclick="closeOrderModal();openLoyaltyModal(${escH(JSON.stringify(phone))})" style="display:block;width:100%;margin-top:10px;background:white;color:var(--green);border:1.5px solid var(--green);padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">⭐ ${L3('عضویت در باشگاه مشتریان — ۱۰۰ امتیاز هدیه','Join our Customer Club — 100 welcome points','Csatlakozzon a klubhoz — 100 ajándékpont')}</button>`;
       ex.innerHTML=h;
     }
+    if(out.ref_discount>0) refForget();
     cart=[]; renderCart(); updateCartBadge(); resetOrderExtras();
   } finally { _orderBusy=false; if(btn) btn.disabled=false; }
 }
@@ -3141,7 +3169,7 @@ try {
   const _qp=new URLSearchParams(location.search);
   if(_qp.get('join')==='1'){ const ph=(_qp.get('phone')||'').replace(/[^\d+]/g,''); setTimeout(()=>openLoyaltyModal(ph&&ph[0]!=='+'?'+'+ph:ph),400); }
 } catch(e){}
-document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo){ memberInfo=null; usePoints=false; renderPointsBox(); updateOrderSummary(); } });
+document.getElementById('oPhone')?.addEventListener('input',()=>{ if(memberInfo){ memberInfo=null; usePoints=false; useWallet=false; renderPointsBox(); updateOrderSummary(); } });
 </script>
 
 <!-- WHOLESALE LOGIN -->
@@ -4208,6 +4236,242 @@ function asShowWelcome(){
   if(window.ResizeObserver) new ResizeObserver(asMiniSize).observe(document.getElementById('asstPanel'));
   const _submitOrder=submitOrder; submitOrder=async function(){ const r=await _submitOrder.apply(this,arguments); try { const ok=document.getElementById('orderSuccess'); if(ok&&ok.style.display==='block'){ AS._checkoutStarted=false; selectedSlot=null; selectedDate=null; } } catch(e){} return r; };
   window.__asst=AS;
+})();
+</script>
+
+<!-- ===================== INVITE FRIENDS + ARÁDI WALLET (Nov 2026) ===================== -->
+<style>
+#inviteModal .iv-h{font-size:18px;color:var(--green);text-align:center;margin:4px 0 6px}
+#inviteModal .iv-sub{font-size:12.5px;color:var(--gray);text-align:center;line-height:1.7;margin-bottom:14px}
+#inviteModal .iv-gift{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+#inviteModal .iv-gift div{background:var(--green-l);border-radius:12px;padding:10px;font-size:12px;line-height:1.6;text-align:center}
+#inviteModal .iv-gift b{display:block;font-size:15px;color:var(--green)}
+#inviteModal .iv-in{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:8px;direction:ltr}
+#inviteModal .iv-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer}
+#inviteModal .iv-btn:disabled{opacity:.5}
+#inviteModal .iv-terms{max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.75;background:#fafcfb;margin:10px 0}
+#inviteModal .iv-code{font-size:24px;font-weight:800;letter-spacing:2px;text-align:center;direction:ltr;color:var(--green);background:var(--green-l);border-radius:12px;padding:10px;margin:8px 0}
+#inviteModal .iv-share{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+#inviteModal .iv-share a,#inviteModal .iv-share button{display:block;text-align:center;text-decoration:none;border:none;border-radius:10px;padding:10px 4px;font-size:12.5px;font-weight:700;cursor:pointer;color:#fff}
+#inviteModal .iv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+#inviteModal .iv-stats div{border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center;font-size:11px;color:var(--gray)}
+#inviteModal .iv-stats b{display:block;font-size:16px;color:#222}
+#inviteModal .iv-msg{font-size:12.5px;margin:6px 0;min-height:16px}
+#refBanner{position:relative;background:linear-gradient(90deg,#f5c04a,#f7d57a);color:#3d2a00;font-size:13px;font-weight:600;padding:10px 40px 10px 14px;line-height:1.6;text-align:center;z-index:50}
+#refBanner button{position:absolute;top:6px;inset-inline-end:8px;background:none;border:none;font-size:18px;cursor:pointer;color:#3d2a00}
+</style>
+<div class="modal-ov" id="inviteModal">
+  <div class="modal-box" style="max-width:480px;border-radius:16px">
+    <div style="text-align:center;font-size:36px">🎁</div>
+    <div class="iv-h" id="ivTitle"></div>
+    <div id="ivBody"></div>
+    <button onclick="closeInvite()" id="ivClose" style="width:100%;background:none;border:none;color:var(--gray);margin-top:8px;padding:10px;cursor:pointer;font-size:13px"></button>
+  </div>
+</div>
+<div class="modal-ov" id="refTermsModal" style="z-index:320">
+  <div class="modal-box" style="max-width:520px;border-radius:16px">
+    <div id="refTermsBody" style="font-size:13px;line-height:1.85"></div>
+    <button onclick="document.getElementById('refTermsModal').classList.remove('open')" class="submit-order-btn" style="margin-top:12px" id="refTermsOk">OK</button>
+  </div>
+</div>
+<script>
+// ---------- terms (version 1) ----------
+const REF_TERMS_VER = 1;
+const REF_TERMS = {
+fa:{t:'شرایط و قوانین «دعوت دوستان آرادی» — نسخهٔ ۱', s:[
+['چه کسی می‌تواند دعوت کند؟','همهٔ اعضای باشگاه مشتریان آرادی که کد عضویت (ARADI-xxxx) دارند. هر عضو یک کد دعوت جداگانه (مثل R-ABC123) و یک لینک دعوت می‌گیرد.'],
+['دوست جدید کیست؟','کسی که شماره تلفنش قبلاً نه در فروشگاه و نه در سفارش آنلاین ثبت شده باشد. هر شماره فقط یک بار می‌تواند از کد دعوت استفاده کند.'],
+['هدیهٔ دوست جدید','فقط برای اولین سفارش آنلاین: برای هر ۱۰٬۰۰۰ فورینت خرید کالا ۱٬۰۰۰ فورینت تخفیف؛ حداقل خرید ۱۰٬۰۰۰ و حداکثر تخفیف ۳٬۰۰۰ فورینت. هزینهٔ ارسال جداست و تخفیف نمی‌خورد. با کد تخفیف دیگری جمع نمی‌شود.'],
+['جایزهٔ دعوت‌کننده','۱۰٪ مبلغ کالاهای اولین سفارش دوست (بعد از تخفیف دوست و بدون هزینهٔ ارسال)، گرد به پایین تا ۱۰ فورینت. مثال: دوست ۲۰٬۰۰۰ فورینت خرید می‌کند و ۲٬۰۰۰ تخفیف می‌گیرد؛ جایزه ۱۰٪ از ۱۸٬۰۰۰ = ۱٬۸۰۰ فورینت. جایزه فقط بعد از تحویل سفارش و پرداخت کامل به «کیف پول آرادی» اضافه می‌شود. تعداد دعوت سقف ندارد.'],
+['کیف پول آرادی','موجودی کیف پول پول نقد نیست، پس داده نمی‌شود و به کس دیگری منتقل نمی‌شود. فقط در سفارش آنلاین قابل استفاده است و در هر سفارش حداکثر تا ۲۰٪ مبلغ کالاها. هر مبلغ ۹۰ روز بعد از اضافه شدن منقضی می‌شود. برای استفاده، شماره تلفن و کد عضویت لازم است.'],
+['چه وقت جایزه داده نمی‌شود یا پس گرفته می‌شود؟','اگر سفارش دوست لغو یا مرجوع شود (جایزه به همان نسبت کم می‌شود)؛ اگر آدرس یا شماره تلفن دوست با خود دعوت‌کننده یکی باشد؛ اگر حساب ساختگی یا سوءاستفاده دیده شود. در این حالت آرادی می‌تواند جایزه را لغو و کد دعوت را غیرفعال کند.'],
+['امتیاز باشگاه','امتیاز فقط روی مبلغی حساب می‌شود که واقعاً پرداخت شده است؛ تخفیف دعوت و کیف پول امتیاز نمی‌گیرند.'],
+['حریم خصوصی','به دعوت‌کننده فقط گفته می‌شود که «یک دوست خرید کرد» و مبلغ جایزه؛ نام و جزئیات خرید دوست نشان داده نمی‌شود.'],
+['تغییر قوانین','آرادی می‌تواند این قوانین را با اعلام قبلی تغییر دهد. جایزه‌هایی که قبلاً اضافه شده‌اند تا تاریخ اعتبارشان معتبر می‌مانند.'],
+['تأیید','دعوت‌کننده قبل از فعال شدن کدش و دوست جدید قبل از ثبت سفارش، تیک «قوانین را خواندم و قبول دارم» را می‌زنند. تاریخ و نسخهٔ قوانینِ پذیرفته‌شده ذخیره می‌شود.']]},
+en:{t:'ARÁDI "Invite friends" — Terms and conditions, version 1', s:[
+['Who can invite?','Every ARÁDI Customer Club member with a member code (ARADI-xxxx). Each member gets a separate invite code (e.g. R-ABC123) and an invite link.'],
+['Who is a new friend?','Someone whose phone number has never been registered with us, neither in the shop nor in an online order. Each phone number can use an invite code only once.'],
+['The new friend\'s gift','For the first online order only: 1,000 Ft off for every 10,000 Ft of goods; minimum order 10,000 Ft, maximum discount 3,000 Ft. The delivery fee is separate and not discounted. Cannot be combined with another discount code.'],
+['The inviter\'s reward','10% of the goods in the friend\'s first order (after the friend\'s discount, without delivery), rounded down to 10 Ft. Example: the friend buys 20,000 Ft of goods and gets 2,000 Ft off; the reward is 10% of 18,000 = 1,800 Ft. The reward is added to your "ARÁDI wallet" only after the order has been delivered and fully paid. There is no limit to the number of invitations.'],
+['ARÁDI wallet','Wallet balance is not cash: it cannot be paid out or transferred to anyone else. It can be used only for online orders, up to 20% of the goods in each order. Each amount expires 90 days after it is added. Using it requires your phone number and member code.'],
+['When is a reward not given or taken back?','If the friend\'s order is cancelled or returned (the reward is reduced accordingly); if the friend\'s address or phone number is the same as the inviter\'s; if fake accounts or misuse are found. In these cases ARÁDI may cancel the reward and deactivate the invite code.'],
+['Club points','Points are calculated only on the amount actually paid; the invite discount and wallet amounts do not earn points.'],
+['Privacy','The inviter is only told that "a friend made a purchase" and the reward amount; the friend\'s name and order details are not shown.'],
+['Changes','ARÁDI may change these terms with prior notice. Rewards already added stay valid until their expiry date.'],
+['Acceptance','The inviter, before the code is activated, and the new friend, before placing the order, tick "I have read and accept the terms". The date and version of the accepted terms are stored.']]},
+hu:{t:'ARÁDI „Hívd meg a barátaidat” — Részvételi feltételek, 1. verzió', s:[
+['Ki hívhat meg?','Az ARÁDI Vásárlói Klub minden tagja, akinek van tagsági kódja (ARADI-xxxx). Minden tag külön meghívókódot (pl. R-ABC123) és meghívólinket kap.'],
+['Ki számít új barátnak?','Az, akinek a telefonszáma még soha nem volt nálunk regisztrálva, sem az üzletben, sem online rendelésben. Egy telefonszám csak egyszer használhat meghívókódot.'],
+['Az új barát ajándéka','Csak az első online rendelésre: minden 10 000 Ft áru után 1 000 Ft kedvezmény; minimális rendelés 10 000 Ft, a kedvezmény legfeljebb 3 000 Ft. A szállítási díj külön fizetendő, arra nem jár kedvezmény. Más kedvezménykóddal nem vonható össze.'],
+['A meghívó jutalma','A barát első rendelésében szereplő áruk értékének 10%-a (a barát kedvezménye után, szállítási díj nélkül), 10 Ft-ra lefelé kerekítve. Példa: a barát 20 000 Ft-ért vásárol és 2 000 Ft kedvezményt kap; a jutalom 18 000 Ft 10%-a = 1 800 Ft. A jutalom csak a rendelés kézbesítése és teljes kifizetése után kerül az „ARÁDI pénztárcába”. A meghívások száma nincs korlátozva.'],
+['ARÁDI pénztárca','A pénztárca egyenlege nem készpénz: nem fizethető ki és nem ruházható át. Csak online rendelésnél használható, rendelésenként az áruk értékének legfeljebb 20%-áig. Minden összeg a jóváírástól számított 90 nap után lejár. Használatához a telefonszám és a tagsági kód szükséges.'],
+['Mikor nem jár, vagy mikor vonható vissza a jutalom?','Ha a barát rendelését lemondják vagy visszaküldik (a jutalom arányosan csökken); ha a barát címe vagy telefonszáma megegyezik a meghívóéval; ha kitalált fiókokat vagy visszaélést észlelünk. Ilyenkor az ARÁDI visszavonhatja a jutalmat és letilthatja a meghívókódot.'],
+['Klubpontok','Pont csak a ténylegesen kifizetett összeg után jár; a meghívó kedvezményre és a pénztárcából fizetett összegre nem jár pont.'],
+['Adatvédelem','A meghívó csak annyit tud meg, hogy „egy barátja vásárolt”, és a jutalom összegét; a barát neve és a rendelés részletei nem láthatók.'],
+['Változások','Az ARÁDI előzetes értesítés mellett módosíthatja a feltételeket. A már jóváírt jutalmak a lejáratukig érvényesek maradnak.'],
+['Elfogadás','A meghívó a kódja aktiválása előtt, az új barát a rendelés leadása előtt bejelöli: „Elolvastam és elfogadom a feltételeket”. Az elfogadás dátumát és a feltételek verzióját rögzítjük.']]}
+};
+function refTermsHtml(){
+  const T0=REF_TERMS[currentLang]||REF_TERMS.en;
+  return `<div style="font-weight:800;color:var(--green);margin-bottom:6px">${escH(T0.t)}</div>`+T0.s.map((x,i)=>`<div style="margin-top:8px"><b>${(i+1).toLocaleString(currentLang==='fa'?'fa-IR':'en')}. ${escH(x[0])}</b><br>${escH(x[1])}</div>`).join('');
+}
+function openRefTerms(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  document.getElementById('refTermsBody').innerHTML=refTermsHtml();
+  document.getElementById('refTermsOk').textContent=L3('متوجه شدم','Got it','Értem');
+  document.getElementById('refTermsModal').classList.add('open');
+}
+
+// ---------- the invite code a friend arrived with ----------
+function refStore(){ try { return window.localStorage; } catch(e){ return null; } }
+function refStored(){
+  try { const j=JSON.parse((refStore()&&refStore().getItem('aradi_ref'))||'null'); if(j&&j.c&&Date.now()-j.t<30*864e5) return j.c; } catch(e){}
+  return null;
+}
+function refForget(){ try { refStore()&&refStore().removeItem('aradi_ref'); } catch(e){} const b=document.getElementById('refBanner'); if(b) b.remove(); }
+function refBanner(){
+  if(!refStored()||document.getElementById('refBanner')) return;
+  const b=document.createElement('div'); b.id='refBanner';
+  b.innerHTML=`<span>🎁 ${L3('دوستتان شما را دعوت کرده! روی اولین خرید آنلاین، برای هر ۱۰٬۰۰۰ فورینت ۱٬۰۰۰ فورینت تخفیف می‌گیرید (تا ۳٬۰۰۰).',
+    'A friend invited you! On your first online order you get 1,000 Ft off for every 10,000 Ft (up to 3,000 Ft).',
+    'Egy barátja meghívta! Első online rendelésénél minden 10 000 Ft után 1 000 Ft kedvezményt kap (legfeljebb 3 000 Ft).')}</span>
+    <a href="#" onclick="openRefTerms(event)" style="color:#3d2a00;margin-inline-start:6px;font-size:12px">${L3('قوانین','Terms','Feltételek')}</a>
+    <button onclick="this.parentNode.remove()" aria-label="close">×</button>`;
+  document.body.insertBefore(b, document.body.firstChild);
+}
+(function(){
+  try {
+    const q=new URLSearchParams(location.search).get('ref');
+    const c=String(q||'').toUpperCase().replace(/[^A-Z0-9-]/g,'');
+    if(/^R-?[A-Z0-9]{6}$/.test(c)) refStore()&&refStore().setItem('aradi_ref', JSON.stringify({c:c.replace(/^R-?/,'R-'), t:Date.now()}));
+  } catch(e){}
+  setTimeout(refBanner, 600);
+})();
+
+// ---------- invite code inside the order form ----------
+async function applyInvite(code, sub){
+  const result=document.getElementById('referralResult');
+  const phone=(document.getElementById('oPhone')||{}).value||'';
+  let r; try { r = await db.rpc('ref_check',{p_code:code, p_phone:phone.trim(), p_subtotal:sub}); } catch(e){ r={error:e}; }
+  if(r.error || !r.data){
+    result.innerHTML='<span style="color:var(--red)">❌ '+L3('بررسی کد ممکن نشد. دوباره امتحان کنید.','Could not check the code. Please try again.','Nem sikerült ellenőrizni a kódot.')+'</span>';
+  } else if(!r.data.ok){
+    result.innerHTML='<span style="color:var(--red)">❌ '+L3(...(ERR_TXT[r.data.reason]||ERR_TXT.REF_INVALID))+'</span>';
+    if(r.data.reason==='REF_SELF'||r.data.reason==='REF_NOT_NEW'||r.data.reason==='REF_INVALID') refForget();
+  } else {
+    appliedReferral={code:r.data.code, type:'ref', step:Number(r.data.step)||10000, stepDisc:Number(r.data.step_disc)||1000, max:Number(r.data.max)||3000};
+    result.innerHTML=`<div style="background:#fff8e1;border:1px solid #f5c04a;border-radius:10px;padding:8px 10px;margin-top:4px">
+      <div style="color:var(--green);font-weight:700">✅ ${L3('کد دعوت دوست پذیرفته شد','Invite code accepted','Meghívókód elfogadva')} — ${L3('برای هر ۱۰٬۰۰۰ فورینت ۱٬۰۰۰ تخفیف (تا ۳٬۰۰۰)','1,000 Ft off per 10,000 Ft (up to 3,000)','10 000 Ft-onként 1 000 Ft kedvezmény (max. 3 000)')}</div>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;font-size:12.5px;cursor:pointer;line-height:1.6">
+        <input type="checkbox" id="refTermsChk" style="width:18px;height:18px;flex-shrink:0;margin-top:2px">
+        <span>${L3('قوانین «دعوت دوستان» را خواندم و قبول دارم.','I have read and accept the "Invite friends" terms.','Elolvastam és elfogadom a „Hívd meg a barátaidat” feltételeit.')}
+        <a href="#" onclick="openRefTerms(event)" style="color:var(--green);font-weight:700">${L3('خواندن قوانین','Read the terms','Feltételek')}</a></span></label></div>`;
+  }
+  updateOrderSummary();
+}
+
+// ---------- "Invite friends" window: activate, link, wallet ----------
+const IV={phone:'', code:'', st:null};
+function ivSet(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
+function openInvite(){
+  try { const s=sessionStorage.getItem('aradi_iv'); if(s){ const j=JSON.parse(s); IV.phone=j.p||''; IV.code=j.c||''; } } catch(e){}
+  ivSet('ivTitle', L3('دعوت دوستان آرادی','Invite your friends','Hívd meg a barátaidat'));
+  ivSet('ivClose', L3('بستن','Close','Bezárás'));
+  if(IV.st&&IV.st.active) ivShowActive(); else ivShowLogin();
+  document.getElementById('inviteModal').classList.add('open');
+}
+function closeInvite(){ document.getElementById('inviteModal').classList.remove('open'); }
+function ivGiftHtml(){
+  return `<div class="iv-sub">${L3('لینک خودتان را برای دوستانتان بفرستید. هر بار که یک دوست جدید اولین خریدش را انجام دهد، ۱۰٪ آن به کیف پول شما اضافه می‌شود — بدون سقف!',
+      'Send your own link to your friends. Every time a new friend makes a first purchase, 10% of it goes to your wallet — with no limit!',
+      'Küldje el saját linkjét barátainak. Minden új barát első vásárlásának 10%-a az Ön pénztárcájába kerül — korlátlanul!')}</div>
+    <div class="iv-gift"><div>🎁 ${L3('دوست شما','Your friend','Barátja')}<b>${L3('تا ۳٬۰۰۰ Ft','up to 3,000 Ft','max. 3 000 Ft')}</b>${L3('تخفیف روی اولین خرید','off the first order','kedvezmény az első rendelésre')}</div>
+    <div>👛 ${L3('شما','You','Ön')}<b>10%</b>${L3('از خرید دوستتان، به کیف پول','of your friend\'s order, to your wallet','a barát rendeléséből, a pénztárcába')}</div></div>`;
+}
+function ivShowLogin(msg){
+  document.getElementById('ivBody').innerHTML=ivGiftHtml()+`
+    <div style="font-size:12.5px;font-weight:700;margin-bottom:6px">${L3('برای ورود، شماره تلفن و کد عضویت باشگاه را بنویسید:','To sign in, enter your phone number and club member code:','Belépéshez adja meg telefonszámát és klubtagsági kódját:')}</div>
+    <input class="iv-in" id="ivPhone" type="tel" placeholder="+36..." value="${escH(IV.phone)}">
+    <input class="iv-in" id="ivCode" placeholder="ARADI-XXXXXX" value="${escH(IV.code)}" style="text-transform:uppercase">
+    <div class="iv-msg" id="ivMsg">${msg||''}</div>
+    <button class="iv-btn" id="ivGo" onclick="ivLogin()">${L3('ادامه','Continue','Tovább')}</button>
+    <div style="font-size:12px;color:var(--gray);text-align:center;margin-top:10px">${L3('عضو باشگاه نیستید؟','Not a club member yet?','Még nem klubtag?')}
+      <a href="#" onclick="closeInvite();openLoyaltyModal('');return false" style="color:var(--green);font-weight:700">${L3('عضویت رایگان','Join for free','Csatlakozás ingyen')}</a></div>`;
+}
+async function ivLogin(){
+  const p=document.getElementById('ivPhone').value.trim(), c=document.getElementById('ivCode').value.trim();
+  const m=document.getElementById('ivMsg');
+  if(!p||!c){ m.innerHTML='<span style="color:var(--red)">'+L3('شماره تلفن و کد عضویت را بنویسید.','Please enter your phone number and member code.','Adja meg telefonszámát és tagsági kódját.')+'</span>'; return; }
+  m.textContent='⏳'; document.getElementById('ivGo').disabled=true;
+  let r; try { r=await db.rpc('ref_status',{p_phone:p, p_code:c}); } catch(e){ r={error:e}; }
+  document.getElementById('ivGo').disabled=false;
+  if(r.error||!r.data){ m.innerHTML='<span style="color:var(--red)">'+L3('اتصال برقرار نشد. دوباره امتحان کنید.','Could not connect. Please try again.','Nem sikerült kapcsolódni.')+'</span>'; return; }
+  if(!r.data.found){ m.innerHTML='<span style="color:var(--red)">❌ '+L3(...ERR_TXT.MEMBER_NOT_FOUND)+'</span>'; return; }
+  IV.phone=p; IV.code=c; IV.st=r.data;
+  try { sessionStorage.setItem('aradi_iv', JSON.stringify({p,c})); } catch(e){}
+  if(r.data.active) ivShowActive(); else ivShowTerms();
+}
+function ivShowTerms(msg){
+  document.getElementById('ivBody').innerHTML=`<div class="iv-sub">${L3('سلام','Hello','Szia')} ${escH(IV.st.name||'')}! ${L3('لطفاً قوانین را بخوانید و تأیید کنید تا کد دعوت شما ساخته شود.','Please read and accept the terms to get your invite code.','Kérjük, olvassa el és fogadja el a feltételeket a meghívókódjához.')}</div>
+    <div class="iv-terms">${refTermsHtml()}</div>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px">
+      <input type="checkbox" id="ivAccept" style="width:18px;height:18px;flex-shrink:0;margin-top:2px" onchange="document.getElementById('ivAct').disabled=!this.checked">
+      <span>${L3('قوانین را خواندم و قبول دارم.','I have read and accept the terms.','Elolvastam és elfogadom a feltételeket.')}</span></label>
+    <div class="iv-msg" id="ivMsg">${msg||''}</div>
+    <button class="iv-btn" id="ivAct" disabled onclick="ivActivate()">✅ ${L3('فعال کردن کد دعوت من','Activate my invite code','Meghívókódom aktiválása')}</button>`;
+}
+async function ivActivate(){
+  const m=document.getElementById('ivMsg'); m.textContent='⏳'; document.getElementById('ivAct').disabled=true;
+  let r; try { r=await db.rpc('ref_activate',{p_phone:IV.phone, p_code:IV.code, p_terms_ver:REF_TERMS_VER, p_lang:currentLang}); } catch(e){ r={error:e}; }
+  if(r.error||!r.data){ m.innerHTML='<span style="color:var(--red)">❌ '+(rpcErrText(r.error)||L3('فعال نشد. دوباره امتحان کنید.','Could not activate. Please try again.','Nem sikerült aktiválni.'))+'</span>'; document.getElementById('ivAct').disabled=false; return; }
+  IV.st=r.data; ivShowActive();
+}
+function ivLink(){ return 'https://aradimcf.com/shop?ref='+encodeURIComponent(IV.st.ref_code); }
+function ivShareText(){
+  return L3('سلام! من از آرادی مارکت (فروشگاه ایرانی بوداپست) خرید می‌کنم. با این لینک روی اولین خرید آنلاینت تا ۳٬۰۰۰ فورینت تخفیف می‌گیری 🎁',
+    'Hi! I shop at ARÁDI Market, the Iranian & international grocery in Budapest. With this link you get up to 3,000 Ft off your first online order 🎁',
+    'Szia! Az ARÁDI Marketben vásárolok (perzsa és nemzetközi élelmiszerbolt, Budapest). Ezzel a linkkel akár 3 000 Ft kedvezményt kapsz az első online rendelésedre 🎁');
+}
+function ivShowActive(){
+  const s=IV.st, link=ivLink(), txt=ivShareText();
+  const credits=(s.credits||[]).map(c=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px dashed #e3e3e3"><span>${Math.floor(c.remaining).toLocaleString()} Ft</span><span style="color:var(--gray)">⏳ ${L3('تا','until','eddig:')} ${escH(c.expires)}</span></div>`).join('');
+  document.getElementById('ivBody').innerHTML=ivGiftHtml()+`
+    <div style="font-size:12px;color:var(--gray);text-align:center">${L3('کد دعوت شما','Your invite code','Az Ön meghívókódja')}</div>
+    <div class="iv-code">${escH(s.ref_code)}</div>
+    <div style="font-size:11.5px;direction:ltr;text-align:center;color:var(--gray);word-break:break-all">${escH(link)}</div>
+    <div class="iv-share">
+      <a href="https://wa.me/?text=${encodeURIComponent(txt+'\n'+link)}" target="_blank" rel="noopener" style="background:#25D366">WhatsApp</a>
+      <a href="https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" style="background:#229ED9">Telegram</a>
+      <button onclick="ivCopy()" id="ivCopyBtn" style="background:var(--green)">${L3('کپی لینک','Copy link','Link másolása')}</button>
+    </div>
+    ${navigator.share?`<button class="iv-btn" style="background:#3d2a00" onclick="ivNativeShare()">📤 ${L3('فرستادن با برنامه‌های دیگر','Share with other apps','Megosztás más alkalmazással')}</button>`:''}
+    <div class="iv-stats">
+      <div><b>${Math.floor(s.balance||0).toLocaleString()}</b>👛 ${L3('موجودی (Ft)','Balance (Ft)','Egyenleg (Ft)')}</div>
+      <div><b>${Number(s.friends||0)}</b>${L3('دوستانی که خرید کردند','Friends who bought','Vásárló barátok')}</div>
+      <div><b>${Math.floor(s.earned||0).toLocaleString()}</b>${L3('کل جایزه (Ft)','Total earned (Ft)','Összes jutalom (Ft)')}</div>
+    </div>
+    ${Number(s.pending)>0?`<div style="font-size:12px;color:var(--orange);text-align:center">⏳ ${Number(s.pending)} ${L3('سفارش دوست در راه است — جایزه بعد از تحویل اضافه می‌شود.','friend order(s) on the way — the reward is added after delivery.','barát-rendelés úton van — a jutalom kézbesítés után jár.')}</div>`:''}
+    ${credits?`<div style="margin-top:8px"><div style="font-size:12px;font-weight:700;margin-bottom:4px">👛 ${L3('اعتبارهای کیف پول','Wallet credits','Pénztárca jóváírások')}</div>${credits}</div>`:''}
+    <div style="font-size:11.5px;color:var(--gray);line-height:1.7;margin-top:10px">${L3('کیف پول را موقع ثبت سفارش آنلاین، با شماره و کد عضویت، استفاده کنید (تا ۲۰٪ هر سفارش).','Use your wallet when you order online, with your phone and member code (up to 20% of each order).','A pénztárcát online rendeléskor használhatja telefonszámával és tagsági kódjával (rendelésenként max. 20%).')}
+      <a href="#" onclick="openRefTerms(event)" style="color:var(--green);font-weight:700">${L3('قوانین','Terms','Feltételek')}</a></div>`;
+}
+async function ivCopy(){
+  const link=ivLink(), b=document.getElementById('ivCopyBtn');
+  try { await navigator.clipboard.writeText(ivShareText()+'\n'+link); b.textContent='✅'; }
+  catch(e){ try { const t=document.createElement('textarea'); t.value=ivShareText()+'\n'+link; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); b.textContent='✅'; } catch(x){ prompt('', link); } }
+  setTimeout(()=>{ b.textContent=L3('کپی لینک','Copy link','Link másolása'); },2000);
+}
+function ivNativeShare(){ try { navigator.share({title:'ARÁDI Market', text:ivShareText(), url:ivLink()}); } catch(e){} }
+
+// texts that follow the language
+(function(){
+  const lbl=()=>{ ivSet('inviteBtnText', L3('دعوت دوستان','Invite friends','Meghívás'));
+    const t=T[currentLang]; if(t&&t.referralLabel) ivSet('referralLabel', t.referralLabel);
+    const b=document.getElementById('refBanner'); if(b){ b.remove(); refBanner(); } };
+  const _sl=setLang; setLang=function(){ const r=_sl.apply(this,arguments); try { lbl(); if(document.getElementById('inviteModal').classList.contains('open')) openInvite(); } catch(e){} return r; };
+  lbl();
+  try { if(new URLSearchParams(location.search).get('invite')==='1') setTimeout(openInvite,500); } catch(e){}
 })();
 </script>
 </body>
