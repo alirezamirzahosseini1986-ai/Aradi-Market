@@ -4766,5 +4766,153 @@ function acMemberInfo(){
   try { if(new URLSearchParams(location.search).get('account')==='1') setTimeout(()=>acOpen(),500); } catch(e){}
 })();
 </script>
+<!-- ===== v15: postcode + server-side delivery fee + free delivery ===== -->
+<style>
+.dq-free{color:var(--green);font-weight:800}
+.dq-strike{text-decoration:line-through;color:#aaa;font-weight:400;margin-inline-end:6px;direction:ltr;unicode-bidi:isolate;display:inline-block}
+.dq-ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.dq-hint{font-size:12px;margin-top:6px;padding:8px 10px;border-radius:8px;background:#fff8e6;color:#8a5a00}
+.dq-promo{font-size:11px;color:var(--green);font-weight:700;margin-top:3px}
+</style>
+<script>
+ERR_TXT.DELIV_POSTCODE=['کد پستی معتبر نیست یا خارج از محدودهٔ ارسال ماست.','The postcode is not valid or is outside our delivery area.','Az irányítószám érvénytelen, vagy kívül esik a szállítási területünkön.'];
+ERR_TXT.DELIV_TOO_FAR=['متأسفانه این آدرس خارج از محدودهٔ ارسال ماست. می‌توانید «تحویل از فروشگاه» را انتخاب کنید.','Sorry, this address is outside our delivery area. You can choose pickup at the shop.','Sajnos ez a cím kívül esik a szállítási területen. Választhat üzleti átvételt.'];
+
+let DQ=null, _dqKey='', _dqTimer=null, _dqSeq=0, DPROMO=null;
+const _geoCache={};
+function dqPostcode(){ return (document.getElementById('oPostcode')?.value||'').replace(/\D/g,'').slice(0,4); }
+function dqPaid(){ const t=getOrderTotals(); return Math.max(0,(t.total||0)-(t.deliv||0)); }
+function dqFmt(n){ return Number(n||0).toLocaleString(); }
+
+// postcode → district for Budapest (1094 → IX); outside Budapest → «out»
+function dqSyncDistrict(){
+  const pc=dqPostcode(), sel=document.getElementById('oDistrict'); if(!sel) return;
+  if(!/^\d{4}$/.test(pc)) return;
+  if(pc[0]==='1'){ const d=parseInt(pc.slice(1,3),10)||13; if(d>=1&&d<=23) sel.value=String(d); }
+  else sel.value='out';
+}
+async function dqGeocode(pc, addr){
+  addr=(addr||'').replace(/,?\s*District\s+\w+/i,'').trim();
+  if(addr.length<4) return null;
+  const k=pc+'|'+addr.toLowerCase(); if(k in _geoCache) return _geoCache[k];
+  let out=null;
+  try {
+    const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=hu&postalcode='+pc+'&street='+encodeURIComponent(addr.split(',')[0]);
+    const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),6000);
+    const r=await fetch(u,{signal:ctl.signal}).then(r=>r.json()); clearTimeout(tm);
+    if(r&&r[0]) out={lat:+r[0].lat, lng:+r[0].lon};
+  } catch(e){}
+  _geoCache[k]=out; return out;
+}
+function dqSchedule(){ clearTimeout(_dqTimer); _dqTimer=setTimeout(dqRefresh,700); }
+async function dqRefresh(){
+  if(selectedDelivery!=='delivery'){ return; }
+  const pc=dqPostcode(), addr=(document.getElementById('oAddress')?.value||'').trim();
+  dqSyncDistrict();
+  if(!/^\d{4}$/.test(pc)){ if(DQ){ DQ=null; _dqKey=''; dqShow(); updateOrderSummary(); } else dqShow(); return; }
+  const paid=dqPaid();
+  const key=[pc,addr,paid,memberInfo?(memberInfo.session||memberInfo.code||''):'',appliedReferral&&appliedReferral.type==='ref'?appliedReferral.code:'',document.getElementById('oPhone')?.value||''].join('|');
+  if(key===_dqKey) return;
+  _dqKey=key; const seq=++_dqSeq;
+  const g=await dqGeocode(pc, addr);
+  const p={postcode:pc, lat:g?g.lat:null, lng:g?g.lng:null, paid,
+    phone:document.getElementById('oPhone')?.value||null,
+    session:memberInfo&&memberInfo.session?memberInfo.session:null, member_code:memberInfo&&!memberInfo.session?memberInfo.code:null,
+    ref_code:appliedReferral&&appliedReferral.type==='ref'?appliedReferral.code:null};
+  let r; try { r=await db.rpc('delivery_quote',{p}); } catch(e){ r={error:e}; }
+  if(seq!==_dqSeq) return;
+  if(r.error){ DQ=null; _dqKey=''; dqShow(); return; }       // database not updated yet → old district prices
+  DQ=Object.assign({pc, lat:p.lat, lng:p.lng}, r.data||{});
+  dqShow(); updateOrderSummary();
+}
+// what the customer sees (never the shop's courier calculation)
+function dqShow(){
+  const v=document.getElementById('delivCostVal'), info=document.getElementById('delivCostInfo'); if(!v) return;
+  let hint='';
+  if(!DQ){ if(!/^\d{4}$/.test(dqPostcode())) info.textContent=L3('کد پستی را بنویسید تا هزینهٔ ارسال حساب شود.','Enter your postcode to see the delivery cost.','Adja meg az irányítószámot a szállítási díjhoz.'); return; }
+  if(!DQ.ok){ v.innerHTML='<span style="color:var(--red)">—</span>'; info.innerHTML='<span style="color:var(--red)">❌ '+L3(...(ERR_TXT[DQ.reason]||ERR_TXT.DELIV_POSTCODE))+'</span>'; return; }
+  info.textContent='';
+  if(DQ.free&&Number(DQ.fee)===0) v.innerHTML=`<span class="dq-strike">${dqFmt(DQ.base)} Ft</span><span class="dq-free">${L3('رایگان 🎉','FREE 🎉','INGYENES 🎉')}</span>`;
+  else if(DQ.far_free) { v.innerHTML=`<span class="dq-strike">${dqFmt(DQ.base)} Ft</span><span class="dq-free dq-ltr">${dqFmt(DQ.fee)} Ft</span>`;
+    hint=L3(`📍 منطقهٔ خیلی دور — با دلیوری رایگان، هزینهٔ ارسال فقط ${dqFmt(DQ.fee)} فورینت`,`📍 Very distant area — with free delivery you pay only ${dqFmt(DQ.fee)} Ft`,`📍 Nagyon távoli terület — ingyenes kiszállítással csak ${dqFmt(DQ.fee)} Ft`); }
+  else v.textContent=dqFmt(DQ.fee)+' Ft';
+  if(DQ.need>0) hint=L3(`🎁 فقط ${dqFmt(DQ.need)} فورینت دیگر خرید کنید تا ارسال رایگان شود!`,`🎁 Add ${dqFmt(DQ.need)} Ft more for free delivery!`,`🎁 Még ${dqFmt(DQ.need)} Ft, és ingyenes a kiszállítás!`);
+  if(hint) info.innerHTML='<div class="dq-hint">'+hint+'</div>';
+}
+// the fee used everywhere in the totals
+const _getDeliveryCostV15=getDeliveryCost;
+getDeliveryCost=function(){ return DQ&&DQ.ok&&DQ.pc===dqPostcode()?Number(DQ.fee):_getDeliveryCostV15(); };
+const _updSumV15=updateOrderSummary;
+updateOrderSummary=function(){
+  _updSumV15.apply(this,arguments);
+  if(selectedDelivery==='delivery'&&DQ&&DQ.ok&&DQ.free){
+    const box=document.getElementById('orderSummaryBox'), tot=box&&box.querySelector('.order-summary-total');
+    if(tot){
+      const row=document.createElement('div'); row.className='order-summary-row'; row.style.color='var(--green)';
+      if(Number(DQ.fee)===0){
+        row.innerHTML=`<span>🚚 ${L3('ارسال','Delivery','Kiszállítás')}</span><span><span class="dq-strike">${dqFmt(DQ.base)} Ft</span>${L3('رایگان','FREE','INGYENES')}</span>`;
+        tot.parentNode.insertBefore(row,tot);
+      }
+    }
+  }
+  dqSchedule();
+};
+const _selDelivV15=selectDelivery;
+selectDelivery=function(type){ const r=_selDelivV15.apply(this,arguments); if(type==='delivery'){ _dqKey=''; dqSchedule(); dqShow(); } return r; };
+
+// promo text under «ارسال به درب منزل»
+async function dqLoadPromo(){
+  let r; try { r=await db.rpc('delivery_promo'); } catch(e){ r={error:e}; }
+  if(r.error||!r.data||!r.data.enabled) return;
+  DPROMO=r.data; const g=DPROMO.groups||{}, ks=Object.keys(g); if(!ks.length) return;
+  const name={all:['همه','everyone','mindenkinek'],members:['اعضای باشگاه','club members','klubtagoknak'],ref_active:['معرف‌ها','referrers','ajánlóknak'],
+    ref_delivered:['کسانی که دوست آورده‌اند','members who invited a friend','akik barátot hoztak'],new_friend:['دوستان دعوت‌شده','invited friends','meghívott barátoknak']};
+  const i=currentLang==='en'?1:currentLang==='hu'?2:0;
+  const parts=(g.all!=null?['all']:ks).map(k=>(name[k]||[k,k,k])[i]+(Number(g[k])>0?L3(' از ',' from ',' ')+dqFmt(g[k])+' Ft'+(i===2?'-tól':''):''));
+  const el=document.getElementById('delivSub'); if(!el) return;
+  let pr=document.getElementById('dqPromo'); if(!pr){ pr=document.createElement('div'); pr.id='dqPromo'; pr.className='dq-promo'; el.parentNode.appendChild(pr); }
+  pr.textContent='🎉 '+L3('ارسال رایگان برای ','Free delivery for ','Ingyenes kiszállítás ')+parts.join('، ');
+}
+
+// postcode field (before the address)
+(function(){
+  const addr=document.getElementById('oAddress'); if(!addr) return;
+  const g=document.createElement('div'); g.className='form-group';
+  g.innerHTML='<label id="pcLabel"></label><input type="text" id="oPostcode" inputmode="numeric" maxlength="4" placeholder="1094" style="direction:ltr;text-align:left">';
+  addr.closest('.form-group').parentNode.insertBefore(g, addr.closest('.form-group'));
+  const sel=document.getElementById('oDistrict');
+  if(sel&&!sel.querySelector('option[value="out"]')){ const o=document.createElement('option'); o.value='out'; o.textContent='Budapesten kívül / Outside Budapest'; sel.appendChild(o); }
+  const pc=document.getElementById('oPostcode');
+  try { const s=localStorage.getItem('aradi_pc'); if(s) pc.value=s; } catch(e){}
+  pc.addEventListener('input',()=>{ pc.value=pc.value.replace(/\D/g,'').slice(0,4); try{ localStorage.setItem('aradi_pc',pc.value); }catch(e){} dqSyncDistrict(); dqSchedule(); });
+  addr.addEventListener('input',dqSchedule);
+  document.getElementById('oPhone')?.addEventListener('change',dqSchedule);
+  const lab=()=>{ document.getElementById('pcLabel').textContent=L3('کد پستی (Irányítószám) *','Postcode (Irányítószám) *','Irányítószám *'); };
+  lab(); const _sl=window.setLang; if(typeof _sl==='function') window.setLang=function(){ const r=_sl.apply(this,arguments); lab(); dqShow(); try{ dqLoadPromo(); }catch(e){} return r; };
+  dqLoadPromo();
+})();
+
+// send postcode + map point with the order; postcode is required for delivery
+const _rpcV15=db.rpc.bind(db);
+db.rpc=function(fn,args){
+  if(fn==='place_order'&&args&&args.p&&args.p.delivery_type==='delivery'){
+    const pc=dqPostcode();
+    args.p.postcode=pc;
+    if(DQ&&DQ.pc===pc){ args.p.lat=DQ.lat; args.p.lng=DQ.lng; }
+    if(pc&&args.p.address&&!args.p.address.includes(pc)) args.p.address=args.p.address.replace(/,\s*District\s+\w+$/i,'')+', '+pc+(args.p.district&&args.p.district!=='out'?', District '+args.p.district:'');
+  }
+  return _rpcV15.apply(this,arguments);
+};
+const _submitV15=submitOrder;
+submitOrder=async function(){
+  if(selectedDelivery==='delivery'){
+    if(!/^\d{4}$/.test(dqPostcode())){ alert(L3('لطفاً کد پستی ۴ رقمی را بنویسید.','Please enter your 4-digit postcode.','Kérjük, adja meg a 4 jegyű irányítószámot.')); document.getElementById('oPostcode')?.focus(); return; }
+    dqSyncDistrict();
+    if(DQ&&DQ.ok===false){ alert(L3(...(ERR_TXT[DQ.reason]||ERR_TXT.DELIV_POSTCODE))); return; }
+  }
+  return _submitV15.apply(this,arguments);
+};
+</script>
+
 </body>
 </html>
