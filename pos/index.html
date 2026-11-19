@@ -193,6 +193,7 @@ tr:hover td{background:#fafafa}
   <div class="tab" onclick="showPage('codes',this)">🎟️ کد تخفیف</div>
   <div class="tab" onclick="showPage('aiknow',this)">🧠 دستیار</div>
   <div class="tab" onclick="showPage('invite',this)">🎁 دعوت</div>
+  <div class="tab" onclick="showPage('delivery',this)">🚚 دلیوری</div>
 </div>
 
 <!-- POS PAGE -->
@@ -424,6 +425,12 @@ tr:hover td{background:#fafafa}
     </div>
   </div>
 
+  <div id="rRangeTxt" style="font-size:13px;color:#555;margin:-4px 0 10px;font-weight:600"></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">🔍 فروش یک کالا در بازهٔ انتخابی</div>
+    <input type="text" id="rSearch" class="fi" style="width:100%" placeholder="نام کالا یا بارکد را بنویسید…" autocomplete="off" oninput="renderReports()">
+    <div id="rSearchOut"></div>
+  </div>
   <div class="stats-row">
     <div class="stat"><div class="stat-label">فروش بازه انتخابی</div><div class="stat-value" id="rTotal">0 Ft</div></div>
     <div class="stat"><div class="stat-label">تعداد تراکنش</div><div class="stat-value" id="rCount">0</div></div>
@@ -506,6 +513,14 @@ tr:hover td{background:#fafafa}
       </select>
     </div>
     <div id="batchListMain"><div class="no-data">دسته‌ای تعریف نشده</div></div>
+  </div>
+</div>
+
+<!-- DELIVERY SETTINGS PAGE (v14) -->
+<div class="page" id="page-delivery">
+  <div class="card" style="max-width:720px;margin:0 auto">
+    <div class="card-title">🚚 دلیوری رایگان و هزینهٔ پیک <button class="btn btn-blue btn-sm" onclick="v14LoadDeliv()">🔄</button></div>
+    <div id="v14DelivBox"></div>
   </div>
 </div>
 
@@ -1347,7 +1362,7 @@ function renderRefundModal(){
   const total=count?refundSelectionTotal():0;
   m.innerHTML=`<div class="modal" style="max-width:440px">
     <h3 style="font-size:15px;color:#e53935">↩ مرجوع کردن کالا</h3>
-    <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px">${new Date(s.time).toLocaleString('fa-IR')} — مبلغ فروش: ${(s.total||0).toLocaleString()} Ft</div>
+    <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px">${gDate(s.time)} — مبلغ فروش: ${(s.total||0).toLocaleString()} Ft</div>
     <div style="font-size:12px;color:#555;margin-bottom:6px">با دکمه + تعداد کالایی را که برگشته انتخاب کنید:</div>
     <div id="refundRows">${rows}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:15px;font-weight:700;color:#e53935">
@@ -1821,7 +1836,7 @@ function renderOnlineOrders(){
       ${o.ref_discount>0?`<div style="font-size:12px;color:var(--green)">🎁 هدیهٔ دعوت دوست (${escP(o.ref_code||'')}): − ${Number(o.ref_discount).toLocaleString()} Ft${o.ref_reward>0?` <span style="color:#8a5a00">· جایزهٔ دعوت‌کننده: ${Number(o.ref_reward).toLocaleString()} Ft</span>`:''}${o.ref_note?` <span style="color:#c0392b">· بدون جایزه (${escP(o.ref_note)})</span>`:''}</div>`:''}
       ${o.wallet_used>0?`<div style="font-size:12px;color:var(--green)">👛 کیف پول آرادی: − ${Number(o.wallet_used).toLocaleString()} Ft</div>`:''}
       ${o.points_used?`<div style="font-size:12px;color:var(--green)">⭐ امتیاز: − ${o.points_used.toLocaleString()} Ft</div>`:''}
-      ${o.delivery_cost?`<div style="font-size:12px;color:var(--orange)">🚚 + ${(o.delivery_cost||0).toLocaleString()} Ft</div>`:''}
+      ${(o.courier_cost!=null||o.free_delivery)&&window.v14DelivHtml?v14DelivHtml(o):(o.delivery_cost?`<div style="font-size:12px;color:var(--orange)">🚚 + ${(o.delivery_cost||0).toLocaleString()} Ft</div>`:'')}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
         <span style="font-size:11px;color:var(--gray)">${new Date(o.created_at).toLocaleString('fa-IR')}${o.payment_method?' | 💳 '+escP(o.payment_method):''}</span>
         <span style="font-weight:700;color:var(--green);font-size:15px">${(o.total||0).toLocaleString()} Ft</span>
@@ -2092,7 +2107,7 @@ function renderReports(){
       :`<div class="sale-amt">${(s.total||0).toLocaleString()} Ft</div>`;
     return `<div class="sale-row">
     <div style="flex:1"><div style="font-weight:600;font-size:12px">${itemsTxt}</div>
-    <div class="sale-time">${new Date(s.time).toLocaleString('fa-IR')}${pay}${tag}</div></div>
+    <div class="sale-time">${gDate(s.time)}${pay}${tag}</div></div>
     <div style="display:flex;align-items:center;gap:8px">
     ${amt}
     ${!full?`<button onclick="refundSale('${s.id}')" style="background:#ffebee;border:1px solid #e53935;color:#e53935;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:600">↩ مرجوع</button>`:''}
@@ -3809,5 +3824,205 @@ async function ivAdjust(id,name){
 const _showPageV12=showPage;
 showPage=function(name,el){ const r=_showPageV12.apply(this,arguments); if(name==='invite') reloadInvite(); return r; };
 </script>
+<!-- ===== v14: online-order alert, smarter scanner, delivery settings ===== -->
+<div class="modal-ov" id="v14Alert" style="z-index:3000">
+  <div class="modal" style="max-width:420px;text-align:center;border:4px solid #e53935">
+    <div style="font-size:64px;line-height:1">🛒</div>
+    <div id="v14AlertTxt" style="font-size:24px;font-weight:800;color:#c0392b;margin:10px 0 6px"></div>
+    <div id="v14AlertSub" style="font-size:15px;color:#555;margin-bottom:16px"></div>
+    <button class="btn btn-green btn-full" style="font-size:19px;padding:16px" onclick="v14OpenOrders()">👀 مشاهدهٔ سفارش</button>
+    <button class="btn btn-sm" style="margin-top:10px;background:none;color:#888" onclick="v14AlertLater()">بعداً</button>
+  </div>
+</div>
+<script>
+// ---------- 1) Online order alert: shows every time the POS opens while there is an order nobody has opened yet ----------
+let _v14Later=false, _v14LastCount=0;
+function v14Unseen(){ return (onlineOrders||[]).filter(o=>(o.status||'new')==='new'&&!o.seen_at); }
+function v14OrderAlert(){
+  const list=v14Unseen(), m=document.getElementById('v14Alert');
+  if(list.length>_v14LastCount) _v14Later=false;           // a new order came in → show again
+  _v14LastCount=list.length;
+  const onOnline=document.getElementById('page-online')?.classList.contains('active');
+  if(!list.length||onOnline||_v14Later){ m.classList.remove('open'); return; }
+  document.getElementById('v14AlertTxt').textContent=list.length===1?'یک سفارش آنلاین دارید':list.length+' سفارش آنلاین دارید';
+  document.getElementById('v14AlertSub').textContent=list.slice(0,3).map(o=>'🔖 '+(o.order_id||'')+' — '+(o.customer_name||'')).join('  |  ');
+  m.classList.add('open');
+}
+function v14AlertLater(){ _v14Later=true; document.getElementById('v14Alert').classList.remove('open'); focusBarcode(); }
+function v14OpenOrders(){
+  document.getElementById('v14Alert').classList.remove('open');
+  const tab=[...document.querySelectorAll('.tab')].find(t=>/سفارش آنلاین/.test(t.textContent));
+  showPage('online',tab);
+}
+async function v14MarkSeen(){
+  if(!document.getElementById('page-online')?.classList.contains('active')) return;
+  const ids=v14Unseen().map(o=>o.id).filter(x=>x!=null);
+  if(!ids.length) return;
+  let r; try { r=await db.rpc('mark_orders_seen',{p_ids:ids}); } catch(e){ r={error:e}; }
+  if(!r.error){ const now=new Date().toISOString(); onlineOrders.forEach(o=>{ if(ids.includes(o.id)) o.seen_at=now; }); _v14LastCount=0; }
+}
+const _reloadOnlineV14=reloadOnlineOrders;
+reloadOnlineOrders=async function(){ const r=await _reloadOnlineV14.apply(this,arguments); await v14MarkSeen(); v14OrderAlert(); return r; };
+const _showPageV14=showPage;
+showPage=function(name,el){ const r=_showPageV14.apply(this,arguments); if(name==='delivery') v14LoadDeliv(); if(name!=='online') v14OrderAlert(); return r; };
+
+// order card: delivery details for the shop (customer never sees the courier cost)
+function v14DelivHtml(o){
+  if(o.delivery_type!=='delivery') return '';
+  const f=n=>Number(n||0).toLocaleString();
+  let h='<div style="font-size:12px;color:var(--orange)">🚚 ';
+  if(o.free_delivery) h+=Number(o.delivery_cost||0)>0?'دلیوری رایگان (منطقهٔ دور) — مشتری '+f(o.delivery_cost)+' Ft می‌دهد':'دلیوری رایگان 🎉'+(o.deliv_base?' <s style="color:#bbb">'+f(o.deliv_base)+' Ft</s>':'');
+  else h+='+ '+f(o.delivery_cost)+' Ft';
+  h+='</div>';
+  if(o.courier_cost!=null) h+='<div style="font-size:12px;color:#7b4fbf;font-weight:700">🛵 هزینهٔ پیک (پرداخت فروشگاه): '+f(o.courier_cost)+' Ft'
+    +(o.km!=null?' — '+o.km+' km':'')+(o.postcode?' — 📮 '+escP(o.postcode):'')+'</div>';
+  return h;
+}
+
+// ---------- 2) Scanner: English characters with any keyboard language, and scans work from any field ----------
+const _nbcV14=nbc;
+nbc=function(bc){
+  bc=String(bc==null?'':bc).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  return _nbcV14(bc);
+};
+(function(){
+  const SYM={Minus:'-',Equal:'=',Period:'.',Comma:',',Slash:'/',NumpadSubtract:'-',NumpadAdd:'+',NumpadDecimal:'.',NumpadDivide:'/',NumpadMultiply:'*',
+    BracketLeft:'[',BracketRight:']',Semicolon:';',Quote:"'",Backslash:'\\',Backquote:'`',IntlBackslash:'\\'};
+  function chOf(e){
+    const c=e.code||''; let m;
+    if((m=c.match(/^Digit(\d)$/))||(m=c.match(/^Numpad(\d)$/))) return m[1];
+    if((m=c.match(/^Key([A-Z])$/))) return e.shiftKey?m[1]:m[1].toLowerCase();
+    return SYM[c]||null;
+  }
+  let buf='', last=0, startEl=null, startVal=null;
+  document.addEventListener('keydown',e=>{
+    if(e.ctrlKey||e.altKey||e.metaKey||e.isComposing) return;
+    const bi=document.getElementById('barcodeInput'); if(!bi) return;
+    const now=performance.now(), gap=now-last; last=now;
+    const ch=chOf(e);
+    if(e.target===bi){
+      // barcode field: the physical key decides the character, so Persian / Hungarian keyboards still give English
+      if(ch!==null&&e.key&&e.key.length===1){
+        e.preventDefault();
+        const s=bi.selectionStart??bi.value.length, en=bi.selectionEnd??s;
+        bi.value=bi.value.slice(0,s)+ch+bi.value.slice(en); bi.selectionStart=bi.selectionEnd=s+1;
+        onBarcodeInput(bi.value);
+      }
+      buf=''; return;
+    }
+    if(!document.getElementById('page-pos')?.classList.contains('active')) return;
+    if(document.querySelector('.modal-ov.open')) return;
+    // a scanner types very fast and ends with Enter: catch it even when another field has focus
+    if(gap>60){ buf=''; startEl=e.target; startVal=(startEl&&'value' in startEl)?startEl.value:null; }
+    if(e.key==='Enter'){
+      if(buf.length>=4){
+        e.preventDefault(); e.stopPropagation();
+        if(startEl&&startVal!==null&&startEl!==bi){ startEl.value=startVal; try{ startEl.dispatchEvent(new Event('input')); }catch(_){} }
+        bi.value=buf; buf=''; bi.focus(); addToCart();
+      }
+      buf=''; return;
+    }
+    if(ch!==null&&e.key&&e.key.length===1) buf+=ch; else if(e.key!=='Shift') buf='';
+  },true);
+  // after any click on the sale tab (buttons, cart, search result…) the cursor goes back to the scan field
+  document.addEventListener('click',()=>{
+    setTimeout(()=>{
+      if(!document.getElementById('page-pos')?.classList.contains('active')) return;
+      if(document.querySelector('.modal-ov.open')) return;
+      const a=document.activeElement;
+      if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.id!=='barcodeInput') return;
+      focusBarcode();
+    },250);
+  },true);
+  // when the batch picker or another window closes, return to the scan field too
+  const mo=new MutationObserver(ms=>{ if(ms.some(m=>!m.target.classList.contains('open'))&&!document.querySelector('.modal-ov.open')) focusBarcode(); });
+  document.querySelectorAll('.modal-ov').forEach(el=>mo.observe(el,{attributes:true,attributeFilter:['class']}));
+})();
+
+// ---------- 3) Delivery settings tab ----------
+const V14G=[['all','همهٔ مشتری‌ها'],['members','اعضای باشگاه'],['ref_active','معرف‌ها (کد دعوت را فعال کرده‌اند)'],
+  ['ref_delivered','معرف‌هایی که حداقل یک دوست آورده‌اند'],['new_friend','دوستِ تازه (اولین سفارش با کد دعوت)']];
+const V14N=[['near_km','شعاع نزدیک (کیلومتر)'],['near_pct','هزینهٔ پیک در شعاع نزدیک (٪ مبلغ سفارش)'],['mid_km','شعاع میانی (کیلومتر)'],
+  ['far_pct','هزینهٔ پیک بیشتر از شعاع نزدیک (٪)'],['far_fee','منطقهٔ خیلی دور: مبلغ از مشتریِ دلیوری‌رایگان (Ft)'],['max_km','حداکثر فاصلهٔ ارسال (کیلومتر)'],
+  ['fee_near','هزینهٔ عادی ارسال، مناطق ۷،۸،۹،۱۱ (Ft)'],['fee_other','هزینهٔ عادی ارسال، بقیه (Ft)']];
+let v14Cfg=null;
+async function v14LoadDeliv(){
+  const box=document.getElementById('v14DelivBox'); box.innerHTML='<div class="no-data">در حال بارگذاری…</div>';
+  let r; try { r=await db.rpc('get_delivery_settings'); } catch(e){ r={error:e}; }
+  if(r.error){ box.innerHTML='<div class="no-data">خطا: '+escP(r.error.message||r.error)+'<br>(فایل aradi_delivery_1.sql در Supabase اجرا شده؟)</div>'; return; }
+  v14Cfg=r.data; const c=v14Cfg, g=c.groups||{};
+  box.innerHTML=`
+   <label style="display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;padding:12px;background:${c.enabled?'#e8f5ee':'#fdecea'};border-radius:10px;cursor:pointer">
+     <input type="checkbox" id="v14On" ${c.enabled?'checked':''} style="width:22px;height:22px"> دلیوری رایگان ${c.enabled?'روشن است ✅':'خاموش است'}</label>
+   <div style="margin:14px 0 6px;font-weight:700">چه کسانی دلیوری رایگان بگیرند؟ و حداقل خرید هر گروه:</div>
+   ${V14G.map(([k,l])=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #f0f0f0">
+      <input type="checkbox" id="v14g_${k}" ${g[k]&&g[k].on?'checked':''} style="width:20px;height:20px">
+      <label for="v14g_${k}" style="flex:1;font-size:14px">${l}</label>
+      <span style="font-size:12px;color:#888">حداقل خرید</span>
+      <input type="number" id="v14m_${k}" class="fi" style="width:110px;direction:ltr" value="${g[k]?Number(g[k].min||0):0}"> Ft</div>`).join('')}
+   <div style="font-size:12px;color:#888;margin:6px 0 14px">اگر مشتری در چند گروه روشن باشد، بیشترین «حداقل خرید» حساب می‌شود. حداقل خرید با مبلغی که مشتری واقعاً می‌دهد (بعد از تخفیف‌ها، بدون ارسال) مقایسه می‌شود.</div>
+   <div style="font-weight:700;margin-bottom:6px">حساب پیک (فقط فروشگاه می‌بیند):</div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${V14N.map(([k,l])=>`<label style="font-size:12px;color:#555">${l}<input type="number" id="v14n_${k}" class="fi" style="width:100%;direction:ltr" value="${c[k]??''}"></label>`).join('')}</div>
+   <button class="btn btn-green btn-full" style="margin-top:14px" onclick="v14SaveDeliv()">💾 ذخیره</button>
+   <div id="v14DelivMsg" style="margin-top:8px;font-size:13px"></div>`;
+}
+async function v14SaveDeliv(){
+  const p={enabled:document.getElementById('v14On').checked, groups:{}};
+  V14G.forEach(([k])=>{ p.groups[k]={on:document.getElementById('v14g_'+k).checked, min:Number(document.getElementById('v14m_'+k).value||0)}; });
+  V14N.forEach(([k])=>{ const v=document.getElementById('v14n_'+k).value; if(v!=='') p[k]=String(v); });
+  let r; try { r=await db.rpc('set_delivery_settings',{p}); } catch(e){ r={error:e}; }
+  const m=document.getElementById('v14DelivMsg');
+  if(r.error){ m.innerHTML='<span style="color:var(--red)">❌ '+escP(/BAD_RADIUS/.test(r.error.message||'')?'شعاع نزدیک باید از شعاع میانی کوچک‌تر باشد':(r.error.message||r.error))+'</span>'; return; }
+  showToast('✅ تنظیمات دلیوری ذخیره شد','ok'); await v14LoadDeliv();
+}
+
+// ---------- 4) Reports: Gregorian dates + product search ----------
+function gDate(d,withTime=true){ const x=new Date(d); if(isNaN(x)) return '';
+  const o={weekday:'long',day:'numeric',month:'long',year:'numeric'}; if(withTime){ o.hour='2-digit'; o.minute='2-digit'; o.hour12=false; }
+  return x.toLocaleString('fa-IR-u-ca-gregory-nu-arabext',o); }
+function rNorm(t){ return String(t||'').toLowerCase().replace(/ي/g,'ی').replace(/ك/g,'ک').replace(/[‌\s]+/g,' ').trim(); }
+const _renderReportsV14=renderReports;
+renderReports=function(){
+  const r=_renderReportsV14.apply(this,arguments);
+  const {from,to}=getPeriodRange();
+  const rt=document.getElementById('rRangeTxt');
+  if(rt) rt.textContent='📅 '+(from.getTime()<=0?'از ابتدا':gDate(from,false))+'  تا  '+gDate(to,false);
+  const out=document.getElementById('rSearchOut'); if(!out) return r;
+  const q=rNorm(document.getElementById('rSearch')?.value);
+  if(!q){ out.innerHTML=''; return r; }
+  const qb=nbc(q);
+  const match=products.filter(p=>rNorm(p.name).includes(q)||(p.barcode&&nbc(p.barcode).includes(qb))).slice(0,30);
+  const ids=new Set(match.map(p=>String(p.id))), names=new Set(match.map(p=>rNorm(p.name)));
+  const inRange=sales.filter(s=>{ const d=new Date(s.time); return d>=from&&d<=to&&!isFullyRefunded(s); });
+  const stat={}; const lines=[];
+  inRange.forEach(s=>(s.items||[]).forEach(i=>{
+    const hit=(i.id!=null&&ids.has(String(i.id)))||names.has(rNorm(i.name))||(!match.length&&rNorm(i.name).includes(q));
+    if(!hit) return;
+    const qn=(i.qty||0)-(i.refunded_qty||0); if(qn<=0) return;
+    const p=match.find(p=>String(p.id)===String(i.id))||match.find(p=>rNorm(p.name)===rNorm(i.name));
+    const k=p?String(p.id):'n:'+i.name;
+    const st=stat[k]||(stat[k]={name:p?p.name:i.name,stock:p?p.stock:null,qty:0,sum:0,n:0});
+    st.qty+=qn; st.sum+=(i.sale_price??i.price??0)*qn; st.n++;
+    lines.push({t:s.time,name:st.name,qty:qn});
+  }));
+  match.forEach(p=>{ if(!stat[String(p.id)]) stat[String(p.id)]={name:p.name,stock:p.stock,qty:0,sum:0,n:0}; });
+  const rows=Object.values(stat).sort((a,b)=>b.qty-a.qty);
+  if(!rows.length){ out.innerHTML='<div class="no-data">کالایی با این نام پیدا نشد</div>'; return r; }
+  const th='padding:7px;border-bottom:2px solid var(--border);background:#f8f9fa';
+  out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px">
+    <thead><tr><th style="${th};text-align:right">کالا</th><th style="${th}">تعداد فروش</th><th style="${th}">دفعات</th><th style="${th}">مبلغ</th><th style="${th}">موجودی فعلی</th></tr></thead>
+    <tbody>${rows.map(x=>`<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:7px;font-weight:600">${escP(x.name)}</td>
+      <td style="padding:7px;text-align:center;font-size:16px;font-weight:800;color:${x.qty?'var(--green)':'#bbb'}">${x.qty.toLocaleString()}</td>
+      <td style="padding:7px;text-align:center">${x.n}</td>
+      <td style="padding:7px;text-align:center;direction:ltr">${Math.round(x.sum).toLocaleString()} Ft</td>
+      <td style="padding:7px;text-align:center">${x.stock==null?'—':x.stock}</td></tr>`).join('')}</tbody></table>
+    ${lines.length?`<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--gray)">تاریخ فروش‌ها (${lines.length})</summary>
+      ${lines.slice(0,100).map(l=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px dashed #eee">${gDate(l.t)} — ${escP(l.name)} × ${l.qty}</div>`).join('')}</details>`:''}`;
+  return r;
+};
+// open the alert at start-up once the orders are loaded
+setTimeout(()=>{ try{ v14OrderAlert(); }catch(e){} },2500);
+</script>
+
 </body>
 </html>
