@@ -4024,5 +4024,85 @@ renderReports=function(){
 setTimeout(()=>{ try{ v14OrderAlert(); }catch(e){} },2500);
 </script>
 
+<!-- ===== v15: cash change helper + voice compound words ===== -->
+<div class="modal-ov" id="cashPad" style="z-index:2500">
+  <div class="modal" style="max-width:520px;text-align:center">
+    <div style="font-size:16px;color:#555">💵 پرداخت نقدی — مبلغ خرید</div>
+    <div id="cpTotal" style="font-size:40px;font-weight:900;color:#1a7a4a;direction:ltr;margin:4px 0 10px"></div>
+    <div style="font-size:15px;font-weight:700;color:#333;margin-bottom:8px">مشتری چقدر داد؟</div>
+    <div id="cpBtns" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+      <input type="number" id="cpOther" class="fi" placeholder="مبلغ دیگر…" style="flex:1;font-size:18px;direction:ltr;padding:10px" inputmode="numeric">
+      <button class="btn btn-blue" style="font-size:16px;padding:12px 16px" onclick="cpPick(Number(document.getElementById('cpOther').value))">حساب کن</button>
+    </div>
+    <div id="cpChange" style="display:none;margin-top:14px;border-radius:12px;padding:14px;background:#fff8e6;border:3px solid #e0a63e">
+      <div style="font-size:16px;color:#8a5a00">پس بدهید:</div>
+      <div id="cpChangeAmt" style="font-size:54px;font-weight:900;color:#c0392b;direction:ltr;line-height:1.1"></div>
+      <div id="cpChangeHow" style="font-size:18px;font-weight:700;color:#555;margin-top:4px;direction:ltr;unicode-bidi:isolate"></div>
+    </div>
+    <button id="cpOk" class="btn btn-green btn-full" style="margin-top:14px;font-size:20px;padding:16px;display:none" onclick="cpConfirm()">✅ ثبت فروش</button>
+    <button class="btn btn-gray" style="width:100%;margin-top:8px" onclick="closeModal('cashPad')">↩ بازگشت</button>
+  </div>
+</div>
+<script>
+// ---------- 5) Cash: suggested banknotes and change to give back ----------
+const HUF_NOTES=[500,1000,2000,5000,10000,20000];
+const HUF_ALL=[20000,10000,5000,2000,1000,500,200,100,50,20,10,5];
+let _cpTotal=0;
+function cashSuggestions(total){
+  total=Math.max(0,Math.round(total));
+  const s=new Set();
+  HUF_NOTES.forEach(d=>{ const v=Math.ceil(total/d)*d; if(v>total) s.add(v); });
+  if(total>0&&total<=20000) HUF_NOTES.forEach(d=>{ if(d>total) s.add(d); });   // small purchase: every banknote
+  return [...s].sort((a,b)=>a-b).slice(0,8);
+}
+function changeBreakdown(n){
+  n=Math.round(n/5)*5; const out=[];
+  HUF_ALL.forEach(d=>{ const k=Math.floor(n/d); if(k>0){ out.push((k>1?k+' × ':'')+d.toLocaleString('en-US')); n-=k*d; } });
+  return out.join('  +  ');
+}
+function openCashPad(){
+  if(!cart.length) return;
+  _cpTotal=getCartFinalTotal();
+  const f=n=>Number(n).toLocaleString('en-US')+' Ft';
+  document.getElementById('cpTotal').textContent=f(_cpTotal);
+  const sug=cashSuggestions(_cpTotal);
+  document.getElementById('cpBtns').innerHTML=
+    `<button class="btn" style="font-size:20px;font-weight:800;padding:14px;background:#e8f5ee;color:#1a7a4a;border:2px solid #1a7a4a;direction:ltr" onclick="cpPick(${_cpTotal})">✔ ${f(_cpTotal)} <span style="font-size:12px">(دقیق)</span></button>`+
+    sug.map(v=>`<button class="btn" style="font-size:22px;font-weight:800;padding:14px;background:#fff;border:2px solid #c9933a;color:#333;direction:ltr" onclick="cpPick(${v})">${f(v)}</button>`).join('');
+  document.getElementById('cpChange').style.display='none';
+  document.getElementById('cpOk').style.display='none';
+  document.getElementById('cpOther').value='';
+  closeModal('rcptModal');
+  document.getElementById('cashPad').classList.add('open');
+}
+function cpPick(paid){
+  if(!paid||paid<_cpTotal){ alert('مبلغ دریافتی از مبلغ خرید کمتر است'); return; }
+  const ch=paid-_cpTotal;
+  document.getElementById('cpChange').style.display='block';
+  document.getElementById('cpChangeAmt').textContent=ch.toLocaleString('en-US')+' Ft';
+  document.getElementById('cpChangeHow').textContent=ch>0?changeBreakdown(ch):'بدون باقیمانده';
+  document.getElementById('cpOk').style.display='block';
+  document.getElementById('cpOk').focus();
+}
+function cpConfirm(){ closeModal('cashPad'); finalizeSale('cash'); }
+document.getElementById('cpOther')?.addEventListener('keydown',e=>{ if(e.key==='Enter') cpPick(Number(e.target.value)); });
+(function(){ const b=[...document.querySelectorAll('#rcptModal button')].find(x=>/finalizeSale\('cash'\)/.test(x.getAttribute('onclick')||'')); if(b) b.setAttribute('onclick','openCashPad()'); })();
+
+// ---------- 6) Voice: compound words («زردآلو» = «زرد آلو», «لواشک‌ها» etc.) ----------
+const _vFitV15=vFit;
+vFit=function(pt,ft){
+  // name side: also try two neighbouring words written together
+  const ft2=ft.slice(); for(let i=0;i+1<ft.length;i++) if(ft[i][0]!=='#'&&ft[i+1][0]!=='#') ft2.push(ft[i]+ft[i+1]);
+  // spoken side: two spoken words that together form one word of the name
+  const pt2=[]; for(let i=0;i<pt.length;i++){
+    if(i+1<pt.length&&pt[i][0]!=='#'&&pt[i+1][0]!=='#'){ const j=pt[i]+pt[i+1];
+      if(ft.some(x=>x===j)&&!ft.some(x=>x===pt[i])){ pt2.push(j); i++; continue; } }
+    pt2.push(pt[i]); }
+  const r=_vFitV15(pt2,ft2);
+  return r;
+};
+</script>
+
 </body>
 </html>
